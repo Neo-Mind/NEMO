@@ -1,0 +1,161 @@
+--Function #0 base
+ReqPCJobName = function(sex, index)
+	local NameMsg = nil
+	if sex == 1 then
+		NameMsg = PCJobNameTable_Override[index]
+	end
+	if NameMsg == nil then
+		NameMsg = PCJobNameTable[index]
+	end
+	if NameMsg ~= nil then
+		return NameMsg
+	else 
+		return ""
+	end
+end
+
+--Function #0 male
+ReqPCJobName_M = function(index)
+	return ReqPCJobName(0, index)
+end
+
+--Function #0 female
+ReqPCJobName_F = function(index)
+	return ReqPCJobName(1, index)
+end
+
+-- Function #1 base
+MapPCJobName = function(sex, index)
+	local MapKey = nil
+	if sex == 1 then
+		MapKey = PCJobNameInheritTable_Override[index]
+	end
+	if MapKey == nil then
+		MapKey = PCJobNameInheritTable[index]
+	end
+	if MapKey ~= nil then
+		return MapKey
+	else
+		return -1
+	end
+end
+
+-- Function #1 male
+MapPCJobName_M = function(index)
+	return MapPCJobName(0, index)
+end
+
+-- Function #1 female
+MapPCJobName_F = function(index)
+	return MapPCJobName(1, index)
+end
+
+--Function #2
+ReqValFromTbl = function(key, index)	
+	local tblvalue = ""	
+	if index > 50 then
+		index = index + 3950
+	end
+		
+	if key == 0 then
+		tblvalue = PCJobPathTable[index]
+	elseif key == 1 then
+		tblvalue = PCHandTable[index]
+	elseif key == 2 then
+		tblvalue = PCImfTable[index]
+	elseif key == 3 then
+		tblvalue = PCPalTable[index]
+	end
+	
+	if tblvalue ~= nil then		
+		return tblvalue
+	end	
+	return ""
+end
+
+--Function #3
+ReqPCPath = function(index)
+	return ReqValFromTbl(0, index)
+end
+
+--Function #4
+ReqPCHandPath = function(index)	
+	return ReqValFromTbl(1, index)
+end
+
+--Function #5
+ReqPCImf = function(index)
+	return ReqValFromTbl(2, index)
+end
+
+--Function #6
+ReqPCPal = function(index)
+	return ReqValFromTbl(3, index)
+end
+
+--Function #7
+MapValFromTbl = function(key, index)
+	if index > 50 then
+		index = index + 3950
+	end	
+	
+	local tblvalue = -1
+	if key == 0 then
+		tblvalue = PCJobPathInheritTable[index]
+	elseif key == 1 then
+		tblvalue = PCHandInheritTable[index]
+	elseif key == 2 then
+		tblvalue = PCImfInheritTable[index]
+	elseif key == 3 then
+		tblvalue = PCPalInheritTable[index]
+	end
+	
+	if tblvalue == nil then
+	  return -1
+	end	
+	if tblvalue > 3950 then
+	  tblvalue = tblvalue - 3950
+	end
+	
+	return tblvalue
+end
+
+--Function #8
+MapPCPath = function(index)
+	return MapValFromTbl(0, index)
+end
+
+--Function #9
+MapPCHandPath = function(index)	
+	return MapValFromTbl(1, index)
+end
+
+--Function #10
+MapPCImf = function(index)
+	return MapValFromTbl(2, index)
+end
+
+--Function #11
+MapPCPal = function(index)
+	return MapValFromTbl(3, index)
+end
+
+--Function #12
+GetHalter = function(index)
+	local HalterID = CashMount_Table[index]
+	if HalterID ~= nil then
+		return HalterID
+	else
+		return index
+	end
+end
+
+--Function #13
+IsDwarf = function(index)
+	for _, id in ipairs(Baby_List) do
+		if id == index then
+			return 1
+		end
+	end
+	return 0
+end

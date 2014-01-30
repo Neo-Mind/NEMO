@@ -1,0 +1,1264 @@
+###########################################################################
+# This is the text file used for translations by the Translate Client patch.
+# The patcher only recognizes three starting characters - rest are ignored
+# So you can comment/draw whatever with any other character you want.
+# Recognized starting characters are
+#
+# M: <= used for providing a message string (details below)
+# F: <= String to find
+# R: <= String to replace with
+#
+# Both F: & R: can recognize HEX as well as regular ASCII strings.
+# To specify ASCII strings enclose them in single quotes.
+# To specify HEX values specify them as byte by byte with space in between
+#
+# Want an example? just check any of the patterns below. you will see almost
+# all of my find strings are HEX but replace strings are ASCII :D
+#
+# Patcher does not stop when it fails to find any of the strings. Instead 
+# it will be reported in a text file called FailedTranslations.txt 
+# with the message specified using M:#
+#
+###########################################################################
+
+
+---------------------------------
+M: Translate Delete Time - Part 1
+---------------------------------
+
+F: 25 64 BF F9 20 25 64 C0 CF 20 25 64 BD C3 20 25 64 BA D0 20 25 64 C3 CA
+R: 'Delete: %d/%d - %d:%d:%d'
+
+---------------------------------
+M: Translate Delete Time - Part 2
+---------------------------------
+
+F: 25 64 B3 E2 20 25 64 BF F9 20 25 64 C0 CF 20 25 64 BD C3 20 25 64 BA D0 20 25 64 C3 CA 20
+R: '%d/%d/%d - %d:%d:%d'
+
+--------------------------
+M: Translate Message Box
+--------------------------
+
+F: B8 DE BD C3 C1 F6
+R: 'Message'
+
+---------------------------------
+M: Translate Character Slot Usage
+---------------------------------
+
+F: 28 C4 B3 B8 AF C5 CD 2F C3 D1 20 BD BD B7 D4 29
+R: '(Used / Total)'
+
+-----------------------------
+M: Translate Cash Shop Points
+-----------------------------
+
+F: 54 6F 74 61 6C 20 3A 20 25 64 20 C4 B3 BD C3
+R: 'Total : %d Points'
+
+----------------------------------
+M: Item Inventory
+----------------------------------
+
+F: BE C6 C0 CC C5 DB 20 BA F1 B1 B3
+R: 'Item Cmpare'
+
+----------------------------------
+M: Enter search string
+----------------------------------
+
+F: B0 CB BB F6 20 B4 DC BE EE 20 BC B3 C1 A4 20 28 45 78 3A 20 B4 DC BE EE 20 B4 DC BE EE 20 2E 2E 2E
+R: 'Enter search string...'
+ 	
+----------------------------------
+M: Find
+----------------------------------
+
+F: B0 CB BB F6
+R: 'Find'
+
+----------------------------------
+M: Back to navigation
+----------------------------------
+
+F: B1 E6 20 C1 A4 BA B8
+R: 'Back to Navigation'
+
+----------------------------------
+M: View List
+----------------------------------
+
+F: B0 CB BB F6 20 C1 A4 BA B8
+R: 'View List'
+
+----------------------------------
+M: Toggle Minimap
+----------------------------------
+
+F: BA B8 B1 E2 20 B8 F0 B5 E5 20 BA AF B0 E6
+R: 'Toggle Minimap'
+
+----------------------------------
+M: More
+----------------------------------
+
+F: C0 FC C0 E5
+R: 'More'
+
+----------------------------------
+M: Water
+----------------------------------
+
+F: BC F6 BC D3 BC BA 25 64
+R: 'Water'
+
+----------------------------------
+M: Earth
+----------------------------------
+
+F: C1 F6 BC D3 BC BA 25 64
+R: 'Earth'
+
+----------------------------------
+M: Shadow
+----------------------------------
+
+F: BE CF BC D3 BC BA 25 64
+R: 'Shdw'
+
+----------------------------------
+M: Fire
+----------------------------------
+
+F: C8 AD BC D3 BC BA 25 64
+R: 'Fire'
+
+----------------------------------
+M: Ghost
+----------------------------------
+
+F: BF B0 BC D3 BC BA 25 64
+R: 'Ghost'
+
+----------------------------------
+M: Wind
+----------------------------------
+
+F: C7 B3 BC D3 BC BA 25 64
+R: 'Wind'
+
+----------------------------------
+M: Poison
+----------------------------------
+
+F: B5 B6 BC D3 BC BA 25 64
+R: 'Poisn'
+
+----------------------------------
+M: Holy
+----------------------------------
+
+F: BC BA BC D3 BC BA 25 64
+R: 'Holy'
+
+----------------------------------
+M: Neutral
+----------------------------------
+
+F: B9 AB BC D3 BC BA 25 64
+R: 'Neutr'
+
+----------------------------------
+M: Big
+----------------------------------
+
+F: B4 EB C7 FC
+R: 'Big'
+
+----------------------------------
+M: Medium
+----------------------------------
+
+F: C1 DF C7 FC
+R: 'Med'
+
+----------------------------------
+M: Small
+----------------------------------
+
+F: BC D2 C7 FC
+R: 'Smal'
+
+----------------------------------
+M: Demon
+----------------------------------
+
+F: BE C7 B8 B6 C7 FC
+R: 'Demon'
+
+----------------------------------
+M: Demi-Human
+----------------------------------
+
+F: C0 CE B0 A3 C7 FC
+R: 'Demi-H'
+
+----------------------------------
+M: Form
+----------------------------------
+
+F: B9 AB C7 FC
+R: 'Form'
+
+----------------------------------
+M: Undead 2
+----------------------------------
+
+F: BE F0 B5 A5 B5 E5 25 64
+R: 'Undead'
+
+----------------------------------
+M: Plant
+----------------------------------
+
+F: BD C4 B9 B0 C7 FC
+R: 'Plant'
+
+----------------------------------
+M: Fish
+----------------------------------
+
+F: BE EE C6 D0 C7 FC
+R: 'Fish'
+
+----------------------------------
+M: Brute
+----------------------------------
+
+F: B5 BF B9 B0 C7 FC
+R: 'Brute'
+
+----------------------------------
+M: Angel
+----------------------------------
+
+F: C3 B5 BB E7 C7 FC
+R: 'Angel'
+
+----------------------------------
+M: Insect
+----------------------------------
+
+F: B0 EF C3 E6 C7 FC
+R: 'Insect'
+
+----------------------------------
+M: Dragon
+----------------------------------
+
+F: BF EB C1 B7
+R: 'Dragn'
+
+----------------------------------
+M: Mob
+----------------------------------
+
+F: 4C 65 76 65 6C 3A 25 64 20 28 C0 CF B9 DD 29
+R: 'Level:%d (Mob)'
+
+----------------------------------
+M: Boss
+----------------------------------
+
+F: 4C 65 76 65 6C 3A 25 64 20 28 BA B8 BD BA 29
+R: 'Level:%d (Boss)'
+
+----------------------------------
+M: To find the location, please go to
+----------------------------------
+
+F: BE C8 B3 BB C7 CF B4 C2 20 C0 A7 C4 A1 B7 CE 20 C0 CC B5 BF C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E
+R: 'To find the location, please go to'
+
+----------------------------------
+M: Using the warp to the next area, please click to go
+----------------------------------
+
+F: 4E 61 76 69 67 61 74 69 6F 6E 20 3E 3A 20 BF F6 C7 C1 B8 A6 20 C0 CC BF EB C7 CF BF A9 20 B4 D9 C0 BD 20 C1 F6 BF AA C0 B8 B7 CE 20 C0 CC B5 BF C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E
+R: 'Navigation >: Using the warp to the next area, please click to go'
+
+----------------------------------
+M: Arrived at the target map
+----------------------------------
+
+F: B8 F1 C7 A5 20 B8 CA BF A1 20 B5 B5 C2 F8 C7 CF BF B4 BD C0 B4 CF B4 D9 2E
+R: 'Arrived at the target map'
+
+----------------------------------
+M: Arrived on the map that has the Npc your looking for. Go to that NPC
+----------------------------------
+
+F: C3 A3 B0 ED C0 DA 20 C7 CF B4 C2 20 4E 70 63 B0 A1 20 C0 D6 B4 C2 20 B8 CA BF A1 20 B5 B5 C2 F8 20 C7 CF BF B4 BD C0 B4 CF B4 D9 2E 20 4E 70 63 B7 CE 20 C0 CC B5 BF C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E
+R: 'Arrived on the map that has the Npc your looking for. Go to that NPC'
+
+----------------------------------
+M: Failed to set info for location
+----------------------------------
+
+F: B5 B5 C2 F8 20 C1 F6 C1 A1 BF A1 20 B4 EB C7 D1 20 C1 A4 BA B8 20 BC B3 C1 A4 20 BD C7 C6 D0 21
+R: 'Failed to set info for location!'
+
+----------------------------------
+M: Please specify target goals
+----------------------------------
+
+F: B8 F1 C7 A5 B8 A6 20 C1 F6 C1 A4 20 C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E
+R: 'Please specify target goals.'
+
+----------------------------------
+M: Is the map that your looking for mob
+----------------------------------
+
+F: C3 A3 B0 ED C0 DA 20 C7 CF B4 C2 20 B8 F3 BD BA C5 CD B0 A1 20 C0 D6 B4 C2 20 B8 CA 20 C0 D4 B4 CF B4 D9 2E
+R: 'Is the map that your looking for mob'
+
+----------------------------------
+M: Directions were started
+----------------------------------
+
+F: B1 E6 20 BE C8 B3 BB B0 A1 20 BD C3 C0 DB 20 B5 C7 BE FA BD C0 B4 CF B4 D9 2E
+R: 'Directions were started'
+
+----------------------------------
+M: Please go to the airship
+----------------------------------
+
+F: 4E 61 76 69 67 61 74 69 6F 6E 20 3E 3A 20 BA F1 B0 F8 C1 A4 C0 B8 B7 CE 20 C0 CC B5 BF 20 C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9
+R: 'Navigation >: Please go to the airship'
+
+----------------------------------
+M: (%s) map, please move to
+----------------------------------
+
+F: 4E 61 76 69 67 61 74 69 6F 6E 20 3E 3A 20 B8 CA 28 25 73 29 C0 B8 B7 CE 20 C0 CC B5 BF C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9
+R: 'Navigation >: (%s) map, please move to'
+
+----------------------------------
+M: Guidance to %s (A) By using
+----------------------------------
+
+F: 4E 61 76 69 67 61 74 69 6F 6E 20 3E 3A 20 BE C8 B3 BB C7 CF B4 C2 20 25 73 28 C0 BB 29 B8 A6 20 C0 CC BF EB C7 CF BF A9
+R: 'Navigation >: Guidance to %s (A) By using'
+
+----------------------------------
+M: Do you want to cancel navigation?
+----------------------------------
+
+F: BE C8 B3 BB C1 DF 20 C0 D4 B4 CF B4 D9 21 20 C1 BE B7 E1 20 C7 CF BD C3 B0 DA BD C0 B4 CF B1 EE 3F
+R: 'Do you want to cancel navigation?'
+
+----------------------------------
+M: Use Scroll ?
+----------------------------------
+
+F: B4 F8 C0 FC C0 CC B5 BF 20 BD BA C5 A9 B7 D1 20 BB E7 BF EB 20 C0 FB BF EB
+R: 'Use Scroll ?'
+
+----------------------------------
+M: Use Kafra Warp ?
+----------------------------------
+
+F: C0 A7 C4 A1 20 C0 CC B5 BF 20 BC AD BA F1 BD BA 20 C7 E3 BF EB
+R: 'Use Kafra Warp ?'
+
+----------------------------------
+M: Use Airship ?
+----------------------------------
+
+F: BA F1 B0 F8 C1 A4 20 C0 CC B5 BF 20 C0 FB BF EB
+R: 'Use Airship ?'
+
+----------------------------------
+M: Found
+----------------------------------
+
+F: B5 B5 C2 F8 2E
+R: 'Found'
+
+----------------------------------
+M: You
+----------------------------------
+
+F: A1 DA
+R: 'You'
+
+----------------------------------
+M: Path Failure
+----------------------------------
+
+F: B1 E6 20 C3 A3 B1 E2 20 BD C7 C6 D0
+R: 'Path Failure'
+
+----------------------------------
+M: Guidance
+----------------------------------
+
+F: 3D 3D 3D 3D 3D 3D 3D 20 B1 E6 20 BE C8 B3 BB 20 C1 A4 BA B8 20 3D 3D 3D 3D 3D 3D 3D
+R: '======= Guidance ======='
+
+----------------------------------
+M: Goal 2
+----------------------------------
+
+F: B8 F1 C7 A5 20 20 20 3A 20 25 73 28 25 64 2C 20 25 64 29
+R: 'Goal : %s(%d, %d)'
+
+----------------------------------
+M: Goal 3
+----------------------------------
+
+F: B8 F1 C7 A5 20 20 20 3A 20 25 73 28 25 73 29 00 C0 CF B9 DD 00 00
+R: 'Goal : %s(%s) General'
+
+----------------------------------
+M: Coord
+----------------------------------
+
+F: B8 F1 C7 A5 B8 CA 3A 20 25 73 28 25 73 29
+R: 'Coords %s(%s)'
+
+----------------------------------
+M: Result
+----------------------------------
+
+F: 3D 3D 3D 3D 3D 3D 3D 3D 20 B0 E1 B0 FA 20 C1 A4 BA B8 20 3D 3D 3D 3D 3D 3D 3D 3D 3D 3D
+R: '======== Results =========='
+
+----------------------------------
+M: Dist  %d Cell %d WarpMove
+----------------------------------
+
+F: B0 C5 B8 AE 20 20 20 3A 20 25 64 20 53 65 6C 6C 20 25 64 20 57 61 72 70 4D 6F 76 65
+R: 'Dist  %d Cell %d WarpMove'
+
+----------------------------------
+M: Found (%d)
+----------------------------------
+
+F: 3D 3D 20 B0 CB BB F6 20 B0 E1 B0 FA 28 25 64 29 3D 3D
+R: '== Found (%d) =='
+
+----------------------------------
+M: Please go to indicated direction
+----------------------------------
+
+F: B0 A1 B8 AE C5 B0 B4 C2 20 B9 E6 C7 E2 C0 B8 B7 CE 20 B0 A1 BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E
+R: 'Please go to indicated direction.'
+
+----------------------------------
+M: << Goal... >>
+----------------------------------
+
+F: 3C 3C 20 B0 CB BB F6 C1 DF 2E 2E 2E 20 3E 3E
+R: '<< Goal... >>'
+
+----------------------------------
+M: Goal: (%d, %d)
+----------------------------------
+
+F: B8 F1 C7 A5 3A 20 28 25 64 2C 20 25 64 29
+R: 'Goal: (%d, %d)'
+
+----------------------------------
+M: Please Specify Destination
+----------------------------------
+
+F: B8 F1 C7 A5 B8 A6 20 C1 F6 C1 A4 20 C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E
+R: 'Please Specify Destination..'
+
+----------------------------------
+M: Cannot Give the Destination Info
+----------------------------------
+
+F: B5 B5 C2 F8 20 C1 F6 C1 A1 BF A1 20 B4 EB C7 D1 20 C1 A4 BA B8 20 BC B3 C1 A4 20 BD C7 C6 D0 21
+R: 'Cannot Give the Destination Info'
+
+----------------------------------
+M: Guidance 2
+----------------------------------
+
+F: 3C 3C 20 BE C8 B3 BB C1 DF 20 3E 3E
+R: '<<Guidance>>'
+
+----------------------------------
+M: Failed to Read Info
+----------------------------------
+
+F: 3E 3E 20 B8 F1 C7 A5 20 C1 A4 BA B8 B8 A6 20 C0 D0 C1 F6 20 B8 F8 C7 D4 21
+R: '>> Failed to Read Info..!'
+
+----------------------------------
+M: Warp By
+----------------------------------
+
+F: BF F6 C7 C1 20 C0 CC BF EB
+R: 'Warp By,'
+
+----------------------------------
+M: ClickNPC
+----------------------------------
+
+F: 4E 50 43 20 C5 AC B8 AF
+R: 'ClickNPC'
+
+----------------------------------
+M: Npc Use Warp Service
+----------------------------------
+
+F: 4E 70 63 20 C0 CC B5 BF BC AD BA F1 BD BA 20 C0 CC BF EB 21
+R: 'Npc Use Warp Service'
+
+----------------------------------
+M: MoveClick
+----------------------------------
+
+F: 25 73 20 C0 CC B5 BF 20 C5 AC B8 AF
+R: '%s MoveClick'
+
+----------------------------------
+M: Move
+----------------------------------
+
+F: 25 73 20 C0 CC B5 BF
+R: '%s Move'
+
+----------------------------------
+M: Npc Warp Service
+----------------------------------
+
+F: 4E 70 63 20 C0 CC B5 BF 20 BC AD BA F1 BD BA 20 C0 CC BF EB
+R: 'Npc Warp Service....'
+
+----------------------------------
+M: Norm Boss part 1
+----------------------------------
+
+F: B8 F1 C7 A5 20 20 20 3A 20 25 73 28 25 73 29
+R: 'Name   : %s(%s)'
+
+----------------------------------
+M: Norm Boss part 2
+----------------------------------
+
+F: C0 CF B9 DD
+R: 'Norm'
+
+----------------------------------
+M: Norm Boss part 3
+----------------------------------
+
+F: BA B8 BD BA
+R: 'Boss'
+
+----------------------------------
+M: Name 
+----------------------------------
+
+F: B8 F1 C7 A5 20 20 20 3A 20 25 73 28 25 64 2C 20 25 64 29
+R: 'Name   : %s(%d, %d)'
+
+----------------------------------
+M: Bifrost message
+----------------------------------
+
+F: C1 F6 BB F3 C0 C7 20 B3 A1 2C 20 BD BA C7 C3 B6 FB B5 F0 B5 E5 BF CD 20 BA CE C0 AF B4 EB B7 FA 20 BE CB C7 C1 C7 EC C0 D3 C0 BB 20 C0 D5 B4 C2 20 B4 D9 B8 AE 2C 20 BA F1 C7 C1 B7 CE BD BA C6 AE BF A1 20 BB FD B0 DC B3 AD 0A B0 C5 B4 EB C7 D1 20 B1 D5 BF AD 2C 20 B1 D7 B8 AE B0 ED 20 B1 D9 BF F8 C0 BB 20 BE CB 20 BC F6 20 BE F8 B4 C2 20 B9 CC B1 C3 BD A3 2E 0A C0 CC B0 CD C0 BA 20 BF A9 C7 E0 C0 C7 20 B3 A1 C0 BB 20 BE CB B8 AE B4 C2 20 C7 A5 BD C4 C0 CE B0 A1 2C 20 BB F5 B7 CE BF EE 20 BC BC B0 E8 B8 A6 20 BF A9 B4 C2 20 C1 F6 C7 A5 C0 CE B0 A1 21 0A BC F6 C8 A3 C0 DA B4 C2 20 B3 EB B7 A7 B8 BB 20 B0 B0 C0 BA 20 C0 AF C8 A4 BF A1 20 C1 A1 C2 F7 20 B3 CC C0 BB 20 C0 D2 BE EE B0 A1 B0 ED 20 C0 D6 BE FA B4 D9 2E 20 BC F6 C3 B5 20 B3 E2 C0 C7 20 BC BC BF F9 C0 CC 20 C8 E5 B8 A3 B4 C2 20 B5 BF BE C8 2C 20 B1 D7 20 BD BA BD BA B7 CE B0 A1 20 C8 A6 B7 CE 20 BE C8 B0 A3 C8 FB C0 BB 20 BE B2 B8 E7 20 C1 F6 C4 D1 B3 BD 20 B0 CD C0 CC 20 B9 AB BE F9 C0 CC BE FA B4 C2 C1 F6 2C 20 BA C0 C0 CE 20 B5 C7 BE EE 20 B1 E4 20 BD C3 B0 A3 C0 BB 20 B0 A4 C7 F4 B9 F6 B8 B0 20 B0 CD C0 BA 20 BF C0 C8 F7 B7 C1 20 C0 DA BD C5 C0 CC 20 BE C6 B4 CF BE FA B4 C2 C1 F6 20 C8 A5 B6 F5 C0 BB 20 B4 C0 B3 A2 B0 ED 20 C0 D6 BE FA B4 D9 2E 0A C0 AF C8 A4 C0 C7 20 B3 EB B7 A7 B8 BB C0 CC 20 C3 D6 B0 ED C1 B6 BF A1 20 C0 CC B8 A3 B7 B6 C0 BB 20 B6 A7 2C 20 C1 F6 BB F3 C0 C7 20 B3 A1 20 BD BA C7 C3 B6 FB B5 F0 B5 E5 BF CD 20 BA CE C0 AF B4 EB B7 FA 20 BE CB C7 C1 C7 EC C0 D3 C0 BB 20 C0 D5 B4 C2 20 B4 D9 B8 AE 2C 20 BA F1 C7 C1 B7 CE BD BA C6 AE BF A1 20 B0 C5 B4 EB C7 D1 20 B1 D5 BF AD C0 CC 20 BB FD B0 DC B3 B5 B0 ED 2C 20 B1 D7 B7 CE 20 C0 CE C7 D8 20 B5 CE 20 BC BC B0 E8 B0 A3 C0 C7 20 BF D5 B7 A1 B0 A1 20 B2 F7 B1 E2 B8 E9 BC AD 20 BB E7 B6 F7 B5 E9 C0 BA 20 C5 AB 20 BA D2 C6 ED C0 BB 20 B0 DE B0 D4 20 B5 C7 BE FA B4 D9 2E 0A BA F1 C7 C1 B7 CE BD BA C6 AE C0 C7 20 C5 EB B7 CE B4 C2 20 C0 CC C1 A6 20 B9 CC B1 C3 BD A3 20 BB D3 2E 0A B1 D9 BF F8 C1 B6 C2 F7 20 BE CB 20 BC F6 20 BE F8 B4 C2 20 B1 D7 B0 F7 C0 BB 20 B9 AB BB E7 C8 F7 20 C5 EB B0 FA 20 C7 D1 20 BB E7 B6 F7 C0 BA 20 C1 F6 B1 DD B1 EE C1 F6 20 BE C6 B9 AB B5 B5 20 BE F8 BE FA B4 D9 2E 0A BD A2 C7 D1 20 B8 F0 C7 E8 B0 A1 B5 E9 C0 BB 20 C1 FD BE EE 20 BB EF C5 B2 20 C8 A5 B5 B7 C0 C7 20 C1 F6 BF C1 2C 20 B9 CC B1 C3 BD A3 C0 BA 20 B1 D7 20 BC D3 C0 BB 20 B9 E6 C8 B2 C7 CF B4 C2 20 C0 CC B8 A7 20 B8 F0 B8 A6 20 BF A9 C0 CE C0 C7 20 B8 B6 C0 BD C3 B3 B7 B3 20 B4 F5 BF ED 20 B1 ED B0 ED 20 C8 A5 B6 F5 BD BA B7 B4 B0 D4 20 C8 AE C0 E5 B5 C7 B0 ED 20 C0 D6 BE FA B4 D9 2E
+R: 46 6F 72 20 74 68 6F 75 73 61 6E 64 73 20 6F 66 20 79 65 61 72 73 2C 20 61 20 6D 79 73 74 65 72 69 6F 75 73 20 6D 65 6C 6F 64 79 20 68 61 73 20 6D 65 73 6D 65 72 69 7A 65 64 20 74 68 65 20 67 75 61 72 64 69 61 6E 20 66 6F 72 20 74 68 6F 75 73 61 6E 64 73 20 6F 66 20 79 65 61 72 73 2E 0D 0A 41 66 74 65 72 20 61 20 6D 69 6C 6C 65 6E 6E 69 61 20 6F 66 20 73 6C 75 6D 62 65 72 2C 20 74 68 65 20 67 75 61 72 64 69 61 6E 20 62 65 63 61 6D 65 20 63 6F 6E 66 75 73 65 64 20 61 62 6F 75 74 20 77 68 61 74 20 68 65 20 68 61 64 20 62 65 65 6E 20 70 72 6F 74 65 63 74 69 6E 67 20 61 6C 6C 20 74 68 65 73 65 20 79 65 61 72 73 2C 20 61 6E 64 20 62 65 67 61 6E 20 74 6F 20 73 75 73 70 65 63 74 20 74 68 61 74 20 68 65 20 6D 69 67 68 74 20 62 65 20 74 68 65 20 6F 6E 65 20 77 68 6F 20 68 61 73 20 62 65 65 6E 20 73 65 61 6C 65 64 20 61 6E 64 20 68 69 64 64 65 6E 20 61 77 61 79 2E 0D 0A 57 68 65 6E 20 74 68 65 20 6D 65 6C 6F 64 79 20 72 65 61 63 68 65 64 20 69 74 73 20 70 65 61 6B 2C 20 61 20 67 69 61 6E 74 20 63 72 65 76 69 63 65 20 61 70 70 65 61 72 65 64 20 69 6E 20 42 69 66 72 6F 73 74 2C 20 74 68 65 20 62 72 69 64 67 65 20 62 65 74 77 65 65 6E 20 53 70 6C 65 6E 64 69 64 65 2C 20 74 68 65 20 65 6E 64 20 6F 66 20 74 68 65 20 77 6F 72 6C 64 2C 20 61 6E 64 20 74 68 65 20 66 6C 6F 61 74 69 6E 67 20 63 6F 6E 74 69 6E 65 6E 74 20 6F 66 20 41 6C 66 68 65 69 6D 2E 0D 0A 41 73 20 61 20 72 65 73 75 6C 74 2C 20 74 68 65 20 74 77 6F 20 77 6F 72 6C 64 73 20 77 65 72 65 20 63 75 74 20 6F 66 66 20 66 72 6F 6D 20 65 61 63 68 20 6F 74 68 65 72 2C 20 63 61 75 73 69 6E 67 20 61 20 62 69 67 20 70 72 6F 62 6C 65 6D 20 66 6F 72 20 74 68 65 20 70 65 6F 70 6C 65 2E 0D 0A 4E 6F 77 2C 20 74 68 65 20 6F 6E 6C 79 20 77 61 79 20 74 6F 20 67 65 74 20 74 6F 20 42 69 66 72 6F 73 74 20 69 73 20 74 68 72 6F 75 67 68 20 74 68 65 20 4C 61 62 79 72 69 6E 74 68 20 46 6F 72 65 73 74 2E
+
+################################
+--For thousands of years, a mysterious melody has mesmerized the guardian for thousands of years.
+--After a millennia of slumber, the guardian became confused about what he had been protecting all these years, and began to suspect that he might be the one who has been sealed and hidden away.
+--When the melody reached its peak, a giant crevice appeared in Bifrost, the bridge between Splendide, the end of the world, and the floating continent of Alfheim.
+--As a result, the two worlds were cut off from each other, causing a big problem for the people.
+--Now, the only way to get to Bifrost is through the Labyrinth Forest.
+################################
+
+----------------------------------
+M: Bifrost message Ghostring
+----------------------------------
+F: B9 D9 B7 CE B0 A1 B1 E2
+R: 'Go To'
+
+################### 2013 Strings Found thanks to TrueNoir ##########################
+
+-----------------------------------
+M: Kafra
+-----------------------------------
+F: C4 AB C7 C1 B6 F3
+R: 'Kafra'
+
+----------------------------------
+M: failed message
+----------------------------------
+F: BA F1 B0 F8 C1 A4
+R: 'Failed'
+
+----------------------------------
+M: Advice
+----------------------------------
+F: BE C8 B3 BB 20 C1 A4 BA B8
+R: 'Advice'
+
+----------------------------------
+M: Monster
+----------------------------------
+F: B8 F3 BD BA C5 CD
+R: 'Monstr'
+
+----------------------------------
+M: Forbidden Access User Account
+----------------------------------
+
+F: C0 AF C0 FA B4 D4 C0 C7 20 B0 E8 C1 A4 C0 BA 20 C1 A2 BC D3 B1 DD C1 F6 20 B5 C7 BF B4 BD C0 B4 CF B4 D9 0A 20 C7 D8 C1 F6 20 BD C3 B0 A3 20 3A 20 25 30 34 64 2D 25 30 32 64 2D 25 30 32 64 20 25 30 32 64 3A 25 30 32 64
+R: 'The user's account access is forbidden. Ended : %04d-%02d-%02d %02d:%02d'
+
+----------------------------------
+M: Permantly banned User Account connected
+----------------------------------
+F: C0 AF C0 FA B4 D4 C0 C7 20 B0 E8 C1 A4 C0 BA 20 BF B5 B1 B8 20 C1 A2 BC D3 B1 DD C1 F6 20 B5 C7 BF B4 BD C0 B4 CF B4 D9
+R: 'Permantly banned User Account connected'
+
+----------------------------------
+M: Hours left to use
+----------------------------------
+F: B0 ED B0 B4 B4 D4 C0 C7 20 C0 CC BF EB 20 BD C3 B0 A3 C0 BA
+R: 'Hours left to use'
+
+----------------------------------
+M: Time
+----------------------------------
+F: BD C3 B0 A3
+R: 'Time'
+
+----------------------------------
+M: Minutes till end
+----------------------------------
+F: BA D0 20 C8 C4 BF A1 20 C1 BE B7 E1 B5 CB B4 CF B4 D9
+R: 'Minutes till end'
+
+----------------------------------
+M: Premium
+----------------------------------
+F: C7 C1 B8 AE B9 CC BE F6
+R: 'Premium'
+
+----------------------------------
+M: Earn
+----------------------------------
+F: BC AD B9 F6
+R: 'Earn'
+
+----------------------------------
+M: Hour
+----------------------------------
+F: BD C3 B0 A3
+R: 'Hour'
+
+----------------------------------
+M: Minutes Left
+----------------------------------
+F: BA D0 20 B3 B2 BE D2 BD C0 B4 CF B4 D9
+R: 'Minutes left'
+
+----------------------------------
+M: You now have time to use
+----------------------------------
+F: C7 F6 C0 E7 20 B0 ED B0 B4 B4 D4 C0 C7 20 C0 CC BF EB 20 BD C3 B0 A3 C0 BA
+R: 'You now have time to use'
+
+----------------------------------
+M: Hours are
+----------------------------------
+F: C0 CC BF EB BD C3 B0 A3 C0 CC
+R: 'Hours are'
+
+----------------------------------
+M: NFL Shut down
+----------------------------------
+F: C1 A6 C0 FB C0 B8 B7 CE 20 C1 BE B7 E1 B5 CB B4 CF B4 D9
+R: 'NFL shut down'
+
+----------------------------------
+M: Normal
+----------------------------------
+F: C1 A4 BB F3 C0 FB C0 CE
+R: 'Normal'
+
+----------------------------------
+M: Please use the game charge for
+----------------------------------
+F: B0 D4 C0 D3 20 C0 CC BF EB C0 BB 20 C0 A7 C7 D8 20 C3 E6 C0 FC C0 BB 20 C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9
+R: 'Please use the game charge for'
+
+----------------------------------
+M: Remaining
+----------------------------------
+F: B3 B2 BE D2 BD C0 B4 CF B4 D9
+R: 'Remaining'
+
+----------------------------------
+M: Charge for a normal game, please use
+----------------------------------
+F: C1 A4 BB F3 C0 FB C0 CE 20 B0 D4 C0 D3 20 C0 CC BF EB C0 BB 20 C0 A7 C7 D8 20 C3 E6 C0 FC C0 BB 20 C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9
+R: 'Charge for a normal game, please use'
+
+----------------------------------
+M: Search Window
+----------------------------------
+F: B0 CB BB F6 C3 A2 20 B8 ED B7 C9 BE EE
+R: 'Search Window'
+
+----------------------------------
+M: Map Name
+----------------------------------
+F: B8 CA C0 CC B8 A7
+R: 'MapNme'
+
+----------------------------------
+M: Area
+----------------------------------
+F: C0 A7 C4 A1
+R: 'Area'
+
+----------------------------------
+M: Enabled
+----------------------------------
+F: BB E7 BF EB C7 D4
+R: 'Enabld'
+
+----------------------------------
+M: Disabled
+----------------------------------
+F: BB E7 BF EB BE C8 C7 D4
+R: 'Disabled'
+
+----------------------------------
+M: Command
+----------------------------------
+F: B8 ED B7 C9 BE EE
+R: 'CMD'
+
+----------------------------------
+M: User is not invited
+----------------------------------
+F: C3 CA C3 BB 20 C0 AF C0 FA B0 A1 20 BE C6 B4 D5 B4 CF B4 D9
+R: 'User is not invited'
+
+----------------------------------
+M: Students now have full access
+----------------------------------
+F: C7 F6 C0 E7 20 C1 A2 BC D3 20 C0 CE BF F8 C0 CC 20 B0 A1 B5 E6 20 C3 A1 BD C0 B4 CF B4 D9
+R: 'Students now have full access'
+
+----------------------------------
+M: Waiting rank
+----------------------------------
+F: C7 F6 C0 E7 20 B4 EB B1 E2 BC F8 C0 A7
+R: 'Waiting rank'
+
+----------------------------------
+M: Minutes
+----------------------------------
+F: BA D0
+R: 'M'
+
+----------------------------------
+M: Seconds
+----------------------------------
+F: C3 CA
+R: 'S'
+
+----------------------------------
+M: Wait Time is
+----------------------------------
+F: BF B9 BB F3 20 B4 EB B1 E2 BD C3 B0 A3
+R: 'Wait Time is'
+
+----------------------------------
+M: Point
+----------------------------------
+F: C6 F7 C0 CE C6 AE
+R: 'Point'
+
+----------------------------------
+M: Rank
+----------------------------------
+F: BC F8 C0 A7
+R: 'Rank'
+
+----------------------------------
+M: Rank Board
+----------------------------------
+F: B7 A9 C5 B7 20 BA B8 B5 E5
+R: 'RankBoard'
+
+----------------------------------
+M: Not reverse the effect of the miracle of the sun, the moon and the stars will no occur
+----------------------------------
+F: C0 CC C1 F6 BF AA C0 BA 20 C5 C2 BE E7 B0 FA B4 DE B0 FA BA B0 C0 C7 20 B1 E2 C0 FB 20 C8 BF B0 FA B0 A1 20 B9 DF BB FD C7 CF C1 F6 20 BE CA BD C0 B4 CF B4 D9
+R: 'Not reverse the effect of the miracle of the sun, the moon and the stars will no occur'
+
+----------------------------------
+M: Station does not prohibite item trades
+----------------------------------
+F: C0 CC C1 F6 BF AA C0 BA 20 BE C6 C0 CC C5 DB B1 B3 C8 AF C0 CC 20 B1 DD C1 F6 20 B5 C7 BE EE 20 C0 D6 BD C0 B4 CF B4 D9
+R: 'Station does not prohibite item trades'
+
+----------------------------------
+M: Game Command
+----------------------------------
+F: B0 D4 C0 D3 20 C4 BF B8 C7 B5 E5
+R: 'GameCommand'
+
+----------------------------------
+M: Game System
+----------------------------------
+F: B0 D4 C0 D3 20 BD C3 BD BA C5 DB
+R: 'Game System'
+
+----------------------------------
+M: Game Settings
+----------------------------------
+F: B0 D4 C0 D3 20 BC B3 C1 A4
+R: 'Settings'
+
+----------------------------------
+M: Opening the item attrutable to aquire items in character bank (Storage Locked) is
+----------------------------------
+F: C7 D8 B4 E7 20 BE C6 C0 CC C5 DB C0 BB 20 B0 B3 BA C0 C7 CF BF A9 20 C8 B9 B5 E6 B5 C7 B4 C2 20 BE C6 C0 CC C5 DB B5 E9 C0 BA 20 C4 B3 B8 AF C5 CD 20 B1 CD BC D3 20 BE C6 C0 CC C5 DB 20 28 C3 A2 B0 ED C0 CC B5 BF 20 BA D2 B0 A1 B4 C9 29 20 C0 D4 B4 CF B4 D9
+R: 'Opening the item attrutable to aquire items in character bank (Storage Locked) is'
+
+----------------------------------
+M: Meet the characters that use this please check destination
+----------------------------------
+F: BA BB 20 C4 B3 B8 AF C5 CD BF A1 20 BB E7 BF EB C7 CF BD C3 B4 C2 20 B0 CD C0 CC 20 B8 C2 C0 B8 BD C5 C1 F6 20 C8 AE C0 CE C7 D8 C1 D6 BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9
+R: 'Meet the characters that use this please check destination'
+
+----------------------------------
+M: Will you open the box?
+----------------------------------
+F: BB F3 C0 DA B8 A6 20 B0 B3 BA C0 C7 CF BD C3 B0 DA BD C0 B4 CF B1 EE
+R: 'Will you open the box?'
+
+----------------------------------
+M: Counterfeit File was detected
+----------------------------------
+F: C6 C4 C0 CF C0 C7 20 C0 A7 BA AF C1 B6 B0 A1 20 B0 A8 C1 F6 20 B5 C7 BE FA BD C0 B4 CF B4 D9
+R: 'Counterfit File was detected'
+
+----------------------------------
+M: Sex Change Window
+----------------------------------
+F: BC BA BA B0 20 BC B1 C5 C3 20 C3 A2
+R: 'Sex Change'
+
+----------------------------------
+M: Enter Character Name
+----------------------------------
+F: C4 B3 B8 AF C5 CD B8 ED C0 BB 20 C0 D4 B7 C2 C7 CF BC BC BF E4
+R: 'Enter Character Name'
+
+----------------------------------
+M: Character name does not match
+----------------------------------
+F: C4 B3 B8 AF B8 ED C0 CC 20 C0 CF C4 A1 C7 CF C1 F6 20 BE CA BD C0 B4 CF B4 D9
+R: 'Character name does not match'
+
+----------------------------------
+M: Make Character
+----------------------------------
+F: C4 B3 B8 AF C5 CD 20 B8 B8 B5 E9 B1 E2
+R: 'Make Charactr'
+
+----------------------------------
+M: The goal is here
+----------------------------------
+F: B8 F1 C7 A5 B0 A1 20 BF A9 B1 E2 20 C0 D4 B4 CF B4 D9
+R: 'The goal is here'
+
+----------------------------------
+M: Goal is the same location
+----------------------------------
+F: C0 CC C0 FC B0 FA 20 B5 BF C0 CF C7 D1 20 B8 F1 C7 A5 20 C0 D4 B4 CF B4 D9
+R: 'Goal is the same location'
+
+----------------------------------
+M: Please select and move to area
+----------------------------------
+F: C0 BB 20 BC B1 C5 C3 C7 CF BF A9 20 C0 CC B5 BF 20 C7 CF BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9
+R: 'Please select and move to area'
+
+----------------------------------
+M: Looking for
+----------------------------------
+F: C3 A3 B0 ED C0 DA 20 C7 CF B4 C2
+R: 'Looking for'
+
+----------------------------------
+M: Arrived at the map location
+----------------------------------
+F: BD C4 C7 CF B4 C2 20 B8 CA BF A1 20 B5 B5 C2 F8 20 C7 CF BF B4 BD C0 B4 CF B4 D9
+R: 'Arrived at the map location'
+
+----------------------------------
+M: Please use the item and go to the map area
+----------------------------------
+F: BE C6 C0 CC C5 DB C0 BB 20 BB E7 BF EB C7 CF BF A9 20 C0 CC B5 BF C7 CF BF A9 20 C1 D6 BD C3 B1 E2 20 B9 D9 B6 F8 B4 CF B4 D9 2E 00 C3 A3 B0 ED C0 DA 20 C7 CF B4 C2 20 B8 CA C0 CC 20 C7 D8 B4 E7 20 B8 CA 20 C0 D4 B4 CF B4 D9
+R: 'Please use the item and go to the map area'
+
+----------------------------------
+M: Find a Map using the location
+----------------------------------
+F: C3 A3 B0 ED C0 DA 20 C7 CF B4 C2 20 B8 CA C0 CC 20 C7 D8 B4 E7 20 B8 CA 20 C0 D4 B4 CF B4 D9
+R: 'Find a Map using the location'
+
+----------------------------------
+M: Find the map route which is not supported
+----------------------------------
+F: C7 D8 B4 E7 20 B8 CA C0 BA 20 B1 E6 C3 A3 B1 E2 B0 A1 20 C1 F6 BF F8 20 B5 C7 C1 F6 20 BE CA B4 C2 20 B8 CA C0 D4 B4 CF B4 D9
+R: 'Find the map route which is not supported'
+
+----------------------------------
+M: We do not have navigation
+----------------------------------
+F: B3 BB BA F1 B0 D4 C0 CC BC C7 BF A1 20 C1 A4 BA B8 B0 A1 20 BE F8 BD C0 B4 CF B4 D9
+R: 'We do not have navigation'
+
+----------------------------------
+M: Latitude player fails
+----------------------------------
+F: C7 C3 B7 B9 C0 CC BE EE 20 C0 A7 C4 A1 20 C3 A3 B1 E2 20 BD C7 C6 D0
+R: 'Latitude player fails'
+
+----------------------------------
+M: Failed to set info on the area
+----------------------------------
+F: C3 E2 B9 DF 20 C1 F6 BF AA BF A1 20 B4 EB C7 D1 20 C1 A4 BA B8 20 BC B3 C1 A4 20 BD C7 C6 D0
+R: 'Failed to set info on the area'
+
+----------------------------------
+M: Match
+----------------------------------
+F: B8 C5 C4 AA C0 CC
+R: 'Match'
+
+----------------------------------
+M: Fit
+----------------------------------
+F: B8 C2 C1 F6
+R: 'Fit'
+
+----------------------------------
+M: Not
+----------------------------------
+F: BE CA B4 C2
+R: 'Not'
+
+----------------------------------
+M: Map of
+----------------------------------
+F: B8 CA C0 CC B4 D9
+R: 'Map of'
+
+----------------------------------
+M: Unable to find the goal
+----------------------------------
+F: C3 A3 B0 ED C0 DA 20 C7 CF B4 C2 20 B8 F1 C0 FB C0 CC 20 BA D2 BA D0 B8 ED 20 C7 D5 B4 CF B4 D9
+R: 'Unable to find the goal'
+
+----------------------------------
+M: Does not support the navigation area
+----------------------------------
+F: B3 D7 BA F1 B0 D4 C0 CC BC C7 C0 CC 20 C1 F6 BF F8 20 B5 C7 C1 F6 20 BE CA B4 C2 20 C1 F6 BF AA 20 C0 D4 B4 CF B4 D9
+R: 'Does not support the navigation area'
+
+----------------------------------
+M: End Points
+----------------------------------
+F: B5 B5 C2 F8 C1 A1
+R: 'EndPts'
+
+----------------------------------
+M: By Warp
+----------------------------------
+F: BF F6 C7 C1 20 C0 CC BF EB
+R: 'By Warp'
+
+----------------------------------
+M: non moving process
+----------------------------------
+F: BA F1 B0 F8 C1 A4 20 C0 CC B5 BF
+R: 'Non-Moving'
+ 
+----------------------------------
+M: Move
+----------------------------------
+F: C0 CC B5 BF
+R: 'Move'
+
+----------------------------------
+M: Service Use
+----------------------------------
+F: BA F1 BD BA 20 C0 CC BF EB
+R: 'Service'
+
+----------------------------------
+M: Undead
+----------------------------------
+F: BA D2 BB E7 C7 FC
+R: 'Undead'
+
+----------------------------------
+M: Result list Window
+----------------------------------
+F: B0 E1 B0 FA 20 B8 AE BD BA C6 AE 20 C3 A2
+R: 'Result List'
+
+----------------------------------
+M: Route Guidance information window can be changed by
+----------------------------------
+F: B1 E6 20 BE C8 B3 BB 20 C1 A4 BA B8 20 C3 A2 5D 20 C0 B8 B7 CE 20 BA B8 B1 E2 20 B8 F0 B5 E5 20 BA AF B0 E6 20 B0 A1 B4 C9 C7 CF B4 D9
+R: 'Change Route By'
+
+----------------------------------
+M: Possible to change view mode
+----------------------------------
+F: C0 B8 B7 CE 20 BA B8 B1 E2 20 B8 F0 B5 E5 20 BA AF B0 E6 20 B0 A1 B4 C9 C7 CF B4 D9
+R: 'Possible to change view mode'
+
+
+----------------------------------
+M: Use the buttons at the bottom of the window in the search list
+----------------------------------
+F: B0 CB BB F6 20 B8 AE BD BA C6 AE C3 A2 20 C7 CF B4 DC 20 B9 F6 C6 B0 C0 BB 20 C0 CC BF EB C7 CF BF A9
+R: 'Use buttons at bottom of window'
+
+----------------------------------
+M: Info Button
+----------------------------------
+F: BE C8 B3 BB 20 B9 F6 C6 B0 C0 CC
+R: 'Info Button'
+
+----------------------------------
+M: Multiple directions, result window changes to chapter
+----------------------------------
+F: B7 AF C1 F6 B8 E9 20 B0 E1 B0 FA 20 B8 AE BD BA C6 AE C3 A2 C0 BA 20 B1 E6 BE C8 B3 BB 20 B8 AE BD BA C6 AE 20 C0 E5 C0 B8 B7 CE 20 BA AF B0 E6 20 B5 C8 B4 D9
+R: 'Multiple directions, result window changes to chapter'
+
+----------------------------------
+M: Box
+----------------------------------
+F: BB F3 C0 DA B8 A6
+R: 'Box'
+
+----------------------------------
+M: You
+----------------------------------
+F: BF F8 C7 CF B4 C2
+R: 'You'
+
+----------------------------------
+M: Check the guide path can be faster
+----------------------------------
+F: C3 BC C5 A9 C7 CF BF A9 20 B4 F5 20 BA FC B8 A5 20 B0 E6 B7 CE B8 A6 20 BE C8 B3 BB 20 B9 DE C0 BB 20 BC F6 20 C0 D6 B4 D9
+R: 'Check the guide path can be faster'
+
+----------------------------------
+M: Goal being output when you click the button that aim guide you the way to
+----------------------------------
+F: C3 E2 B7 C2 20 B5 C7 B0 ED 20 C0 D6 B4 C2 20 B8 F1 C7 A5 B0 A1 20 C0 D6 C0 BB B6 A7 20 BE C8 B3 BB 20 B9 F6 C6 B0 C0 BB 20 C5 AC B8 AF C7 CF B8 E9 20 C7 D8 B4 E7 20 B8 F1 C7 A5 B7 CE 20 B1 E6 C0 BB 20 BE C8 B3 BB 20 C7 D1 B4 D9
+R: 'Goal being output when you click the button that aim guide you the way to'
+
+----------------------------------
+M: List
+----------------------------------
+F: B8 AE BD BA C6 AE BF A1
+R: 'List'
+
+----------------------------------
+M: Item
+----------------------------------
+F: C7 D7 B8 F1 C0 BB
+R: 'Item'
+
+----------------------------------
+M: Selected information is output to
+----------------------------------
+F: BC B1 C5 C3 C7 CF B8 E9 20 C1 A4 BA B8 B0 A1 20 C3 E2 B7 C2 B5 C8 B4 D9
+R: 'Select info is output to'
+
+----------------------------------
+M: Saffron Cap
+----------------------------------
+F: C7 C1 B7 D0 20 C4 AB C7 C1
+R: 'Boys Cap'
+
+----------------------------------
+M: Output all results to kafra of Prontera
+----------------------------------
+F: B0 CB BB F6 20 B0 E1 B0 FA 20 C7 C1 B7 D0 C5 D7 B6 F3 C0 C7 20 C4 AB C7 C1 B6 F3 B8 A6 20 B8 F0 B5 CE 20 C3 E2 B7 C2 20 C7 D1 B4 D9
+R: 'Output all results to kafra of Prontera'
+
+----------------------------------
+M: Command to retrieve
+----------------------------------
+F: B8 ED B7 C9 BE EE B7 CE 20 B0 CB BB F6 C7 D1 B4 D9
+R: 'CMD to retrieve'
+
+----------------------------------
+M: Rules
+----------------------------------
+F: B1 D4 C4 A2 C0 BA
+R: 'Rules'
+
+----------------------------------
+M: Want to find
+----------------------------------
+F: B0 CB BB F6 20 C7 CF B7 C1 B4 C2
+R: 'Want toFind'
+
+----------------------------------
+M: All
+----------------------------------
+F: C0 CC 20 B8 F0 B5 CE
+R: 'All'
+
+----------------------------------
+M: Information contained
+----------------------------------
+F: C6 F7 C7 D4 B5 C8 20 C1 A4 BA B8 B8 A6
+R: 'Info Containd'
+
+----------------------------------
+M: Output
+----------------------------------
+F: C3 E2 B7 C2 20 C7 D1 B4 D9
+R: 'Output'
+
+------------------------------------
+M: Dunno
+----------------------------------
+F: B0 CB BB F6 20 C1 BE B7 F9 B4 C2 20 C0 FC C3 BC
+
+----------------------------------
+M: Map
+----------------------------------
+F: B8 CA
+R: 'MP'
+
+----------------------------------
+M: Classified as a Mob
+----------------------------------
+F: B8 F3 BD BA C5 CD 20 C0 B8 B7 CE 20 BA D0 B7 F9 20 B5 C8 B4 D9
+R: 'Classified as a Mob'
+
+----------------------------------
+M: Details
+----------------------------------
+F: BC B3 B8 ED
+R: 'Note'
+
+----------------------------------
+M: Output lvl range of Mob that
+----------------------------------
+F: C7 D8 B4 E7 20 B7 B9 BA A7 20 B9 FC C0 A7 C0 C7 20 B8 F3 BD BA C5 CD 20 C3 E2 B7 C2
+R: 'Output lvl range of Mob that'
+
+----------------------------------
+M: Mob of that level output
+----------------------------------
+F: C7 D8 B4 E7 20 B7 B9 BA A7 C0 C7 20 B8 F3 BD BA C5 CD 20 C3 E2 B7 C2
+R: 'Mob of that level output'
+
+----------------------------------
+M: Output all items
+----------------------------------
+F: B8 F0 B5 E7 20 C7 D7 B8 F1 20 C3 E2 B7 C2
+R: 'Output all itm'
+
+----------------------------------
+M: Class Category of output types
+----------------------------------
+F: B1 B8 BA D0 20 C7 D7 B8 F1 C0 B8 B7 CE 20 C3 E2 B7 C2 20 C1 BE B7 F9 20 B1 B8 BA D0 20 B0 A1 B4 C9
+R: 'Class Category of output types'
+
+----------------------------------
+M: Map Location
+----------------------------------
+F: B8 CA C0 CC B8 A7 2C 20 C0 A7 C4 A1
+R: 'Map Location'
+
+----------------------------------
+M: Jenny basic Command
+----------------------------------
+F: B1 E2 BA BB 20 B8 ED B7 C9 BE EE B4 C2 20 C1 A6 B4 CF 2C 20 BA F1 B0 F8 C1 A4 20 B0 CB BB F6 C0 BB 20 B1 E2 BA BB C0 B8 B7 CE 20 C7 D5 B4 CF B4 D9
+R: 'Jenny basic CMD, on the basis of the non-search'
+
+----------------------------------
+M: M: Map Name
+----------------------------------
+F: B8 CA C0 CC B8 A7
+R: 'Map NM'
+
+----------------------------------
+M: Navigation Help
+----------------------------------
+F: B3 BB BA F1 B0 D4 C0 CC BC C7 20 B5 B5 BF F2 B8 BB
+R: 'Navigation Help'
+
+----------------------------------
+M: Boss
+----------------------------------
+F: BA B8 BD BA
+R: 'Boss'
+
+----------------------------------
+M: Target
+----------------------------------
+F: B8 F1 C7 A5
+R: 'Trgt'
+
+----------------------------------
+M: Failed to read information
+----------------------------------
+F: C1 A4 BA B8 B8 A6 20 C0 D0 C1 F6 20 B8 F8 C7 D4
+R: 'Fail to read info'
+
+----------------------------------
+M: Help
+----------------------------------
+F: B5 B5 BF F2 B8 BB
+R: 'Help'
+
+----------------------------------
+M: Simple UI Change
+----------------------------------
+F: B0 A3 C6 ED 20 55 49 B7 CE 20 BA AF B0 E6
+R: 'SimpleUIChange'
+
+----------------------------------
+M: External route information file read
+----------------------------------
+F: BF DC BA CE 20 B1 E6 C1 A4 BA B8 20 C6 C4 C0 CF 20 C0 D0 B1 E2
+R: 'Ext Route info file'
+
+----------------------------------
+M: Deadline
+----------------------------------
+F: B8 B6 B0 A8 BD C3 B0 A3
+R: 'Deadline'
+
+------------------------------------
+M: Dunno
+----------------------------------
+F: C1 A6 C7 D1 BD C3 B0 A3
