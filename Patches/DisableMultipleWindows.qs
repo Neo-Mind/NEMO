@@ -42,7 +42,7 @@ function DisableMultipleWindows() {
 			
 		//Step 3 - Get the address of CoInitialize function.
 		code = ' FF 15 AB AB AB 00 B9';
-		var o2 = exe.find(code, PTYPE_HEX, true, '\xAB', offset - 0x200);
+		var o2 = exe.find(code, PTYPE_HEX, true, '\xAB', offset - 0x200, offset);
 		if (o2 == -1) {
 			return 'Failed in Step 3';
 		}
@@ -94,7 +94,7 @@ function DisableMultipleWindows() {
 		}
 
 		//Step 7 - Replace the stolen call with our code
-		exe.replace(o2-4, (exe.Raw2Rva(free)-exe.Raw2Rva(o2)).packToHex(4), PTYPE_HEX);
+		exe.replace(o2-5, "E9" + (exe.Raw2Rva(free)-exe.Raw2Rva(o2)).packToHex(4), PTYPE_HEX);
 	
 		//Step 8 - Fill the call instruction.
 		code = code.replaceAt( 0x01*3, (stolen - exe.Raw2Rva(free + 5)).packToHex(4));

@@ -29,7 +29,7 @@ registerPatch(  3, "RemoveChatLimit", 'Chat Flood Remove Limit', 'UI', 1, "Neo",
 
 //registerPatch(  4, "EnableAuraOver", 'Enable Aura Over Level 99 And Level 150', 'UI', 0, "Shinryo", 'Allows the client to display standard auras over level 99 and 3rd class auras over level 150.', false);
 
-registerPatch(  5, "EnableProxySupport", 'Enable Proxy Support', 'Fix', 0, "Ai4rei/AN", 'Ignores server-provided IP addresses when changing servers.', false);
+registerPatch(  5, "EnableProxySupport", 'Enable Proxy Support (Experimental)', 'Fix', 0, "Ai4rei/AN", 'Ignores server-provided IP addresses when changing servers.', false);
 
 registerPatch(  6, "ForceSendClientHash", 'Force Send Client Hash Packet (Experimental)', 'Packet', 0, "GreenBox, Neo", 'Forces the client to send a packet with it\'s MD5 hash for all servicetypes. Only use if you have enabled it in your server', false);
 
@@ -119,7 +119,7 @@ registerPatch( 50, "SkipLicenseScreen", 'Skip License Screen', 'UI', 0, "Shinryo
 
 registerPatch( 51, "UseArialOnAllLangtypes", 'Ascii & Arial on All Langtypes', 'UI', 0, "Ai4rei/AN, Shakto", 'Makes Arial the default font on all Langtypes (it s enable ascii by default', true);
 
-registerPatch( 52, "UseCustomFont", 'Use Custom Font (Experimental)', 'UI', 0, "Ai4rei/AN", 'Allows the use of user-defined font for all langtypes. The langtype-specific charset is still being enforced, so if the selected font does not support it, the system falls back to a font that does.', false);
+registerPatch( 52, "UseCustomFont", 'Use Custom Font', 'UI', 0, "Ai4rei/AN", 'Allows the use of user-defined font for all langtypes. The langtype-specific charset is still being enforced, so if the selected font does not support it, the system falls back to a font that does.', false);
 
 registerPatch( 54, "ChatColorGM", 'Chat Color - GM', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes the GM Chat color and sets it to the specified value. Default value is ffff00 (a yellow color)', false);
 
@@ -205,12 +205,11 @@ registerPatch( 98, "DisableDCScream", 'Disable dc_scream.txt', 'UI', 0, "Neo", '
 
 registerPatch( 99, "DisableBAFrostJoke", 'Disable ba_frostjoke.txt', 'UI', 0, "Neo", 'Disable chat on file ba_frostjoke', false);
 
-registerPatch(100, "DisableMultipleWindows", 'Disable Multiple Windows (Experimental)', 'UI', 0, "Shinryo, Ai4rei/AN", 'Prevents the client from creating more than one instance on all lang types. Currently has small bug - when closing client stale process remains', false);
+registerPatch(100, "DisableMultipleWindows", 'Disable Multiple Windows', 'UI', 0, "Shinryo, Ai4rei/AN", 'Prevents the client from creating more than one instance on all lang types. Currently has small bug - when closing client stale process remains', false);
 
 registerGroup(101, "MultiGRFs", true);
 
 registerPatch(102, "FixTetraVortex", 'Fix Tetra Vortex', 'UI', 0, "sanosan33, Neo", 'Fixes the black screen animation issue of tetra vortex', false);
-
 
 registerPatch( 49, "EnableMultipleGRFs", 'Enable Multiple GRFs', 'UI', 101, "Shinryo", 'Enables the use of multiple grf files by putting them in a data.ini file in your client folder.You can only load up to 10 total grf files with this option (0-9).', true);
 
@@ -233,4 +232,4 @@ registerPatch(207, "ResizeFont", "Resize Font", 'Custom', 0, "Yommy, Neo", 'Resi
 
 //registerPatch(208, "ExtractStrings", "Extract it bitch", 'Custom', 0, "Neo", 'No Description meh', false);
 
-registerPatch(209, "EnableMailBox", "Enable Mail Box for All Langtypes (Experimental)", 'Custom', 0, "Neo", 'Enables the full use of Mail Boxes and @mail commands (write is disabled for few langtypes by default in 2013 Clients)', false);
+registerPatch(209, "EnableMailBox", "Enable Mail Box for All Langtypes", 'Custom', 0, "Neo", 'Enables the full use of Mail Boxes and @mail commands (write is disabled for few langtypes by default in 2013 Clients)', false);
