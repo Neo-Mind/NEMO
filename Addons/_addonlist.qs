@@ -23,4 +23,3 @@ registerAddon("GetPacketKeys", "Get Packet Keys", "Retrieves the packet keys use
 
 //registerAddon("GenMapEffectPlugin", "Generate Mapeffect plugin by Curiosity", "Generates Curiosity's mapeffect plugin for loaded client");
 //Disabled since it needs to be fixed.
-

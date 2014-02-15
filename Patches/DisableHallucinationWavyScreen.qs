@@ -16,7 +16,7 @@ function DisableHallucinationWavyScreen() {
 	}
     
 	var dword = exe.fetchHex(offset+5, 4);
-	code =    ' 8B CF'
+	code =    ' 8B AB'
 			+ ' E8 AB AB AB AB'
 			+ ' 83 3D' + dword + ' 00'
             + ' 0F 84 AB AB AB AB';

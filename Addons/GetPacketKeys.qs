@@ -1,7 +1,7 @@
 function le2be(le) {
 	var be = "";
 	for (var i = le.length-3; i >= 0; i-=3) {
-		be += le.substring(i,i+3);
+		be += le.substr(i,3);
 	}
 	return "0x" + be.replace(/ /g,"");	
 }

@@ -19,10 +19,10 @@ function EnableCustom3DBones() {
 	// Find offset of instruction after CMP ESI, 9h within this function before $finish
 	// We use $finish - 0x70 as an approximate location where the function starts
 	
-	var offset = exe.find(' 83 FE 09', PTYPE_HEX, false, finish - 0x70, finish);
+	var offset = exe.find(' 83 FE 09', PTYPE_HEX, false, " ", finish - 0x70, finish);
 	if (offset == -1) {	
 		// For VC9 images the valus is 09h but for earlier VC6 images the value is 10h
-		offset = exe.find(' 83 FE 0A', PTYPE_HEX, false, finish - 0x70, finish);
+		offset = exe.find(' 83 FE 0A', PTYPE_HEX, false, " ", finish - 0x70, finish);
 	}
 	
 	if (offset == -1) {
