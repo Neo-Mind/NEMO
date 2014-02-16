@@ -5,36 +5,30 @@ function EnableMultipleGRFsV2() {
     // Locate call to grf loading function.
 	var grf = exe.findString("data.grf", RVA).packToHex(4);
 	
-	if (exe.getClientDate() <= 20130605) {
-		var code =
-				  ' 68' + grf			// push    offset aData_grf ; 'data.grf'
-				+ ' B9 AB AB AB 00'		// mov     ecx, offset g_fileMgr
-				+ ' 88 AB AB AB AB 00'	// mov     byte_C08AC2, dl
-				+ ' E8 AB AB AB AB'		// call    CFileMgr::AddPak()
+	var code = 	  ' 68' + grf			// push    offset aData_grf ; 'data.grf'
+				+ ' B9 AB AB AB 00'		// mov     ecx, offset unk_86ABBC
 				;
-	}
-	else {
-		var code =
-				  ' 68' + grf			// push    offset aData_grf ; 'data.grf'
-				+ ' B9 AB AB AB 00'		// mov     ecx, offset g_fileMgr
-				+ ' E8 AB AB AB AB'		// call    CFileMgr::AddPak()
-				;
-	}
 	
 	var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
 	if (offset == -1) {
 		return "Failed in part 1";
 	}
-
+	
 	// Save "this" pointer and address of AddPak.
 	var setECX = exe.fetchHex(offset+5, 5);
-	if (exe.getClientDate() <= 20130605) {
-		var AddPak = exe.Raw2Rva(offset+16) + exe.fetchDWord(offset + 17) + 5;
-	}
-	else {
-		var AddPak = exe.Raw2Rva(offset+10) + exe.fetchDWord(offset + 11) + 5;
+	    
+	code =	  ' E8 AB AB AB AB'		//call CFileMgr::AddPak()
+			+ ' 8B AB AB AB AB 00'	//mov reg32, DWORD PTR DS:[addr1]
+			+ ' A1 AB AB AB 00'		//MOV EAX, DWORD PTR DS:[addr2]
+			;
+			
+	var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB");
+	if (fnoffset == -1) {
+		return "Failed in part 2";
 	}
 	
+	var AddPak = exe.Raw2Rva(fnoffset + 5) + exe.fetchDWord(fnoffset + 1);
+
 	var f = new TextFile();
 	if (!getInputFile(f, '$inpMultGRF', 'File Input - Enable Multiple GRF', 'Enter your INI file', APP_PATH) ) {
 		return "Patch Cancelled";
@@ -92,13 +86,8 @@ function EnableMultipleGRFsV2() {
 	code += strcode.toHex();
 	
 	// Create a call to the free space that was found before.
-	exe.replace(offset, ' 90 90 90 90 90 90 90 90 90 90', PTYPE_HEX);
-	if (exe.getClientDate() <= 20130605) {
-		exe.replace(offset+16, 'E8' + (freeRva - exe.Raw2Rva(offset+16) - 5).packToHex(4), PTYPE_HEX);
-	}
-	else {
-		exe.replace(offset+10, 'E8' + (freeRva - exe.Raw2Rva(offset+10) - 5).packToHex(4), PTYPE_HEX);
-	}
+	//exe.replace(offset, ' 90 90 90 90 90 90 90 90 90 90', PTYPE_HEX);// = not needed
+	exe.replaceDWord(fnoffset + 1, freeRVA - exe.Raw2Rva(fnoffset + 5));
 	
 	// Finally, insert everything.
     exe.insert(free, size, code, PTYPE_HEX);	

@@ -191,11 +191,11 @@ registerPatch( 90, "EnableDNSSupport", 'Enable DNS Support', 'UI', 0, "Shinryo",
 
 registerGroup( 91, "PacketEncryptionKeys", false);
 
-registerPatch( 92, "PacketFirstKeyEncryption", 'Packet First Key Encryption', 'Packet', 91, "Shakto", 'Change the 1st key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
+registerPatch( 92, "PacketFirstKeyEncryption", 'Packet First Key Encryption', 'Packet', 91, "Shakto, Neo", 'Change the 1st key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
 
-registerPatch( 93, "PacketSecondKeyEncryption", 'Packet Second Key Encryption', 'Packet', 91, "Shakto", 'Change the 2nd key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
+registerPatch( 93, "PacketSecondKeyEncryption", 'Packet Second Key Encryption', 'Packet', 91, "Shakto, Neo", 'Change the 2nd key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
 
-registerPatch( 94, "PacketThirdKeyEncryption", 'Packet Third Key Encryption', 'Packet', 91, "Shakto", 'Change the 3rd key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
+registerPatch( 94, "PacketThirdKeyEncryption", 'Packet Third Key Encryption', 'Packet', 91, "Shakto, Neo", 'Change the 3rd key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
 
 registerPatch( 95, "SsoLogin", 'Use SSO Login Packet', 'Packet', 0, "Ai4rei/AN", 'Enable using SSO packet on all langtype (to use login and pass with a launcher)', false);
 

@@ -10,7 +10,7 @@ function ExtendNpcBox() {
 				+ ' 56'						// push    esi
 				+ ' 8B C1'					// mov     eax, ecx
 				+ ' 57'						// push    edi
-				+ ' 8B BC 24 14 08 00 00'	// mov     edi, [esp+810h+arg_0]
+				+ ' 8B BC 24 14 08 00 00'	// mov     edi, [esp+814h] <= arg_0
 				;
 	}
 	else {
@@ -32,21 +32,23 @@ function ExtendNpcBox() {
         return "Failed in part 1";
     }
 	
-    exe.replace(offset+2, ' 04 10', PTYPE_HEX);
+	var value = exe.getUserInput('$npcBoxLength', XTYPE_DWORD, "Number Input", "Enter new NPC Dialog box length (2052 - 4096)", 0x804, 0x804, 0x1000);	
+    exe.replaceDWord(offset+2, value+4);
 	
 	if (exe.getClientDate() <= 20130605) {
-		exe.replace(offset+16, " 00 10", PTYPE_HEX);
-		exe.replace(offset+27, " 10 10", PTYPE_HEX);
+		exe.replaceDWord(offset+16, value);
+		exe.replaceDWord(offset+27, value + 0x10);
 
-		code =  ' FF D2 8B 8C 24 0C 08 00 00 5F 5E 33 CC E8 AB AB 0C 00 81 C4 08 08 00 00';
+		offset += code.hexlength();
+		code =  ' FF D2 8B 8C 24 0C 08 00 00 5F 5E 33 CC E8 AB AB AB AB 81 C4 08 08 00 00';
 			  
-		offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+		offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset);
 		if (offset == -1) {
 			return "Failed in part 2";
 		}
 
-		exe.replace(offset+5,  " 08 10", PTYPE_HEX);
-		exe.replace(offset+20, " 04 10", PTYPE_HEX);
-	}	
-    return true;	
+		exe.replaceDWord(offset+5,  value+8);
+		exe.replaceDWord(offset+20, value+4);
+	}
+    return true;
 }

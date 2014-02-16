@@ -41,14 +41,14 @@ function DisableMultipleWindows() {
 		}
 			
 		//Step 3 - Get the address of CoInitialize function.
-		code = ' FF 15 AB AB AB 00 B9';
+		code = ' E8 AB AB AB AB AB FF 15 AB AB AB 00';//CALL func, PUSH reg32, CALL ole32.CoInitialize
 		var o2 = exe.find(code, PTYPE_HEX, true, '\xAB', offset - 0x200, offset);
 		if (o2 == -1) {
 			return 'Failed in Step 3';
 		}
 		
 		//Step 4 - Steal the called address before CoInitialize.
-		o2 = o2 - 1;
+		o2 = o2 + 5;
 		var stolen = exe.fetchDWord(o2-4) + exe.Raw2Rva(o2);
 		
 		//Step 5 - Setup ASM code for mutex

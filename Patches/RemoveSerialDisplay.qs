@@ -8,6 +8,9 @@ function RemoveSerialDisplay() {
 	//Step 2 - Find offset of pattern 
 	var offset = exe.findCode(' 83 C0 AB 3B 41 AB 0F 8C AB 00 00 00 56 57 6A 00', PTYPE_HEX, true, '\xAB');
 	if (offset == -1) {
+		offset = exe.findCode(' 83 C0 AB 3B 41 AB 0F 8C AB 00 00 00 56 6A 00', PTYPE_HEX, true, '\xAB');//Older client
+	}
+	if (offset == -1) {
 		return "Failed in Part 2";
 	}
 		
