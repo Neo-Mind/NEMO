@@ -117,7 +117,7 @@ registerPatch( 48, "UsePlainTextDescriptions", 'Use Plain Text Descriptions', 'D
 
 registerPatch( 50, "SkipLicenseScreen", 'Skip License Screen', 'UI', 0, "Shinryo, MS", 'Skip the warning screen and goes directly to the main window with the Service Select.', false);
 
-registerPatch( 51, "UseArialOnAllLangtypes", 'Use Arial on All Langtypes', 'UI', 0, "Ai4rei/AN, Shakto", 'Makes Arial the default font on all Langtypes (it s enable ascii by default)', true);
+//registerPatch( 51, "UseArialOnAllLangtypes", 'Use Arial on All Langtypes', 'UI', 0, "Ai4rei/AN, Shakto", 'Makes Arial the default font on all Langtypes (it s enable ascii by default)', true);
 
 registerPatch( 52, "UseCustomFont", 'Use Custom Font', 'UI', 0, "Ai4rei/AN", 'Allows the use of user-defined font for all langtypes. The langtype-specific charset is still being enforced, so if the selected font does not support it, the system falls back to a font that does.', false);
 
