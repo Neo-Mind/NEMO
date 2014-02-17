@@ -45,6 +45,17 @@ function EnableCustom3DBones() {
 	}
 	else {
 		return "Failed in Part 4";
-	}	
+	}
+	
+	//Step 5 - Disable the annoying warning
+	//Find "too many vertex granny model!" find its pushed location and NOP the call after it.
+	offset = exe.findString("too many vertex granny model!", RVA);
+	if (offset !== -1) {
+		offset = exe.findCode(" 68" + offset.packToHex(4) + " E8", PTYPE_HEX, false);
+	}
+	if (offset !== -1) {
+		exe.replace(offset+5, " 90 90 90 90 90", PTYPE_HEX);
+	}
+	
 	return true;
 }
