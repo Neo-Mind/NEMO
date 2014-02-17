@@ -1,0 +1,8 @@
+#!/bin/sh
+
+##############################################################
+#put this in .git/hooks folder to update lastcommit properly #
+##############################################################
+date +"%Y-%m-%d  %T  GMT%z" > lastcommit.ts
+git stage lastcommit.ts
+exit 0

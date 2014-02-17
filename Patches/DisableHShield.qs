@@ -56,16 +56,15 @@ function DisableHShield() {
 		return 'Failed in part 3';
 	}
         
-    //Convert to RVA
-    var bOffset = aOffset + exe.getVOffset(IMPORT) - exe.getROffset(IMPORT);//IMPORT section is auto detected internally
-	
+    //Convert to RVA (the actual Relative Virtual Address not the RVA we mistook)
+    var bOffset = exe.Raw2Rva(aOffset) - exe.getImageBase();//ideally should be in IMPORT section
 	
 	// The name offset comes after the thunk offset.
     // Thunk offset is guessed through wildcard.
 	
 	code = ' 00 AB AB AB 00 00 00 00 00 00 00 00 00' + bOffset.packToHex(4);	
 	offset = exe.find(code, PTYPE_HEX, true, '\xAB', exe.getROffset(IMPORT), exe.getROffset(IMPORT) + exe.getRSize(IMPORT)-1);
-		
+
     if (offset == -1) {
 		return 'Failed in part 4';
 	}
