@@ -41,7 +41,7 @@ function EnableMultipleGRFs() {
 			+ ' A1 AB AB AB 00'		//MOV EAX, DWORD PTR DS:[addr2]
 			;
 			
-	var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB");
+	var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
 	if (fnoffset == -1) {
 		return "Failed in part 2";
 	}
