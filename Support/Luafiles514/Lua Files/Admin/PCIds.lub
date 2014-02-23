@@ -274,7 +274,7 @@ CashMount_Table = {--For assigning ids to be used as cash mount (@mount2) for jo
 	[PCJobTable.JT_MONK]		=	PCJobTable.JT_SHEEP_MONK,
 	[PCJobTable.JT_SAGE]		=	PCJobTable.JT_FOX_SAGE,
 	[PCJobTable.JT_ROGUE]		=	PCJobTable.JT_DOG_ROGUE,
-	[PCJobTable.JT_ALCHEMIST]	=	PCJobTable.JT_PIG_ALCHEMIST,
+	[PCJobTable.JT_ALCHEMIST]	=	PCJobTable.JT_PIG_ALCHE,
 	[PCJobTable.JT_BARD]		=	PCJobTable.JT_OSTRICH_BARD,
 	[PCJobTable.JT_DANCER]		=	PCJobTable.JT_OSTRICH_DANCER,
 
@@ -322,7 +322,7 @@ CashMount_Table = {--For assigning ids to be used as cash mount (@mount2) for jo
 	[PCJobTable.JT_MONK_B] 		=	PCJobTable.JT_SHEEP_MONK_B,
 	[PCJobTable.JT_SAGE_B] 		=	PCJobTable.JT_FOX_SAGE_B,
 	[PCJobTable.JT_ROGUE_B] 	=	PCJobTable.JT_DOG_ROGUE_B,
-	[PCJobTable.JT_ALCHEMIST_B] =	PCJobTable.JT_PIG_ALCHEMIST_B,
+	[PCJobTable.JT_ALCHEMIST_B] =	PCJobTable.JT_PIG_ALCHE_B,
 	[PCJobTable.JT_BARD_B] 		=	PCJobTable.JT_OSTRICH_BARD_B,
 	[PCJobTable.JT_DANCER_B]	=	PCJobTable.JT_OSTRICH_DANCER_B,
 
