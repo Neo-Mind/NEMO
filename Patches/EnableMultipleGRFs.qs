@@ -139,7 +139,7 @@ function EnableMultipleGRFs() {
 	var freeRva = exe.Raw2Rva(free);
 
 	// Create a call to the free space that was found before.
-	//exe.replace(offset, ' 90 90 90 90 90 90 90 90 90 90', PTYPE_HEX);// = not needed
+	exe.replace(offset, ' B9', PTYPE_HEX);//Little trick to avoid changing 10 bytes - apparently the push gets nullified in the original
 	exe.replaceDWord(fnoffset + 1, freeRva - exe.Raw2Rva(fnoffset + 5));
 	
 	// ***********************************************************
