@@ -27,7 +27,7 @@ function DisableHShield() {
 	}
         
     // Just return 1 without initializing AhnLab :)
-	exe.replace(offset+1, ' 31 C0 40 90 90 90 90 90 90 90 90', PTYPE_HEX);
+	exe.replace(offset+8, ' 33 C0 40 90', PTYPE_HEX);
 		
 	offset = exe.findString('CHackShieldMgr::Monitoring() failed', RAW);
 	if (offset != -1) {
