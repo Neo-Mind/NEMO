@@ -62,12 +62,13 @@ function DisableHShield() {
 	// The name offset comes after the thunk offset.
     // Thunk offset is guessed through wildcard.
 	
-	code = ' 00 AB AB AB 00 00 00 00 00 00 00 00 00' + bOffset.packToHex(4);	
-	offset = exe.find(code, PTYPE_HEX, true, '\xAB', exe.getROffset(IMPORT), exe.getROffset(IMPORT) + exe.getRSize(IMPORT)-1);
+	code = ' 00 00 00 00 00 00 00 00 00' + bOffset.packToHex(4);	
+	offset = exe.find(code, PTYPE_HEX, false, ' ', exe.getROffset(IMPORT), exe.getROffset(IMPORT) + exe.getRSize(IMPORT)-1);
 
     if (offset == -1) {
 		return 'Failed in part 4';
 	}
+	offset -= 3 ; //(AB AB AB 00) got shrinked to 00 so we need to subtract 3 to get needed value;
 	
     // Shinryo: As far as I see, all clients which were compiled with VC9
     // have always the same import table and therefore I assume that the last entry
@@ -76,17 +77,18 @@ function DisableHShield() {
     // place it where aossdk.dll was set before.
     // TO-DO: Create a seperate PE parser for easier access
     // and modification in case this diff should break in the near future.
+	
+	// Neo: Enough with the dependencies - find the 20 NULL byte sequence following the last entry and just subtract 20 
+	
+	var endoffset = exe.find(" 00".repeat(21), PTYPE_HEX, false, " ", offset + 20);//20 from the end + 1 zero is from the last dll entry bytes
+	if (endoffset == -1) {
+		return "Failed in Part 5 - Unable to determine end of Import Table"
+	}
+	endoffset -= 19;//<= points to the last dll imported
 		
-	if (exe.isThemida()) {
-		var entries = 6;
-	}
-	else {
-		var entries = 11;
-	}
+	var data = exe.fetchHex(endoffset, 20);
 	
-	var data = exe.fetchHex(offset + 20 * entries, 20);
-	
-	exe.replace(offset + 20 * entries, " 00".repeat(20), PTYPE_HEX);
+	exe.replace(endoffset, " 00".repeat(20), PTYPE_HEX);
     exe.replace(offset, data, PTYPE_HEX);
 	
 	return true;
