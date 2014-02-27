@@ -1,5 +1,5 @@
 function DisableHShield() {
-	if (exe.getClientDate() <= 20130605) {
+	if (exe.getClientDate() <= 20130605) {//alternative to finding webclinic
 		var code =	
 				  ' 51'						// push    ecx
 				+ ' 83 3D AB AB AB 00 00'	// cmp     dword_88A210, 0
@@ -28,10 +28,14 @@ function DisableHShield() {
         
     // Just return 1 without initializing AhnLab :)
 	exe.replace(offset+8, ' 33 C0 40 90', PTYPE_HEX);
-		
-	offset = exe.findString('CHackShieldMgr::Monitoring() failed', RAW);
+	
+	// Next we take care of a new function call that is there in the newer clients (maybe all ragexe too?)
+	offset = exe.findString('CHackShieldMgr::Monitoring() failed', RVA);
 	if (offset != -1) {
-		// Second part of patch, i think only for ragexe
+		offset = exe.findCode(" 68" + offset.packToHex(4) + " FF 15", PTYPE_HEX, false);
+	}
+	
+	if (offset != -1) {
 		code =	  ' E8 AB AB AB AB'
 				+ ' 84 C0'
 				+ ' 74 16'
@@ -39,14 +43,30 @@ function DisableHShield() {
 				+ ' E8 AB AB AB AB'
 				;
 				
-		offset = exe.findCode(code, PTYPE_HEX, true, '\xAB');
-		if (offset == -1) {
-			return 'Failed in part 2';
-		}
-		
+		offset = exe.find(code, PTYPE_HEX, true, '\xAB', offset - 0x40, offset);
+	}
+	if (offset != -1) {
 		exe.replace(offset, ' B0 01 5E C3 90', PTYPE_HEX);
     }
-		
+	
+	// Adding FailSafe - avoiding the calls itself.
+	offset = exe.findString("ERROR", RVA);//prefixZero is true by default.
+	if (offset == -1) {
+		return "Failed in part 2.1";
+	}
+	
+	offset = exe.findCode(" 68" + offset.packToHex(4) + " 50", PTYPE_HEX, false);
+	if (offset == -1) {
+		return "Failed in part 2.2";
+	}
+	
+	offset = exe.find(" 80 3D AB AB AB AB 00 75", PTYPE_HEX, true, "\xAB", offset, offset+0x80);
+	if (offset == -1) {
+		return "Failed in part 2.3";
+	}
+	
+	exe.replace(offset+7, "EB", PTYPE_HEX);//change JNE to JMP
+
     // Import table fix for aossdk.dll
 	// The dll name offset gives the hint where the image descriptor of this
     // dll resides.
