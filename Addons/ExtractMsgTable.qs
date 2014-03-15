@@ -29,5 +29,5 @@ function ExtractMsgTable() {
 		}
 	}
 	fp.close();
-	return "Msgstringtable has been Extracted to NEMO's path";
+	return "Msgstringtable has been Extracted to Output folder";
 }

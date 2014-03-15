@@ -106,7 +106,6 @@ function RestoreLoginWindow() {
             + ' 68 AB AB AB 00'			// PUSH <offset>  ; ASCII 'open'
             + ' 51'						// PUSH ECX
             + ' FF 15 AB AB AB 00'		// CALL DWORD PTR DS:[<address>]  ; ShellExecuteA
-			;
             
             // Shinryo:
             // The easierst way would be propably to set this value to a random value instead of 0,
@@ -114,31 +113,38 @@ function RestoreLoginWindow() {
             // I prefer the old way that the client used.
             + ' C7 06 00 00 00 00'		// MOV DWORD PTR DS:[ESI],0 <----- Return to which mode
 			;
-    
+			
+    offset = exe.findCode(" 8B 0D AB AB AB 00 8B 01 8B 50 18", PTYPE_HEX, true, "\xAB");//there are plenty of matches but they are all same
+	if (offset == -1) {
+		return "Failed in Part 6.1";
+	}
+	var infix = exe.fetchHex(offset, 11);
+	
     var replace =	
-			  ' 8B 4C E4 10'			// MOV ECX,DWORD PTR SS:[ESP+10]
             // Save the used registers this time..
-            + ' 52'						// PUSH EDX
+			  ' 52'						// PUSH EDX
             + ' 50'						// PUSH EAX
-			+ ' 50'						// PUSH EAX - dummy not popped later (CALL EAX eats a push dunno why)
-			+ ' 8B 11'					// MOV EDX,DWORD PTR DS:[ECX]
-			+ ' 8B 42 18'				// MOV EAX,DWORD PTR DS:[EDX+18]
+			+ infix						// MOV ECX,DWORD PTR DS:[memaddr] 
+										// MOV EAX,DWORD PTR DS:[ECX]
+										// MOV EDX,DWORD PTR DS:[EAX+18]
+            + ' 6A 00'					// PUSH 0
             + ' 6A 00'					// PUSH 0
             + ' 6A 00'					// PUSH 0
             + ' 6A 00'					// PUSH 0
             + ' 68 1D 27 00 00'			// PUSH 271D
             + ' C7 41 0C 03 00 00 00'	// MOV DWORD PTR DS:[ECX+0C],3
-            + ' FF D0'					// CALL EAX
+            + ' FF D2'					// CALL EDX
             // ..and restore them again.
             + ' 58'						// POP EAX
             + ' 5A'						// POP EDX
-			+ " 90".repeat(22)			// NOPS
+			+ " 90".repeat(19)			// NOPS
 			;
 
 	offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
     if (offset == -1) {
-        return "Failed in part 6";
+        return "Failed in part 6.2";
     }
+	debugValue(replace);
 
     exe.replace(offset, replace, PTYPE_HEX);
 	

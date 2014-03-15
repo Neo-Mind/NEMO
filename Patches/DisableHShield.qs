@@ -102,8 +102,13 @@ function DisableHShield() {
 	
 	var endoffset = exe.find(" 00".repeat(21), PTYPE_HEX, false, " ", offset + 20);//20 from the end + 1 zero is from the last dll entry bytes
 	if (endoffset == -1) {
+		endoffset = exe.find(" 00".repeat(20), PTYPE_HEX, false, " ", offset + 20);//20 from the end - for newer clients where the offsets crossed 0xFFFFFF
+		endoffset--;
+	}
+	if (endoffset < 0) {
 		return "Failed in Part 5 - Unable to determine end of Import Table"
 	}
+	
 	endoffset -= 19;//<= points to the last dll imported
 		
 	var data = exe.fetchHex(endoffset, 20);
