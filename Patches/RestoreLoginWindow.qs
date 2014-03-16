@@ -144,8 +144,6 @@ function RestoreLoginWindow() {
     if (offset == -1) {
         return "Failed in part 6.2";
     }
-	debugValue(replace);
-
     exe.replace(offset, replace, PTYPE_HEX);
 	
 	// Part 7: New Addon for 2013 clients

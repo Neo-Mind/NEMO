@@ -24,6 +24,12 @@ function EnableMultipleGRFsV2() {
 			
 	var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
 	if (fnoffset == -1) {
+		code =	  ' E8 AB AB AB AB'		//call CFileMgr::AddPak()
+				+ ' A1 AB AB AB 00'		//MOV EAX, DWORD PTR DS:[addr2]
+				;
+		fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
+	}
+	if (fnoffset == -1) {
 		return "Failed in part 2";
 	}
 	
