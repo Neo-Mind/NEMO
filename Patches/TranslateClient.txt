@@ -1258,7 +1258,15 @@ M: Deadline
 F: B8 B6 B0 A8 BD C3 B0 A3
 R: 'Deadline'
 
-------------------------------------
-M: Dunno
+----------------------------------
+M: Limited time
 ----------------------------------
 F: C1 A6 C7 D1 BD C3 B0 A3
+
+----------------------------------
+M: Navigation Interface
+----------------------------------
+F: B3 BB BA F1 B0 D4 C0 CC BC C7 20 B5 B5 C5 B7 20 C7 D8 C1 A6
+R: 'Navigation Interface'
+
+
