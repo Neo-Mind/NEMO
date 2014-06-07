@@ -62,6 +62,11 @@ String.prototype.toAscii = function() {
     return result;
 }
 
+String.prototype.unpackToInt = function() {
+	var orig = this;
+	return parseInt("0x" + orig.split(" ").reverse().join(""),16)
+}
+
 Number.prototype.packToHex = function(size)  {
 
 	var number = this;

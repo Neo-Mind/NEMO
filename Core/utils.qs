@@ -12,7 +12,7 @@ function getInputFile(f, varname, title, prompt, fpath) {
 			inp = "";
 		}
 	}
-	return true;
+	return inp;
 }
 
 function fetchPacketKeys() {
@@ -146,4 +146,44 @@ function convertToBE(le) {//le is in PTYPE_HEX format but output wont have space
 		be += le.substr(i,3);
 	}
 	return be.replace(/ /g,"");	
+}
+
+function GetResourceEntry(rTree, hierList) {
+	var rDir = rTree;
+	for(var i = 0; i < hierList.length; i++) {
+		if (typeof(rDir.numEntries) === "undefined") 
+			break;
+		for(var j = 0; j < rDir.numEntries; j++) {
+			if (rDir.entries[j].id === hierList[i]) break;
+		}
+		if (j === rDir.numEntries) {
+			rDir = -(i+1);
+			break;
+		}
+		rDir = rDir.entries[j];
+	}
+	return rDir;
+}
+
+function ResourceDir(rsrcAddr, addrOffset, id) {
+	this.id = id;
+	this.addr = rsrcAddr + addrOffset;
+	this.numEntries = exe.fetchWord(this.addr+12) + exe.fetchWord(this.addr+14)
+	this.entries = new Array(this.numEntries);
+	
+	for(var i = 0; i < this.numEntries; i++) {
+		id = exe.fetchDWord(this.addr + 16 + i*8);
+		addrOffset = exe.fetchDWord(this.addr + 16 + i*8 + 4);
+		if (addrOffset < 0)
+			this.entries[i] = new ResourceDir(rsrcAddr, addrOffset & 0x7FFFFFFF, id);
+		else
+			this.entries[i] = new ResourceFile(rsrcAddr, addrOffset & 0x7FFFFFFF, id);
+	}
+}
+
+function ResourceFile(rsrcAddr, addrOffset, id) {
+	this.id = id;
+	this.addr = rsrcAddr + addrOffset;
+	this.dataAddr = exe.Rva2Raw(exe.fetchDWord(this.addr) + exe.getImageBase());
+	this.dataSize = exe.fetchDWord(this.addr + 4);
 }

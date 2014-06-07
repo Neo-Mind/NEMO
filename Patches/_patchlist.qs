@@ -103,13 +103,15 @@ registerPatch( 41, "SetTCPNODELAY", 'Disable Nagle Algorithm', 'Packet', 0, "Shi
 
 registerPatch( 42, "SkipResurrectionButtons", 'Skip Resurrection Buttons', 'UI', 0, "Shinryo", 'Skip resurrection button when you die or use Token of Ziegfried.', false);
 
+registerGroup( 43, "UseIcon", true);
+
 registerPatch( 44, "TranslateClient", 'Translate Client', 'UI', 0, "Ai4rei/AN, Neo", 'This will translate some of the hardcoded Korean phrases with strings stored in TranslateClient.txt. It also fixes the Korean Job name issue with langtype', true);
 
 registerPatch( 45, "UseCustomAuraSprites", 'Use Custom Aura Sprites', 'Data', 0, "Shinryo", 'This option will make it so your warp portals will not be affected by your aura sprites. For this you will have to make aurafloat.tga and auraring.bmp and place them in your "data\\texture\\effect" folder');
 
 registerPatch( 46, "UseNormalGuildBrackets", 'Use Normal Guild Brackets', 'UI', 0, "Shinryo", 'On langtype 0, instead of square-brackets, japanese style brackets are used, this option reverts that behaviour to the normal square brackets ("[" and"]").', false);
 
-registerPatch( 47, "UseRagnarokIcon", 'Use Ragnarok Icon', 'UI', 0, "Shinryo", 'Makes the hexed client use the RO program icon instead of the generic Win32 app icon.', false);
+registerPatch( 47, "UseRagnarokIcon", 'Use Ragnarok Icon', 'UI', 43, "Shinryo, Neo", 'Makes the hexed client use the RO program icon instead of the generic Win32 app icon.', false);
 
 registerPatch( 48, "UsePlainTextDescriptions", 'Use Plain Text Descriptions', 'Data', 0, "Shinryo", 'Signals that the contents of text files are text files, not encoded.', true);
 
@@ -235,3 +237,5 @@ registerPatch(207, "ResizeFont", "Resize Font", 'Custom', 0, "Yommy, Neo", 'Resi
 //registerPatch(208, "ExtractStrings", "Extract it bitch", 'Custom', 0, "Neo", 'No Description meh', false);
 
 registerPatch(209, "EnableMailBox", "Enable Mail Box for All Langtypes", 'Custom', 0, "Neo", 'Enables the full use of Mail Boxes and @mail commands (write is disabled for few langtypes by default in 2013 Clients)', false);
+
+registerPatch(210, "UseCustomIcon", "Use Custom Icon", "Custom", 43, "Neo", 'Makes the hexed client use the User specified icon. Icon file should have an 8bpp (256 color) 32x32 image', false);
