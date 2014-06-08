@@ -199,7 +199,7 @@ function IncreaseAtkDisplay() {
 		offsetStack(offset + 3,1);
 		
 		//Change 44 to 54 in MOV DWORD PTR SS:[ESP+44], ESI
-		offset = exe.find(" 8B AB 24 AB 3B", PTYPE_HEX, true, "\xAB", offset+4);
+		offset = exe.find(" 89 AB 24 AB 3B", PTYPE_HEX, true, "\xAB", offset+4);
 		offsetStack(offset + 3,1);
 		
 		//Change 44 to 54 in MOV DWORD PTR SS:[ESP+44],-1
