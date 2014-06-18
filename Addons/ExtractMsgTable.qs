@@ -1,22 +1,27 @@
 function ExtractMsgTable() {
-	var offset = exe.find(" 3F 41 56 56 4E 49 49 6E 70 75 74 4D 6F 64 65 40", PTYPE_HEX, false);
+	var offset = exe.findString("msgStringTable.txt", RVA);
 	if (offset == -1) {
-		return "Failed in Part 1";		
-	}
-	if (exe.getClientDate() <= 20130605) {
-		offset += 0x23;
-	}
-	else {
-		offset += 0x1D3;
+		return "Failed in Part 1";
 	}
 	
+	offset = exe.findCode(" 68" + offset.packToHex(4) + " 68", PTYPE_HEX, false);
+	if (offset == -1) {
+		return "Failed in Part 2";
+	}
+	
+	offset = exe.findCode(" 8B 14 F5 AB AB AB 00 52 56", PTYPE_HEX, true, "\xAB");
+	if (offset == -1) {
+		return "Failed in Part 3";
+	}
+	
+	offset = exe.Rva2Raw(exe.fetchDWord(offset+3));
 	var done = false;
 	var id = 0;
 	var fp = new TextFile();
 	fp.open(APP_PATH + "/Output/msgstringtable_" + exe.getClientDate() + ".txt", "w");
 	while (!done) {
-		if (exe.fetchDWord(offset) == id) {
-			var start_offset = exe.Rva2Raw(exe.fetchDWord(offset+4));
+		if (exe.fetchDWord(offset-4) == id) {
+			var start_offset = exe.Rva2Raw(exe.fetchDWord(offset));
 			var end_offset   = exe.find(" 00", PTYPE_HEX, false, " ", start_offset);
 			var msgstr = exe.fetch(start_offset, end_offset - start_offset);
 			msgstr = msgstr.replace(/\r\n/g, "\n");

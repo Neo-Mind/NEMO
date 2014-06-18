@@ -239,3 +239,5 @@ registerPatch(207, "ResizeFont", "Resize Font", 'Custom', 0, "Yommy, Neo", 'Resi
 registerPatch(209, "EnableMailBox", "Enable Mail Box for All Langtypes", 'Custom', 0, "Neo", 'Enables the full use of Mail Boxes and @mail commands (write is disabled for few langtypes by default in 2013 Clients)', false);
 
 registerPatch(210, "UseCustomIcon", "Use Custom Icon", "Custom", 43, "Neo", 'Makes the hexed client use the User specified icon. Icon file should have an 8bpp (256 color) 32x32 image', false);
+
+registerPatch(211, "UseCustomDLL", "Use Custom DLL", "Custom", 0, "Neo", 'Makes the hexed client load the specified DLL and functions');

@@ -148,6 +148,25 @@ function convertToBE(le) {//le is in PTYPE_HEX format but output wont have space
 	return be.replace(/ /g,"");	
 }
 
+function getLangType() {
+	var offset = exe.findString("america", RVA);
+	if (offset == -1) {
+		return -4;
+	}
+	
+	offset = exe.findCode('68' + offset.packToHex(4), PTYPE_HEX, false);
+	if (offset == -1) {
+		return -3;
+	}
+	
+	offset = exe.find('C7 05 AB AB AB AB 01 00 00 00', PTYPE_HEX, true, "\xAB", offset + 5);
+	if (offset == -1) {
+		return -2;
+	}
+	
+	return exe.fetchDWord(offset+2);
+}
+
 function GetResourceEntry(rTree, hierList) {
 	var rDir = rTree;
 	for(var i = 0; i < hierList.length; i++) {
@@ -186,4 +205,13 @@ function ResourceFile(rsrcAddr, addrOffset, id) {
 	this.addr = rsrcAddr + addrOffset;
 	this.dataAddr = exe.Rva2Raw(exe.fetchDWord(this.addr) + exe.getImageBase());
 	this.dataSize = exe.fetchDWord(this.addr + 4);
+}
+
+function GetDataDirectory(index) {
+	var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
+	if (PEoffset === -1) return -2;
+	var result = new Object();
+	result.offset = exe.Rva2Raw(exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index) + exe.getImageBase());
+	result.size = exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x60 + 0x8*index + 0x4);
+	return result;
 }

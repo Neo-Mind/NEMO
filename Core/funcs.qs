@@ -30,11 +30,11 @@ String.prototype.hexlength = function() {
 String.prototype.toHex = function() {
     var result = '';
     for( i=0; i < this.length; i++) {
-        var h = this.charCodeAt(i).toString(16);
-        if (h.length === 1) {
-			h = '0' + h;
-		}
-        result += ' ' + h;
+			var h = this.charCodeAt(i).toString(16);
+      if (h.length === 1) {
+				h = '0' + h;
+			}
+      result += ' ' + h;
     }
     return result;
 }

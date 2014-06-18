@@ -67,54 +67,57 @@ function DisableHShield() {
 	
 	exe.replace(offset+7, "EB", PTYPE_HEX);//change JNE to JMP
 
-    // Import table fix for aossdk.dll
-	// The dll name offset gives the hint where the image descriptor of this
-    // dll resides.
-    
-	var aOffset = exe.find('aossdk.dll', PTYPE_STRING, false);
+  // Import table fix for aossdk.dll  
+	// The dll name offset gives the hint where the image descriptor of this dll resides.
+	var aOffset = exe.find("aossdk.dll", PTYPE_STRING, false);
 	if (aOffset == -1) {
 		return 'Failed in part 3';
 	}
-        
-    //Convert to RVA (the actual Relative Virtual Address not the RVA we mistook)
-    var bOffset = exe.Raw2Rva(aOffset) - exe.getImageBase();//ideally should be in IMPORT section
-	
-	// The name offset comes after the thunk offset.
-    // Thunk offset is guessed through wildcard.
-	
-	code = ' 00 00 00 00 00 00 00 00 00' + bOffset.packToHex(4);	
-	offset = exe.find(code, PTYPE_HEX, false, ' ', exe.getROffset(IMPORT), exe.getROffset(IMPORT) + exe.getRSize(IMPORT)-1);
-
-    if (offset == -1) {
-		return 'Failed in part 4';
-	}
-	offset -= 3 ; //(AB AB AB 00) got shrinked to 00 so we need to subtract 3 to get needed value;
-	
-    // Shinryo: As far as I see, all clients which were compiled with VC9
-    // have always the same import table and therefore I assume that the last entry
-    // is always 221 bytes after the aossdk.dll thunk offset.
-    // So just read the last import entry, clear it with zeros and
-    // place it where aossdk.dll was set before.
-    // TO-DO: Create a seperate PE parser for easier access
-    // and modification in case this diff should break in the near future.
-	
-	// Neo: Enough with the dependencies - find the 20 NULL byte sequence following the last entry and just subtract 20 
-	
-	var endoffset = exe.find(" 00".repeat(21), PTYPE_HEX, false, " ", offset + 20);//20 from the end + 1 zero is from the last dll entry bytes
-	if (endoffset == -1) {
-		endoffset = exe.find(" 00".repeat(20), PTYPE_HEX, false, " ", offset + 20);//20 from the end - for newer clients where the offsets crossed 0xFFFFFF
-		endoffset--;
-	}
-	if (endoffset < 0) {
-		return "Failed in Part 5 - Unable to determine end of Import Table"
-	}
-	
-	endoffset -= 19;//<= points to the last dll imported
 		
-	var data = exe.fetchHex(endoffset, 20);
+	//Convert to RVA (the actual Relative Virtual Address not the RVA we mistook) prefixed by 8 zeros
+	aOffset = " 00".repeat(8) + (exe.Raw2Rva(aOffset) - exe.getImageBase()).packToHex(4);
 	
-	exe.replace(endoffset, " 00".repeat(20), PTYPE_HEX);
-    exe.replace(offset, data, PTYPE_HEX);
-	
+	//Check if Custom DLL has been enabled - does the import table fix inside.
+	var hasCustomDLL = (exe.getActivePatches().indexOf(211) != -1);	
+	if (hasCustomDLL) {
+		var tblData = Imp_DATA.valueSuf;
+		var newTblData = "";
+		
+		for (var i = 0; i < tblData.length; i+=20*3) {
+			var curValue = tblData.substr(i, 20*3);
+			if (curValue.indexOf(aOffset) === 3*4)
+				continue;
+			newTblData = newTblData + curValue;	
+		}
+		
+		if(newTblData !== tblData) {
+			exe.emptyPatch(211);//We will add the changes to this patch instead.
+			var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
+			exe.insert(Imp_DATA.offset, (Imp_DATA.valuePre + newTblData).hexlength(), Imp_DATA.valuePre + newTblData, PTYPE_HEX);
+			exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0x8, Imp_DATA.tblAddr);
+			exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0xC, Imp_DATA.tblSize);
+		}		
+	}
+	else {
+		var dir = GetDataDirectory(1);
+		var finalValue = " 00".repeat(20);
+		var offset = dir.offset;
+		
+		var curValue = exe.fetchHex(offset,20);
+		do {
+			if (curValue.indexOf(aOffset) === 3*4) 
+				break;
+			offset += 20;
+			curValue = exe.fetchHex(offset,20);
+		} while(curValue != finalValue);
+		
+		if (curValue == finalValue) {
+			return "Failed in Part 4";
+		}
+		
+		var endOffset = dir.offset + 20 * dir.size - 20;//Last DLL Entry
+		exe.replace(offset, exe.fetchHex(endOffset, 20), PTYPE_HEX);//Replace aossdk.dll import with the last import
+		exe.replace(endOffset, finalValue, PTYPE_HEX);//Replace last import with 0s to indicate end of table.	
+	}
 	return true;
 }

@@ -58,22 +58,14 @@ function TranslateClient() {
 	}
 	
 	var msg = "Translate Taekwon Job";
-	var offset = exe.findString("america", RVA);
-	if (offset == -1) {
-		return "Failed in Part 2.1 :" + msg;
+	var langtype = getLangType();
+	switch(langtype) {
+		case -4: return "Failed in Part 2.1 :" + msg;
+		case -3: return "Failed in Part 2.2 :" + msg;
+		case -2: return "Failed in Part 2.3 :" + msg;
+		case -1: return "Failed in Part 2.4 :" + msg;
 	}
-	
-	offset = exe.findCode('68' + offset.packToHex(4), PTYPE_HEX, false);
-	if (offset == -1) {
-		return "Failed in Part 2.2 :" + msg;
-	}
-	
-	offset = exe.find('C7 05 AB AB AB AB 01 00 00 00', PTYPE_HEX, true, "\xAB", offset + 5);
-	if (offset == -1) {
-		return "Failed in Part 2.3 :" + msg;
-	}
-	
-	var langtype = exe.fetchHex(offset+2, 4);
+	langtype = langtype.packToHex(4);
 	
 	code =    ' 83 3D' + langtype + ' 00'	//CMP langtype 0
 			+ ' B9 AB AB AB AB'				//MOV ECX, <some offset>

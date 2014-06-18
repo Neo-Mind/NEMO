@@ -1,0 +1,7 @@
+//All Lines beginning with // are ignored
+//All lines following a .dll name are assumed to be functions of that DLL and the function index is also incremented sequentially from 0.
+//For better clarity put spaces in front of functions
+
+Splash.dll
+    _DllMain@12
+ 
