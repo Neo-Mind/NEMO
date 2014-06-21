@@ -210,8 +210,7 @@ function ResourceFile(rsrcAddr, addrOffset, id) {
 function GetDataDirectory(index) {
 	var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
 	if (PEoffset === -1) return -2;
-	var result = new Object();
-	result.offset = exe.Rva2Raw(exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index) + exe.getImageBase());
-	result.size = exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x60 + 0x8*index + 0x4);
-	return result;
+	var offset = exe.Rva2Raw(exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index) + exe.getImageBase());
+	var size = exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index + 0x4);
+	return {"offset":offset, "size":size};
 }

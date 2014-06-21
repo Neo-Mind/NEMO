@@ -115,7 +115,7 @@ function DisableHShield() {
 			return "Failed in Part 4";
 		}
 		
-		var endOffset = dir.offset + 20 * dir.size - 20;//Last DLL Entry
+		var endOffset = dir.offset + dir.size - 20;//Last DLL Entry
 		exe.replace(offset, exe.fetchHex(endOffset, 20), PTYPE_HEX);//Replace aossdk.dll import with the last import
 		exe.replace(endOffset, finalValue, PTYPE_HEX);//Replace last import with 0s to indicate end of table.	
 	}

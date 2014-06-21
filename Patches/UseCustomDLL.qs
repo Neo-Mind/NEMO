@@ -10,7 +10,6 @@ function UseCustomDLL() {
 			aOffset = " 00".repeat(8) + (exe.Raw2Rva(aOffset) - exe.getImageBase()).packToHex(4);
 		}
 	}
-	
 	var offset = dir.offset;
 	var curValue = exe.fetchHex(offset,20);
 	do {
@@ -91,7 +90,6 @@ function UseCustomDLL() {
 		dirEntryData = dirEntryData + " 00 00 00 00";
 		dptr += 4;	
 	}
-	
 	dirTableData = dirData + dirTableData + finalValue;	
 	exe.insert(free, strSize + dirSize, strData + dirEntryData + dirTableData, PTYPE_HEX);
 	
