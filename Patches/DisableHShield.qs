@@ -102,21 +102,22 @@ function DisableHShield() {
 		var dir = GetDataDirectory(1);
 		var finalValue = " 00".repeat(20);
 		var offset = dir.offset;
+		var dllOffset = false;
 		
 		var curValue = exe.fetchHex(offset,20);
 		do {
 			if (curValue.indexOf(aOffset) === 3*4) 
-				break;
+				dllOffset = offset;
+				
 			offset += 20;
 			curValue = exe.fetchHex(offset,20);
 		} while(curValue != finalValue);
 		
-		if (curValue == finalValue) {
+		if (!dllOffset) {
 			return "Failed in Part 4";
 		}
-		
-		var endOffset = dir.offset + dir.size - 20;//Last DLL Entry
-		exe.replace(offset, exe.fetchHex(endOffset, 20), PTYPE_HEX);//Replace aossdk.dll import with the last import
+		var endOffset = offset - 20;//Last DLL Entry
+		exe.replace(dllOffset, exe.fetchHex(endOffset, 20), PTYPE_HEX);//Replace aossdk.dll import with the last import
 		exe.replace(endOffset, finalValue, PTYPE_HEX);//Replace last import with 0s to indicate end of table.	
 	}
 	return true;
