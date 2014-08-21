@@ -11,18 +11,8 @@ function ExtendPMBox() {
 }
 
 function ExtendBox(index) {
-
-	var offsets = exe.findCodes(' C7 40 78 46', PTYPE_HEX, false);	
-	
-	if (offsets.length !== 4) {
-		offsets = exe.findCodes(' C7 40 64 46', PTYPE_HEX, false);
-	}
-	
-	if (offsets.length !== 4) {
-		offsets = exe.findCodes(' C7 40 68 46', PTYPE_HEX, false);
-	}
-	
-	if (offsets.length !== 4) {
+	var offsets = exe.findCodes(' C7 40 AB 46 00 00 00', PTYPE_HEX, true, "\xAB");
+	if (offsets.length < 4) {
 		return "Failed in part 1";
 	}
 	

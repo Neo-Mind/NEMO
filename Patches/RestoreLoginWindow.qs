@@ -1,30 +1,29 @@
 function RestoreLoginWindow() {
 
 	//Step 1 - Find the code where we need to make client call the login window		
-	var code =
-			  ' 50'						// push    eax
-            + ' E8 AB AB AB FF'			// call    sub_54AF30
+	var code =	' 50'							// push    eax
+            + ' E8 AB AB AB FF'	// call    sub_54AF30
             + ' 8B C8'					// mov     ecx, eax
-            + ' E8 AB AB AB FF'			// call    sub_54B3D0
-            + ' 50'						// push    eax
-            + ' B9 AB AB AB 00'			// mov     ecx, offset unk_7D9DF0
-            + ' E8 AB AB AB FF'			// call    sub_508EB0 
+            + ' E8 AB AB AB FF'	// call    sub_54B3D0
+            + ' 50'							// push    eax
+            + ' B9 AB AB AB 00'	// mov     ecx, offset unk_7D9DF0
+            + ' E8 AB AB AB FF'	// call    sub_508EB0 
             // replace following with CreateWindow call .
             + ' 80 3D AB AB AB 00 00'	// cmp     T_param, 0
             + ' 74 AB'					// jz      short loc_61FCF5
             + ' C6 AB AB AB AB 00 00'	// mov     T_param, 0
             + ' C7 AB AB 04 00 00 00'	// mov     dword ptr [ebx+0Ch], 4
             // end of patch
-            + ' E9 AB AB 00 00'			// jmp     loc_6212E3
+            + ' E9 AB AB 00 00'				// jmp     loc_6212E3
 			;
 			
-    var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-    if (offset == -1) {
-        return "Failed in part 1";
-    }
-    
+	var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+	if (offset == -1) {
+		return "Failed in part 1";
+	}
+  debugValue(offset);  
 	//Step 2 - Extract the mov ecx, offset instruction from the above.
-    var mov = exe.fetchHex(offset+14, 5);
+	var mov = exe.fetchHex(offset+14, 5);
 	
 	//Step 3 - Find code where the CreateWindow function is called  (that we know of)
 	//3.1 - get offset of NUMACCOUNT
@@ -32,7 +31,7 @@ function RestoreLoginWindow() {
 	if (numaccoff == -1) {
 		return "Failed in Part 3.1";
 	}
-    var numaccount = numaccoff.packToHex(4);
+	var numaccount = numaccoff.packToHex(4);
 	
 	//3.2 - use it to find the code location.
     code =	  ' B9 AB AB AB 00'		// mov     ecx, offset unk_816600
@@ -56,35 +55,35 @@ function RestoreLoginWindow() {
 	var call = (calladdr - (offset + 24 + 2 + 5 + 5)).packToHex(4);
 	
 	//Step 4 - Prepare the replace code to call the login window.
-    code =    ' 6A 03'			// push    3
-            +   mov				// mov     ecx, offset unk_7D9DF0
-            + ' E8' + call	// call    CreateWindow
-            + ' 90 90 90 90 90'	// set
-            + ' 90 90 90 90 90'	// of
-            + ' 90'				// NOPs
-			;
-			
-    exe.replace(offset+24, code, PTYPE_HEX);
+  code =    ' 6A 03'			// push    3
+          +   mov				// mov     ecx, offset unk_7D9DF0
+          + ' E8' + call	// call    CreateWindow
+          + ' 90 90 90 90 90'	// set
+          + ' 90 90 90 90 90'	// of
+          + ' 90'				// NOPs
+	;
 	
-    //Step 5 - Force the client to send old login packet.
-    code =	  ' 80 3D AB AB AB 00 00'	// cmp     g_passwordencrypt, 0
-            + ' 0F AB AB AB 00 00'		// jnz     loc_62072D
-            + ' A1 AB AB AB 00'			// mov     eax, Langtype
-            // Some clients (this far only 2010-10-05a and 2010-10-07a)
-            // use cmp eax,ebp instead of test eax,eax
-            + ' AB AB'					// test    eax, eax
-            + ' 0F AB AB AB 00 00'		// jz      loc_620587 <- remove
-            + ' 83 F8 12'				// cmp     eax, 12h
-            + ' 0F 84 AB AB 00 00'		// jz      loc_620587 <- remove
-			;
-            
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  exe.replace(offset+24, code, PTYPE_HEX);
+	
+  //Step 5 - Force the client to send old login packet.
+  code =	' 80 3D AB AB AB 00 00'	// cmp     g_passwordencrypt, 0
+        + ' 0F AB AB AB 00 00'		// jnz     loc_62072D
+        + ' A1 AB AB AB 00'			// mov     eax, Langtype
+        // Some clients (this far only 2010-10-05a and 2010-10-07a)
+        // use cmp eax,ebp instead of test eax,eax
+        + ' AB AB'					// test    eax, eax
+        + ' 0F AB AB AB 00 00'		// jz      loc_620587 <- remove
+        + ' 83 F8 12'				// cmp     eax, 12h
+        + ' 0F 84 AB AB 00 00'		// jz      loc_620587 <- remove
+	;
+          
+  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
 	if (offset == -1) {
-        return "Failed in part 5";
-    }
+		return "Failed in part 5";
+	}
 	
 	var repl = " 90 90 90 90 90 90";
-    exe.replace(offset+20, repl, PTYPE_HEX);
+  exe.replace(offset+20, repl, PTYPE_HEX);
 	exe.replace(offset+29, repl, PTYPE_HEX);    
 	
     // Step 6 - Care of Shinryo:
@@ -120,34 +119,33 @@ function RestoreLoginWindow() {
 	}
 	var infix = exe.fetchHex(offset, 11);
 	
-    var replace =	
-            // Save the used registers this time..
-			  ' 52'						// PUSH EDX
-            + ' 50'						// PUSH EAX
-			+ infix						// MOV ECX,DWORD PTR DS:[memaddr] 
-										// MOV EAX,DWORD PTR DS:[ECX]
-										// MOV EDX,DWORD PTR DS:[EAX+18]
-            + ' 6A 00'					// PUSH 0
-            + ' 6A 00'					// PUSH 0
-            + ' 6A 00'					// PUSH 0
-            + ' 6A 00'					// PUSH 0
-            + ' 68 1D 27 00 00'			// PUSH 271D
-            + ' C7 41 0C 03 00 00 00'	// MOV DWORD PTR DS:[ECX+0C],3
-            + ' FF D2'					// CALL EDX
-            // ..and restore them again.
-            + ' 58'						// POP EAX
-            + ' 5A'						// POP EDX
-			+ " 90".repeat(19)			// NOPS
-			;
+  var replace =		// Save the used registers this time..
+								' 52'						// PUSH EDX
+							+ ' 50'						// PUSH EAX
+							+ infix						// MOV ECX,DWORD PTR DS:[memaddr] 
+																// MOV EAX,DWORD PTR DS:[ECX]
+																// MOV EDX,DWORD PTR DS:[EAX+18]
+							+ ' 6A 00'					// PUSH 0
+							+ ' 6A 00'					// PUSH 0
+							+ ' 6A 00'					// PUSH 0
+							+ ' 6A 00'					// PUSH 0
+							+ ' 68 1D 27 00 00'			// PUSH 271D
+							+ ' C7 41 0C 03 00 00 00'	// MOV DWORD PTR DS:[ECX+0C],3
+							+ ' FF D2'					// CALL EDX
+																	// ..and restore them again.
+							+ ' 58'						// POP EAX
+							+ ' 5A'						// POP EDX
+							+ " 90".repeat(19)			// NOPS
+	;
 
 	offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-    if (offset == -1) {
-        return "Failed in part 6.2";
-    }
-    exe.replace(offset, replace, PTYPE_HEX);
+  if (offset == -1) {
+		return "Failed in part 6.2";
+  }
+  exe.replace(offset, replace, PTYPE_HEX);
 	
 	// Part 7: New Addon for 2013 clients
-	if(exe.getClientDate() >= 20130320) {
+	if(exe.getClientDate() >= 20130320 && exe.getClientDate() <= 20140226) {
 		//7.1 - Find offset of "ID"
 		offset = exe.findString("ID", RVA);
 		if (offset == -1) {

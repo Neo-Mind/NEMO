@@ -15,17 +15,40 @@ function ExtractMsgTable() {
 	}
 	
 	offset = exe.Rva2Raw(exe.fetchDWord(offset+3));
-	var done = false;
-	var id = 0;
 	var fp = new TextFile();
+	var hArr = new Object();
+	var engArr = [];
+	
+	var index = 0;
+	fp.open(APP_PATH + "/Input/msgStringHex.txt", "r");
+	while(!fp.eof()) {
+		var line = fp.readline().trim();
+		hArr[line] = index;
+		index++;
+	}
+	fp.close();
+	
+	fp.open(APP_PATH + "/Input/msgStringEng.txt", "r");
+	while(!fp.eof()) {
+		engArr.push(fp.readline());
+	}
+	fp.close();
+	
+	var done = false;
+	var id = 0;	
 	fp.open(APP_PATH + "/Output/msgstringtable_" + exe.getClientDate() + ".txt", "w");
 	while (!done) {
 		if (exe.fetchDWord(offset-4) == id) {
 			var start_offset = exe.Rva2Raw(exe.fetchDWord(offset));
 			var end_offset   = exe.find(" 00", PTYPE_HEX, false, " ", start_offset);
-			var msgstr = exe.fetch(start_offset, end_offset - start_offset);
-			msgstr = msgstr.replace(/\r\n/g, "\n");
-			fp.writeline(msgstr + "#");
+			var msgstr = exe.fetchHex(start_offset, end_offset - start_offset);
+			msgstr = msgstr.replace(/ 0d 0a/g, " 5c 6e").trim();
+			if (typeof(hArr[msgstr]) !== "undefined" && typeof(engArr[hArr[msgstr]]) !== "undefined") {
+				fp.writeline(engArr[hArr[msgstr]]);
+			}
+			else {
+				fp.writeline(msgstr.toAscii() + "#");
+			}
 			offset += 0x08;
 			id++;
 		}
