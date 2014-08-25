@@ -178,7 +178,7 @@ function IncreaseAtkDisplay() {
 				+ ' 90'			//NOP
 				+ ' 89 E2'		//MOV EDX,ESP
 				+ ' 8D 24 1C'	//LEA ESP,[ESP+EBX]
-				+ ' 89 4D 00'	//MOV DWORD PTR SS:[ESP],ECX
+				+ ' 89 0C E4'	//MOV DWORD PTR SS:[ESP],ECX
 				+ ' 89 D4'		//MOV ESP,EDX
 				+ obyte
 				+ ' EB' + (jmpto - (espcalc-6+39)).packToHex(1)			//JMP SHORT to next loc
