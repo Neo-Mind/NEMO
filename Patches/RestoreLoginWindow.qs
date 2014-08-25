@@ -21,7 +21,7 @@ function RestoreLoginWindow() {
 	if (offset == -1) {
 		return "Failed in part 1";
 	}
-  debugValue(offset);  
+   
 	//Step 2 - Extract the mov ecx, offset instruction from the above.
 	var mov = exe.fetchHex(offset+14, 5);
 	
@@ -172,7 +172,7 @@ function RestoreLoginWindow() {
 		if (offset == -1) {
 			return "Failed in part 7.5";
 		}
-		//return "REACHED HERE";
+		
 		//7.6 - Now get the jump offset
 		call = offset + 5 + exe.fetchDWord(offset+1);//rva conversions are not needed since we are referring to same code section.
 		
