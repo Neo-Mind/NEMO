@@ -3,7 +3,7 @@ function IncreaseScreenshotQuality() {
 	//"C785 -x 03000000"    // MOV DWORD PTR SS:[EBP-x],3    ; DIBChannels - default value is also 3
 	//"C785 -y 02000000"    // MOV DWORD PTR SS:[EBP-y],2    ; DIBColor    - default value is also 2
 	//here x and y are dwords
-	or
+	//or
 	//"C74424 x 03000000"   // MOV DWORD PTR SS:[ESP+x],3    ; DIBChannels - default value is also 3
 	//"C74424 y 02000000"   // MOV DWORD PTR SS:[ESP+y],2    ; DIBColor    - default value is also 2
 	//here x and y are signed bytes. 
