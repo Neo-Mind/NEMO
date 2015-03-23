@@ -1,11 +1,3 @@
-// Enable Multiple GRF files
-// adds support to load GRF files from a list inside DATA.INI
-//
-// 26.11.2010 - Organized DiffPatch into a working state for vc9 compiled clients [Yom]
-// 12.10.2010 - The complete diff would take 247+9+14 = 264 bytes.
-//              Note that if you are using k3dt's diff patcher, you have to use 2.30
-//              since 2.31 and all before have a limit of 255 byte changes. [Shinryo]
-
 //If you enable this feature, you will have to put a data.ini in your client folder.
 //You can only load up to 10 total grf files with this option (0-9).
 //The read priority is 0 first to 9 last.
@@ -17,196 +9,182 @@
 //2=sdata.grf
 //3=data.grf
 //----------------------------------------
-
 //If you only have 3 GRF files, you would only need to use: 0=first.grf, 1=second.grf, 2=last.grf");
 
 function EnableMultipleGRFs() {
-    // Locate call to grf loading function.
-	var grf = exe.findString("data.grf", RVA).packToHex(4);
-	
-	var code = 	  ' 68' + grf			// push    offset aData_grf ; 'data.grf'
-				+ ' B9 AB AB AB 00'		// mov     ecx, offset unk_86ABBC
-				;
-	
-	var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-	if (offset == -1) {
-		return "Failed in part 1";
-	}
-	
-	// Save "this" pointer and address of AddPak.
-	var setECX = exe.fetchHex(offset+5, 5);
+  ////////////////////////////////////////////////////////////////
+  // GOAL: Override the data.grf loading with a custom function //
+  //       that reads file names from an ini file and loads all //
+  //       of them in order.                                    //
+  ////////////////////////////////////////////////////////////////
+  
+  //Step 1a - Find data.grf location
+  var grf = exe.findString("data.grf", RVA).packToHex(4);
+  
+  //Step 1b - Find its reference
+  var code =
+      " 68" + grf       // PUSH OFFSET addr1; "data.grf"
+    + " B9 AB AB AB 00" // MOV ECX, OFFSET g_fileMgr
+    ;
+  
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  if (offset === -1)
+    return "Failed in part 1";
+  
+  //Step 2a - Extract the g_FileMgr assignment
+  var setECX = exe.fetchHex(offset+5, 5);
     
-	code =	  ' E8 AB AB AB AB'		//call CFileMgr::AddPak()
-			+ ' 8B AB AB AB AB 00'	//mov reg32, DWORD PTR DS:[addr1]
-			+ ' A1 AB AB AB 00'		//MOV EAX, DWORD PTR DS:[addr2]
-			;
-			
-	var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
-	if (fnoffset == -1) {
-		code =	  ' E8 AB AB AB AB'		//call CFileMgr::AddPak()
-				+ ' A1 AB AB AB 00'		//MOV EAX, DWORD PTR DS:[addr2]
-				;
-		fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
-	}
-	if (fnoffset == -1) {
-		return "Failed in part 2";
-	}
-	
-	var AddPak = exe.Raw2Rva(fnoffset + 5) + exe.fetchDWord(fnoffset + 1);
-	
-	var filler = ' 00 00 00 00';	
-	var code =	
-			  ' C8 80 00 00'		// enter   80h, 0
-			+ ' 60'					// pushad
-			+ ' 68' +  filler		// push    offset ModuleName   		; ST00 = 'KERNEL32' | offset = 6
-			+ ' FF 15' + filler		// call    ds:GetModuleHandleA 		; CA00 = GetModuleHandleA | offset = 6+4+2 = 12 
-			+ ' 85 C0'				// test    eax, eax
-			+ ' 74 23'				// jz      short loc_735E01
-			+ ' 8B 3D' + filler		// mov     edi, ds:GetProcAddress 	; CA01 = GetProcAddress | offset = 12+4+6 = 22
-			+ ' 68' + filler		// push    offset aGetprivateprof 	; ST01 = 'GetPrivateProfileStringA' | offset = 22+4+1 = 27
-			+ ' 89 C3'				// mov     ebx, eax
-			+ ' 50'					// push    eax  ; hModule
-			+ ' FF D7'				// call    edi  ; GetProcAddress()
-			+ ' 85 C0'				// test    eax, eax
-			+ ' 74 0F'				// jz      short loc_735E01
-			+ ' 89 45 F6'			// mov     [ebp+var_A], eax
-			+ ' 68' + filler		// push    offset aWriteprivatepr 	; ST02 = 'WritePrivateProfileStringA' | offset = 27+4+13 = 44
-			+ ' 89 D8'				// mov     eax, ebx
-			+ ' 50'					// push    eax  ; hModule
-			+ ' FF D7'				// call    edi  ; GetProcAddress() 
-			+ ' 85 C0'				// test    eax, eax
-			+ ' 74 6E'				// jz      short loc_735E71
-			+ ' 89 45 FA'			// mov     [ebp+var_6], eax
-			+ ' 31 D2'				// xor     edx, edx
-			+ ' 66 C7 45 FE 39 00'	// mov     [ebp+var_2], 39h ; char 9
-			+ ' 52'					// push    edx
-			+ ' 68' + filler		// push    offset a_Data_ini 		; ST04 = '.\\DATA.INI' | offset = 44+4+22 = 70
-			+ ' 6A 74'				// push    74h
-			+ ' 8D 5D 81'			// lea     ebx, [ebp+var_7F]
-			+ ' 53'					// push    ebx
-			+ ' 8D 45 FE'			// lea     eax, [ebp+var_2]
-			+ ' 50'					// push    eax
-			+ ' 50'					// push    eax
-			+ ' 68' + filler		// push    offset aData_2  			; ST03 = 'Data' | offset = 70+4+12 = 86
-			+ ' FF 55 F6'			// call    [ebp+var_A]
-			+ ' 8D 4D FE'			// lea     ecx, [ebp+var_2]
-			+ ' 66 8B 09'			// mov     cx, [ecx]
-			+ ' 8D 5D 81'			// lea     ebx, [ebp+var_7F]
-			+ ' 66 3B 0B'			// cmp     cx, [ebx]
-			+ ' 5A'					// pop     edx
-			+ ' 74 0E'				// jz      short loc_735E44
-			+ ' 52'					// push    edx
-			+ ' 53'					// push    ebx
-			+   setECX				// mov     ecx, offset unk_810248
-			+ ' E8' + filler		// call    CFileMgr::AddPak()		; CA02 = AddPak() | offset = 86+4+26 = 116
-			+ ' 5A'					// pop     edx
-			+ ' 42'					// inc     edx
-			+ ' FE 4D FE'			// dec     byte ptr [ebp+var_2]
-			+ ' 80 7D FE 30'		// cmp     byte ptr [ebp+var_2], 30h
-			+ ' 73 C1'				// jnb     short loc_735E0E
-			+ ' 85 D2'				// test    edx, edx
-			+ ' 75 20'				// jnz     short loc_735E71
-			+ ' 68' + filler		// push    offset a_Data_ini 		; ST04 = '.\\DATA.INI' | offset = 116+4+16 = 136
-			+ ' 68' + grf			// push    offset aData_grf
-			+ ' 66 C7 45 FE 32 00'	// mov     [ebp+var_2], 32h
-			+ ' 8D 45 FE'			// lea     eax, [ebp+var_2]
-			+ ' 50'					// push    eax
-			+ ' 68' + filler		// push    offset aData_2  			; ST03 = 'Data' | offset = 136+4+16 = 156
-			+ ' FF 55 FA'			// call    [ebp+var_6]
-			+ ' 85 C0'				// test    eax, eax
-			+ ' 75 97'				// jnz     short loc_735E08
-			+ ' 61'					// popad
-			+ ' C9'					// leave
-			+ ' C3 00'				// retn
-			;
-	
-	var iniFile = exe.getUserInput('$dataINI', XTYPE_STRING, "String Input", "Enter the name of the INI file", "DATA.INI", 1, 20);
-	if (iniFile === "") {
-		iniFile = ".\\DATA.INI";
-	}
-	else {
-		iniFile = ".\\" + iniFile;
-	}
-	
-	var strings = new Array();
-	strings.push("KERNEL32", "GetPrivateProfileStringA", "WritePrivateProfileStringA", "Data", iniFile);
-	
-	// Calculate free space that the code will need.
-	var size = code.hexlength();
-	for (var i=0; strings[i]; i++) {
-		size = size + strings[i].length + 1;//1 for NULL
-	}	
-	
-	// Find free space to inject our data.ini load function.
-	var free = exe.findZeros(size+4);
-	if (free == -1) {
-		return "Failed in part 3: Not enough free space";
-	}
-	var freeRva = exe.Raw2Rva(free);
+  //Step 2b - Find the AddPak call after the push 
+  code =
+      " E8 AB AB AB AB"    // CALL CFileMgr::AddPak()
+    + " 8B AB AB AB AB 00" // MOV reg32, DWORD PTR DS:[addr1]
+    + " A1 AB AB AB 00"    // MOV EAX, DWORD PTR DS:[addr2]
+    ;
 
-	// Create a call to the free space that was found before.
-	exe.replace(offset, ' B9', PTYPE_HEX);//Little trick to avoid changing 10 bytes - apparently the push gets nullified in the original
-	exe.replaceDWord(fnoffset + 1, freeRva - exe.Raw2Rva(fnoffset + 5));
-	
-	// ***********************************************************
-	// Create default offsets that will be replaced into the code.
-	// ***********************************************************
-	// GetModuleHandleA
-	var CA00 = exe.findFunction("GetModuleHandleA");
-	if (CA00 == -1) {
-		return "Failed in part 4";
-	}
-	
-	// GetProcAddress
-	var CA01 = exe.findFunction("GetProcAddress");
-	if (CA01 == -1) {
-		return "Failed in part 5";
-	}
-	
-	// AddPak - offset is 116 but op starts at 115
-    var CA02 = AddPak - (freeRva + 115) - 5;
-	
-	// Get string Location starting.
-	var memPosition = freeRva + code.hexlength();
-	
-    // Now put the respective addresses into the code.
-	//ST00 at 6
-	code = code.replaceAt(  6*3, memPosition.packToHex(4));
-	memPosition = memPosition + strings[0].length + 1;//1 for null
-	
-	//ST01 at 27
-	code = code.replaceAt( 27*3, memPosition.packToHex(4));
-	memPosition = memPosition + strings[1].length + 1;//1 for null
-	
-	//ST02 at 44
-	code = code.replaceAt( 44*3, memPosition.packToHex(4));
-	memPosition = memPosition + strings[2].length + 1;//1 for null
-		
-	//ST03 at 86, 155
-	code = code.replaceAt( 86*3, memPosition.packToHex(4));
-	code = code.replaceAt(156*3, memPosition.packToHex(4));
-	memPosition = memPosition + strings[3].length + 1;//1 for null
-	
-	//ST04 at 70, 135
-	code = code.replaceAt( 70*3, memPosition.packToHex(4));
-	code = code.replaceAt(136*3, memPosition.packToHex(4));
-	
-	//CA00 at 12
-	code = code.replaceAt( 12*3, CA00.packToHex(4));
-	
-	//CA01 at 22
-	code = code.replaceAt( 22*3, CA01.packToHex(4));
-	
-	//CA02 at 115
-	code = code.replaceAt(116*3, CA02.packToHex(4));
-	
-	// Add the strings into our code as well
-	for (var i=0; strings[i]; i++) {
-		code = code + strings[i].toHex() + ' 00';
-	}
-	code = code + ' 00'.repeat(8);
-	
-	// Finally, insert everything.
-    exe.insert(free, size+4, code, PTYPE_HEX);
-	return true;
+  var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
+  if (fnoffset === -1) {
+    code =
+        " E8 AB AB AB AB" // CALL CFileMgr::AddPak()
+      + " A1 AB AB AB 00" // MOV EAX, DWORD PTR DS:[addr2]
+      ;
+
+    fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10);
+  }
+  if (fnoffset === -1)
+    return "Failed in part 2";
+  
+  //Step 2c - Extract AddPak function address
+  var AddPak = exe.Raw2Rva(fnoffset + 5) + exe.fetchDWord(fnoffset + 1);
+  
+  //Step 3a - Prep code for reading INI file and loading GRFs
+  var code =
+        " C8 80 00 00"       // ENTER 80, 0
+      + " 60"                // PUSHAD
+      + " 68" + varHex(1)    // PUSH addr1 ; "KERNEL32" => varHex(1)
+      + " FF 15" + varHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; varHex(2) 
+      + " 85 C0"             // TEST EAX, EAX
+      + " 74 23"             // JZ SHORT addr2
+      + " 8B 3D" + varHex(3) // MOV EDI,DWORD PTR DS:[<&KERNEL32.GetProcAddress>] ; varHex(3)
+      + " 68" + varHex(4)    // PUSH addr3 ; "GetPrivateProfileStringA" => varHex(4)
+      + " 89 C3"             // MOV EBX, EAX
+      + " 50"                // PUSH EAX ; hModule
+      + " FF D7"             // CALL EDI ; GetProcAddress()
+      + " 85 C0"             // TEST EAX, EAX
+      + " 74 0F"             // JZ SHORT addr2
+      + " 89 45 F6"          // MOV DWORD PTR SS:[EBP-0A], EAX
+      + " 68" + varHex(5)    // PUSH addr4 ; "WritePrivateProfileStringA" => varHex(5)
+      + " 89 D8"             // MOV EAX, EBX
+      + " 50"                // PUSH EAX ; hModule
+      + " FF D7"             // CALL EDI ; GetProcAddress() 
+      + " 85 C0"             // TEST EAX, EAX
+      + " 74 6E"             // JZ SHORT loc_735E71
+      + " 89 45 FA"          // MOV DWORD PTR SS:[EBP-6], EAX
+      + " 31 D2"             // XOR EDX, EDX
+      + " 66 C7 45 FE 39 00" // MOV DWORD PTR SS:[EBP-2], 39 ; char 9
+      + " 52"                // PUSH EDX
+      + " 68" + varHex(6)    // PUSH addr5 ; INI filename => varHex(6)
+      + " 6A 74"             // PUSH 74
+      + " 8D 5D 81"          // LEA EBX, [EBP-7F]
+      + " 53"                // PUSH EBX
+      + " 8D 45 FE"          // LEA EAX, [EBP-2]
+      + " 50"                // PUSH EAX
+      + " 50"                // PUSH EAX
+      + " 68" + varHex(7)    // PUSH addr6 ; "Data" => varHex(7)
+      + " FF 55 F6"          // CALL DWORD PTR SS:[EBP-0A]
+      + " 8D 4D FE"          // LEA ECX, [EBP-2]
+      + " 66 8B 09"          // MOV CX, WORD PTR DS:[ECX]
+      + " 8D 5D 81"          // LEA EBX, [EBP-7F]
+      + " 66 3B 0B"          // CMP CX, WORD PTR DS:[EBX]
+      + " 5A"                // POP EDX
+      + " 74 0E"             // JZ SHORT addr7
+      + " 52"                // PUSH EDX
+      + " 53"                // PUSH EBX
+      +   setECX             // MOV ECX, g_fileMgr
+      + " E8" + varHex(8)    // CALL CFileMgr::AddPak() ; varHex(8)
+      + " 5A"                // POP EDX
+      + " 42"                // INC EDX
+      + " FE 4D FE"          // DEC BYTE PTR SS:[EBP-2]
+      + " 80 7D FE 30"       // CMP BYTE PTR SS:[EBP-2], 30
+      + " 73 C1"             // JNB SHORT addr8
+      + " 85 D2"             // TEST EDX, EDX
+      + " 75 20"             // JNZ SHORT addr9
+      + " 68" + varHex(9)    // PUSH addr10 ; INI filename => varHex(9)
+      + " 68" + grf          // push addr11 ; "data.grf"
+      + " 66 C7 45 FE 32 00" // MOV DWORD PTR SS:[EBP-2], 32
+      + " 8D 45 FE"          // LEA EAX, [EBP-2]
+      + " 50"                // PUSH EAX
+      + " 68" + varHex(10)   // PUSH addr12 ; "Data" => varHex(10)
+      + " FF 55 FA"          // CALL DWORD PTR SS:[EBP-6]
+      + " 85 C0"             // TEST EAX, EAX
+      + " 75 97"             // JNZ SHORT 
+      + " 61"                // POPAD
+      + " C9"                // LEAVE
+      + " C3 00"             // RETN
+      ;
+  
+  //Step 4 - Get the INI file name from user
+  var iniFile = exe.getUserInput("$dataINI", XTYPE_STRING, "String Input", "Enter the name of the INI file", "DATA.INI", 1, 20);
+  if (iniFile === "")
+    iniFile = ".\\DATA.INI";
+  else
+    iniFile = ".\\" + iniFile;
+  
+  //Step 5a - Put all the strings in an array
+  var strings = new Array();
+  strings.push("KERNEL32", "GetPrivateProfileStringA", "WritePrivateProfileStringA", "Data", iniFile);
+  
+  //Step 5b - Calculate size of free space that the code & strings will need
+  var size = code.hexlength();
+  for (var i=0; strings[i]; i++) {
+    size = size + strings[i].length + 1;//1 for NULL
+  }  
+  
+  //Step 5c - Find free space to inject our code
+  var free = exe.findZeros(size+4);
+  if (free === -1)
+    return "Failed in part 3: Not enough free space";
+
+  var freeRva = exe.Raw2Rva(free);
+
+  //Step 5d - Create a call to the free space that was found before
+  exe.replace(offset, " B9", PTYPE_HEX);//Little trick to avoid changing 10 bytes - apparently the push gets nullified in the original
+  exe.replaceDWord(fnoffset + 1, freeRva - exe.Raw2Rva(fnoffset + 5));
+  
+  //Step 5e - Replace the variables used in code
+  var memPosition = freeRva + code.hexlength();
+  code = code.replace(varHex(1), memPosition.packToHex(4));//KERNEL32  
+  code = code.replace(varHex(2), exe.findFunction("GetModuleHandleA").packToHex(4));
+  code = code.replace(varHex(3), exe.findFunction("GetProcAddress").packToHex(4));
+  
+  memPosition = memPosition + strings[0].length + 1;//1 for null
+  code = code.replace(varHex(4), memPosition.packToHex(4));//GetPrivateProfileStringA
+  
+  memPosition = memPosition + strings[1].length + 1;//1 for null
+  code = code.replace(varHex(5), memPosition.packToHex(4));//WritePrivateProfileStringA
+
+  memPosition = memPosition + strings[2].length + 1;//1 for null
+  code = code.replace(varHex(7) , memPosition.packToHex(4));//INI file
+  code = code.replace(varHex(10), memPosition.packToHex(4));//INI file
+  
+  memPosition = memPosition + strings[3].length + 1;//1 for null
+  code = code.replace(varHex(6), memPosition.packToHex(4));//Data
+  code = code.replace(varHex(9), memPosition.packToHex(4));//Data
+   
+  code = code.replace(varHex(8), (AddPak - (freeRva + 115) - 5).packToHex(4));//AddPak function
+  
+  //Step 5f - Add the strings into our code as well
+  for (var i=0; strings[i]; i++) {
+    code = code + strings[i].toHex() + " 00";
+  }
+  code = code + " 00".repeat(8);
+  
+  //Step 6 - Finally, insert everything.
+  exe.insert(free, size+4, code, PTYPE_HEX);
+  
+  return true;
 }
+
+// 26.11.2010 - Organized DiffPatch into a working state for vc9 compiled clients [Yom]
+// 12.10.2010 - The complete diff would take 247+9+14 = 264 bytes.
+//              Note that if you are using k3dt"s diff patcher, you have to use 2.30
+//              since 2.31 and all before have a limit of 255 byte changes. [Shinryo]

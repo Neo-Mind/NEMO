@@ -1,27 +1,31 @@
 function ReadMsgstringtabledottxt() {
-	var langtype = getLangType();
-	switch(langtype) {
-		case -4: return "Failed in Part 1.1 ";
-		case -3: return "Failed in Part 1.2 ";
-		case -2: return "Failed in Part 1.3 ";
-		case -1: return "Failed in Part 1.4 ";
-	}
-	
-	var code =    ' 83 3D' + langtype.packToHex(4) + ' 00'	// cmp     langtype, 0
-							+ ' 56'							// push    esi
-							+ ' 75 24'					// jnz     short loc_582B4B <---- Jmp to ReadMsgStringTable()
-							+ ' 33 C9'					// xor     ecx, ecx
-							+ ' 33 C0'					// xor     eax, eax
-							+ ' 8B FF'					// mov     edi, edi
-							+ ' 8B 90 AB AB AB 00'	// mov     edx, off_7EF7FC[eax]
-							;
-                
-	var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-	if (offset == -1) {
-		return "Failed in part 1";
-	}
-	        
-	// Force a jump to ReadMsgStringTable(): JNZ -> JMP
-	exe.replace(offset+8, 'EB', PTYPE_HEX);
-	return true;
+  //////////////////////////////////////////////////////////////////
+  // GOAL: Convert the conditional jump from LangType check       //
+  //       to regular JMP so as to always load msgStringTable.txt //
+  //       inside "InitMsgStrings" function                       //
+  //////////////////////////////////////////////////////////////////
+  
+  //Step 1 - Find the comparison which is at the start of the function
+  //         Old clients have slightly different pattern <- To Do
+  
+  if (LANGTYPE === -1)
+    return "Failed in Part 1 - LangType not found"
+
+  var code = 
+      " 83 3D " + LANGTYPE +" 00" // CMP DWORD PTR DS:[g_serviceType], 0
+    + " 56"                       // PUSH ESI
+    + " 75 24"                    // JNZ addr -> continue with string loading
+    + " 33 C9"                    // XOR ECX, ECX
+    + " 33 C0"                    // XOR EAX, EAX
+    + " 8B FF"                    // MOV EDI, EDI
+    ;
+
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  if (offset === -1)
+    return "Failed in part 1";
+  
+  //Step 2 - Change JNZ to JMP
+  exe.replace(offset+8, "EB", PTYPE_HEX);
+  
+  return true;
 }

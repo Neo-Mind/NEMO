@@ -70,7 +70,7 @@ M: Enter search string
 
 F: B0 CB BB F6 20 B4 DC BE EE 20 BC B3 C1 A4 20 28 45 78 3A 20 B4 DC BE EE 20 B4 DC BE EE 20 2E 2E 2E
 R: 'Enter search string...'
- 	
+
 ----------------------------------
 M: Find
 ----------------------------------

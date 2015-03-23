@@ -1,22 +1,35 @@
 function KoreaServiceTypeXMLFix() {
+  ///////////////////////////////////////////////////////////
+  // GOAL: Remove the jmp after SelectKoreaClientInfo call //
+  //       so that SelectClientInfo also gets called.      //
+  ///////////////////////////////////////////////////////////
 
-	// 10.12.2010 - I think the diff I've placed inside SkipServiceSelect was
-	//              KoreaServiceTypeXMLFix. Even though, the previous version of this diff
-	//              just replaced the properties with those of america in the wrong way. [Shinryo]
-	
-	// Shinryo:
-	// Gravity has their clientinfo hardcoded and seperated the initialization, screw 'em.. :(
-	// SelectKoreaClientInfo() has for example global variables like g_extended_slot set
-	// which aren't set by SelectClientInfo(). Just call both functions will fix this as the
-	// changes from SelectKoreaClientInfo() will persist and overwritten by SelectClientInfo().
-	// TO-DO: Maybe use a seperate diff? Dunno.
-
-	var code = ' E8 AB AB FF FF E9 AB AB FF FF 6A 00 E8 AB AB FF FF 83 C4 04';
-	var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-	if (offset == -1) {
-		return "Failed in part 1";
-	}
-	
-	exe.replace(offset+5, ' 90 90 90 90 90', PTYPE_HEX);
-	return true;
+  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  // To Do - Pattern differs for old clients & there is more than 1 called location.
+  //        Find out when it changed.
+  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  //Step 1 - Find the called location
+  var code = 
+      " E8 AB AB FF FF"  // CALL SelectKoreaClientInfo
+    + " E9 AB AB FF FF"  // JMP addr
+    + " 6A 00"           // PUSH 0
+    + " E8 AB AB FF FF"  // CALL SelectClientInfo
+    + " 83 C4 04"        // ADD ESP, 4
+    ;
+    
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  if (offset == -1)
+    return "Failed in part 1";
+  
+  //Step 2 - NOP out the JMP instruction
+  exe.replace(offset+5, " 90 90 90 90 90", PTYPE_HEX);
+  
+  return true;
 }
+
+// Note:
+// Gravity has their clientinfo hardcoded and seperated the initialization, screw "em.. :(
+// SelectKoreaClientInfo() has for example global variables like g_extended_slot set
+// which aren"t set by SelectClientInfo(). Just call both functions will fix this as the
+// changes from SelectKoreaClientInfo() will persist and overwritten by SelectClientInfo().

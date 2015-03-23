@@ -148,25 +148,6 @@ function convertToBE(le) {//le is in PTYPE_HEX format but output wont have space
 	return be.replace(/ /g,"");	
 }
 
-function getLangType() {
-	var offset = exe.findString("america", RVA);
-	if (offset == -1) {
-		return -4;
-	}
-	
-	offset = exe.findCode('68' + offset.packToHex(4), PTYPE_HEX, false);
-	if (offset == -1) {
-		return -3;
-	}
-	
-	offset = exe.find('C7 05 AB AB AB AB 01 00 00 00', PTYPE_HEX, true, "\xAB", offset + 5);
-	if (offset == -1) {
-		return -2;
-	}
-	
-	return exe.fetchDWord(offset+2);
-}
-
 function GetResourceEntry(rTree, hierList) {
 	var rDir = rTree;
 	for(var i = 0; i < hierList.length; i++) {

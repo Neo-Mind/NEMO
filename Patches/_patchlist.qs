@@ -6,14 +6,14 @@
 //
 //FORMAT for registering group : registerGroup(group id, group Name, mutualexclude [true/false]);
 //
-//	If you wish that only 1 patch can be active at a time (default) put mutualexclude as true
+//  If you wish that only 1 patch can be active at a time (default) put mutualexclude as true
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //FORMAT for registering patch : registerPatch(patch id, functionName, patch Name, category, group id, author, description, recommended [true/false] );
 //
-//	functionName is the function called when a patch is enabled. All your logic goes inside it.
-//	You can define your function in any .qs file in the patches folder.
-//	Remember the functionName needs to be in quotes (single or double) here but no quotes should be used while defining it.
+//  functionName is the function called when a patch is enabled. All your logic goes inside it.
+//  You can define your function in any .qs file in the patches folder.
+//  Remember the functionName needs to be in quotes (single or double) here but no quotes should be used while defining it.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //Currently some of the ids are not used in between - i believe because some patches were removed due to errors. Anyways dont use those ids for new ones.
@@ -31,19 +31,19 @@ registerPatch(  3, "RemoveChatLimit", 'Chat Flood Remove Limit', 'UI', 1, "Neo",
 
 registerPatch(  5, "EnableProxySupport", 'Enable Proxy Support (Experimental)', 'Fix', 0, "Ai4rei/AN", 'Ignores server-provided IP addresses when changing servers.', false);
 
-registerPatch(  6, "ForceSendClientHash", 'Force Send Client Hash Packet (Experimental)', 'Packet', 0, "GreenBox, Neo", 'Forces the client to send a packet with it\'s MD5 hash for all servicetypes. Only use if you have enabled it in your server', false);
+registerPatch(  6, "ForceSendClientHash", 'Force Send Client Hash Packet (Experimental)', 'Packet', 0, "GreenBox, Neo", 'Forces the client to send a packet with it\'s MD5 hash for all langtypes. Only use if you have enabled it in your server', false);
 
-registerPatch(  7, "ChangeGravityErrorHandler", 'Change Gravity Error Handler', 'Fix', 0, " ", 'It changes the Gravity Error Handler Mesage for a Custom One Pre-Defined by Diff Team.', false);
+//registerPatch(  7, "ChangeGravityErrorHandler", 'Change Gravity Error Handler', 'Fix', 0, " ", 'It changes the Gravity Error Handler Mesage for a Custom One Pre-Defined by Diff Team.', false);
 
 registerPatch(  8, "CustomWindowTitle", 'Custom Window Title', 'UI', 0, "Shinryo", 'Changes window title. Normally, the window title is "Ragnarok".', false);
 
 registerPatch(  9, "Disable1rag1Params", 'Disable 1rag1 type parameters', 'Fix', 0, "Shinryo", 'Enable this to launch the client directly without patching or any 1rag1, 1sak1 etc parameters.', true);
 
-registerPatch( 10, "Disable4LetterUserCharacterLimit", 'Disable 4 Letter UserCharacter Limit', 'Fix', 0, "Shinryo", 'Will allow people to use character names shorter than 4 characters.' );
+registerPatch( 10, "Disable4LetterCharnameLimit", 'Disable 4 Letter Character Name Limit', 'Fix', 0, "Shinryo", 'Will allow people to use character names shorter than 4 characters.', false);
 
-registerPatch( 11, "Disable4LetterUserIDLimit", 'Disable 4 Letter UserID Limit', 'Fix', 0, "Shinryo", 'Will allow people to use account names shorter than 4 characters.', false);
+registerPatch( 11, "Disable4LetterUsernameLimit", 'Disable 4 Letter User Name Limit', 'Fix', 0, "Shinryo", 'Will allow people to use account names shorter than 4 characters.', false);
 
-registerPatch( 12, "Disable4LetterUserPasswordLimit", 'Disable 4 Letter UserPassword Limit', 'Fix', 0, "Shinryo", 'Will allow people to use passwords shorter than 4 characters.' );
+registerPatch( 12, "Disable4LetterPasswordLimit", 'Disable 4 Letter Password Limit', 'Fix', 0, "Shinryo", 'Will allow people to use passwords shorter than 4 characters.', false);
 
 registerPatch( 13, "DisableFilenameCheck", 'Disable Ragexe Filename Check', 'Fix', 0, "Shinryo", 'Disables the check that forces the rakexe to quit if not called "sakexe.exe" in langtype 0', true);
 
@@ -54,6 +54,8 @@ registerPatch( 15, "DisableHShield", 'Disable HShield', 'Fix', 0, "Ai4rei/AN, Ne
 registerPatch( 16, "DisableSwearFilter", 'Disable Swear Filter', 'UI', 0, "Shinryo", 'The content of manner.txt has no impact on ability to send text.', false);
 
 registerPatch( 17, "EnableOfficialCustomFonts", 'Enable Official Custom Fonts', 'UI', 0, "Shinryo", 'This option forces Official Custom Fonts (eot files int data folder) on all langtype.', false);
+
+registerPatch( 18, "SkipServiceSelect", 'Skip Service Selection Screen', 'UI', 0, "Shinryo", 'Jumps directly to the login interface without asking to select a service.', false);
 
 registerPatch( 19, "EnableTitleBarMenu", 'Enable Title Bar Menu', 'UI', 0, "Shinryo", 'Enable Title Bar Menu (Reduce, Maximize, Close button) and the window icon.', false);
 
@@ -99,7 +101,7 @@ registerPatch( 39, "RemoveGravityLogo", 'Remove Gravity Logo', 'UI', 0, "Shinryo
 
 registerPatch( 40, "RestoreLoginWindow", 'Restore Login Window', 'Fix', 0, "Shinryo, Neo", 'Circumvents Gravity\'s new token-based login system and restores the normal login window', true);
 
-registerPatch( 41, "SetTCPNODELAY", 'Disable Nagle Algorithm', 'Packet', 0, "Shinryo", 'Disables the Nagle Algorithm.The Nagle Algorithm queues packets before they are sent in order to minimize protocol overhead. Disabling the algorithm will slightly increase network traffic, but it will decrease latency as well.', true);
+registerPatch( 41, "DisableNagleAlgorithm", 'Disable Nagle Algorithm', 'Packet', 0, "Shinryo", 'Disables the Nagle Algorithm.The Nagle Algorithm queues packets before they are sent in order to minimize protocol overhead. Disabling the algorithm will slightly increase network traffic, but it will decrease latency as well.', true);
 
 registerPatch( 42, "SkipResurrectionButtons", 'Skip Resurrection Buttons', 'UI', 0, "Shinryo", 'Skip resurrection button when you die or use Token of Ziegfried.', false);
 
@@ -129,15 +131,16 @@ registerPatch( 54, "ChatColorGM", 'Chat Color - GM', 'Color', 0, "Ai4rei/AN, Sha
 
 registerPatch( 55, "ChatColorPlayerOther", 'Chat Color - Other Player', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes other players Chat color and sets it to the specified value. Default value is ffffff (a white color)' );
 
-registerPatch( 56, "ChatColorMain", 'Chat Color - Main', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes the Main Chat color and sets it to the specified value.', false);
+//There is some mixup with PlayerOther patch
+//registerPatch( 56, "ChatColorMain", 'Chat Color - Main', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes the Main Chat color and sets it to the specified value.', false);
 
 registerPatch( 57, "ChatColorGuild", 'Chat Color - Guild', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes the Guild Chat color and sets it to the specified value. Default Value is b4ffb4 (a light green color)' );
 
 registerPatch( 58, "ChatColorPartyOther", 'Chat Color - Other Party ', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes the Other Party members Chat color and sets it to the specified value. Default value is ffc8c8 (a pinkish color)' );
 
-registerPatch( 59, "ChatColorPartyYou", 'Chat Color - Your Party', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes Your Party Chat color and sets it to the specified value. Default value is ffc800 (An orange color)' );
+registerPatch( 59, "ChatColorPartySelf", 'Chat Color - Your Party', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes Your Party Chat color and sets it to the specified value. Default value is ffc800 (An orange color)' );
 
-registerPatch( 60, "ChatColorPlayerYou", 'Chat Color - Self', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes your character\'s Chat color and sets it to the specified value. Default value is 00ff00 (a green color)', false);
+registerPatch( 60, "ChatColorPlayerSelf", 'Chat Color - Self', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes your character\'s Chat color and sets it to the specified value. Default value is 00ff00 (a green color)', false);
 
 registerPatch( 61, "DisablePacketEncryption", 'Disable Packet Encryption', 'UI', 0, "Ai4rei/AN", 'Disable kRO Packet_ID Encryption. Also known as Skip Packet Obfuscation', true);
 
@@ -147,7 +150,7 @@ registerPatch( 64, "FixChatAt", '@ Bug Fix', 'UI', 0, "Shinryo", 'Correct the bu
 
 registerPatch( 65, "ItemInfo", 'Load Custom lua file instead of iteminfo.lub', 'UI', 0, "Neo", 'Makes the client load your own lua file instead of iteminfo.lub . If you directly use ItemInfo.lub for your translated items, it may become lost during the next kRO update', false);
 
-registerPatch( 67, "QuakeSkillEffect", 'Remove Quake skill effect', 'UI', 0, "Ai4rei/AN", ' ', false);
+registerPatch( 67, "DisableQuakeEffect", 'Remove Quake skill effect', 'UI', 0, "Ai4rei/AN", ' ', false);
 
 registerPatch( 68, "Enable64kHairstyle", 'Enable 64k Hairstyle', 'UI', 0, "Ai4rei/AN", 'Enable 64k hairstyle instead 27 by default', false);
 
@@ -199,7 +202,7 @@ registerPatch( 93, "PacketSecondKeyEncryption", 'Packet Second Key Encryption', 
 
 registerPatch( 94, "PacketThirdKeyEncryption", 'Packet Third Key Encryption', 'Packet', 91, "Shakto, Neo", 'Change the 3rd key for packet encryption. Dont select the patch Disable Packet Header Encryption if you are using this. Don\'t use it if you don\'t know what you are doing. (Not available yet on rathena)', false);
 
-registerPatch( 95, "SsoLogin", 'Use SSO Login Packet', 'Packet', 0, "Ai4rei/AN", 'Enable using SSO packet on all langtype (to use login and pass with a launcher)', false);
+registerPatch( 95, "UseSSOLogin", 'Use SSO Login Packet', 'Packet', 0, "Ai4rei/AN", 'Enable using SSO packet on all langtype (to use login and pass with a launcher)', false);
 
 registerPatch( 96, "RemoveGMSprite", 'Remove GM Sprites', 'UI', 0, "Neo", 'Remove the GM sprites and keeping all the functionality like yellow name and admin right click.', false);
 

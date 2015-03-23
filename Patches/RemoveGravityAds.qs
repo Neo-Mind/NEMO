@@ -1,30 +1,31 @@
 function RemoveGravityAds() {
+  //////////////////////////////////////////
+  // GOAL: Zero out all Gravity Ad Images //
+  //////////////////////////////////////////
+  
+  //Step 1a - Find 1st Pic
+  var offset = exe.findString("\\T_중력성인.tga", RAW, false);
+  if (offset === -1)
+    return "Failed in part 1";
 
-	// T_중력성인.tga
-	var code = ' 54 5F C1 DF B7 C2 BC BA C0 CE 2E 74 67 61';
-	var offset = exe.findAll(code, PTYPE_HEX, false);
-	if (offset.length !== 1) {
-		return "Failed in part 1";
-	}
+  //Step 1b - Replace with NULL
+  exe.replace(offset+1, "00", PTYPE_HEX);
+  
+  //Step 2a - Find 2nd Pic
+  offset = exe.findString("\\T_GameGrade.tga", RAW, false);
+  if (offset === -1)
+    return "Failed in part 2";
+  
+  //Step 2b - Replace with NULL
+  exe.replace(offset+1, "00", PTYPE_HEX);
 
-	exe.replace(offset[0], ' 00', PTYPE_HEX);
-	
-	// T_GameGrade.tga
-	code = ' 54 5F 47 61 6D 65 47 72 61 64 65 2E 74 67 61';
-	offset = exe.findAll(code, PTYPE_HEX, false);
-	if (offset.length !== 1) {
-		return "Failed in part 2";
-	}
-	
-	exe.replace(offset[0], ' 00', PTYPE_HEX);
-
-	// T_테입%d.tga
-	code = ' 54 5F C5 D7 C0 D4 25 64 2E 74 67 61';
-	offset = exe.findAll(code, PTYPE_HEX, false);
-	if (offset.length !== 1) {
-		return "Failed in part 3";
-	}
-	
-	exe.replace(offset[0], ' 00', PTYPE_HEX);
-	return true;
+  //Step 3a - Find Last Pic
+  offset = exe.findString("\\T_테입%d.tga", RAW, false);
+  if (offset === -1)
+    return "Failed in part 3";
+    
+  //Step 3b - Replace with NULL
+  exe.replace(offset+1, "00", PTYPE_HEX);
+  
+  return true;
 }

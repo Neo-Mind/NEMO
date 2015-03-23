@@ -1,25 +1,31 @@
 function OnlyFirstLoginBackground() {
-	var first  = 'T_' + "\xB9\xE8\xB0\xE6" + '%d-%d.bmp' + "\x00";
-	var second = 'T2_' + "\xB9\xE8\xB0\xE6" + '%d-%d.bmp';
-	return OnlySelectedBackground(second, first);
+  return OnlySelectedBackground("2", "");
 }
 
 function OnlySecondLoginBackground() {
-	var first  = 'T_' + "\xB9\xE8\xB0\xE6" + '%d-%d.bmp' + "\x00";
-	var second = 'T2_' + "\xB9\xE8\xB0\xE6" + '%d-%d.bmp';
-	return OnlySelectedBackground(first, second);
+  return OnlySelectedBackground("", "2");
 }
 
-function OnlySelectedBackground(str1, str2) {
-	var prefix = "\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\x5C";
-	
-	//Step 1 - Find the string
-	var offset = exe.findString(prefix + str1, RAW);
-	if (offset == -1) {
-		return "Failed to find matching data : Part 1";
-	}
-	
-	//Step 2 - Replace with the other 
-	exe.replace(offset+15, str2, PTYPE_STRING);
-	return true;
+function OnlySelectedBackground(s1, s2) {
+  ///////////////////////////////////////////////////////
+  // GOAL: Replace one of the Login Backgrounds format //
+  //       strings with the other                      //
+  ///////////////////////////////////////////////////////
+  
+  //Step 1a - Prep Strings
+  var fnd = "유저인터페이스\\T" + s1 + "_배경" + "%d-%d.bmp";
+  if (s1 === "")
+    fnd  += "\x00";
+
+  var rep = s2 + "배경" + "%d-%d.bmp" + "\x00";
+  
+  //Step 1b - Find the source format string
+  var offset = exe.findString(fnd, RAW);
+  if (offset === -1)
+    return "Failed in Part 1";
+  
+  //Step 2 - Replace with the other 
+  exe.replace(offset+16, rep, PTYPE_STRING);
+  
+  return true;
 }

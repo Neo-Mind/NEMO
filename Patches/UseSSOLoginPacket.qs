@@ -1,18 +1,31 @@
-function SsoLogin() {
-	var code =
-			  ' A1 AB AB AB AB' // push    0FFFFh
-			+ ' 85 C0'
-			+ ' 0F 84 AB AB AB AB'
-			+ ' 83 F8 12'
-			+ ' 0F 84 AB AB AB AB'
-			+ ' 83 F8 0C'
-			+ ' 0F 84 AB AB AB AB';
-	
-	var offset = exe.findCode(code, PTYPE_HEX, true, '\xAB');
-	if (offset == -1) {
-		return 'Failed in part 1';
-	}
+function UseSSOLogin() {
+  ///////////////////////////////////////////////
+  // GOAL: Modify the Conditional Jump to send //
+  //       SSO Login Packet                    //
+  ///////////////////////////////////////////////
+  
+  //To Do - did not find it in old client
+  
+  //Step 1 - Find the LangType comparison
+  if (LANGTYPE === -1)
+    return "Failed in Part 1 - LangType not found";
     
-    exe.replace(offset+7, ' 90 E9', PTYPE_HEX);
-    return true;
+  var code =
+      " A1" + LANGTYPE     // MOV EAX, DWORD PTR DS:[g_serviceType]
+    + " 85 C0"             // TEST EAX, EAX
+    + " 0F 84 AB AB AB AB" // JE addr
+    + " 83 F8 12"          // CMP EAX, 12
+    + " 0F 84 AB AB AB AB" // JE addr
+    + " 83 F8 0C"          // CMP EAX, 0C
+    + " 0F 84"             // JE addr
+    ;
+  
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  if (offset === -1)
+    return "Failed in part 1";
+  
+  //Step 2 - Change first JE to JMP
+  exe.replace(offset+7, " 90 E9", PTYPE_HEX);
+  
+  return true;
 }

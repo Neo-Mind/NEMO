@@ -1,11 +1,15 @@
 function RemoveGravityLogo() {
-
-	var code = "T_R%d.tga";
-	var offset = exe.findAll(code, PTYPE_STRING, false);
-	if (offset.length !== 1) {
-		return "Failed in part 1";
-	}
-	
-	exe.replace(offset[0], ' 00', PTYPE_HEX);
-	return true;
+  ///////////////////////////////////////
+  // GOAL: Zero out Gravity Logo Image //
+  ///////////////////////////////////////
+  
+  //Step 1a - Find the image
+  var offset = exe.findString("\\T_R%d.tga", RAW, false);
+  if (offset === -1)
+    return "Failed in part 1";
+  
+  //Step 1b - Replace with NULL
+  exe.replace(offset+1, "00", PTYPE_HEX);
+  
+  return true;
 }
