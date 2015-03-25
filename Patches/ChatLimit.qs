@@ -10,7 +10,6 @@ function AllowChatFlood() {
 }
 
 function ChatLimit(option) {
-
   ///////////////////////////////////////////////////////////////
   //GOAL: Find the Comparison in the ::IsSameSentence function //
   //      and change the reference value of 2 or to remove the //

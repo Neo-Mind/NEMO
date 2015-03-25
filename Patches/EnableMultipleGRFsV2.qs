@@ -1,6 +1,3 @@
-// Enable Multiple GRF files
-// adds support to load GRF files from a list inside DATA.INI
-//
 function EnableMultipleGRFsV2() {
   ////////////////////////////////////////////////////////////////
   // GOAL: Override the data.grf loading with a custom function //

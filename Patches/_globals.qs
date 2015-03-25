@@ -21,5 +21,9 @@ function getLangType() {
 LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
 
 function varHex(num) {
+  //////////////////////////////////////////////
+  // GOAL: Generate 'CC CC CC C0+num' hexcode //
+  //       to use as variable in insert codes //
+  //////////////////////////////////////////////
   return (0xCCCCCCC0 + num).packToHex(4);
 }

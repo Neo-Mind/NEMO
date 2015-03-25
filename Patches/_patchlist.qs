@@ -218,6 +218,8 @@ registerGroup(101, "MultiGRFs", true);
 
 registerPatch(102, "FixTetraVortex", 'Fix Tetra Vortex', 'UI', 0, "sanosan33, Neo", 'Fixes the black screen animation issue of tetra vortex', false);
 
+registerPatch(103, "DisableAutofollow", 'Disable Auto follow', 'UI', 0, "Functor, Neo", 'Disables player autofollow on Shift+Right click', false);
+
 registerPatch( 49, "EnableMultipleGRFs", 'Enable Multiple GRFs', 'UI', 101, "Shinryo", 'Enables the use of multiple grf files by putting them in a data.ini file in your client folder.You can only load up to 10 total grf files with this option (0-9).', true);
 
 // Starting special customs from 200

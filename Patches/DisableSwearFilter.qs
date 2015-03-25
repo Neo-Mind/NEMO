@@ -7,7 +7,7 @@ function DisableSwearFilter() {
   // Note: It"s better to use a generic approach as some calls to 
   //       CInsultFilter::IsBadSentence can not be found, else it
   //       would be a huge pain to ensure for every location.
-  //       However this wont work on old clients. Same To Do
+  //       However this wont work on old clients ~ To Do
   //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   if (exe.getClientDate() <= 20130605) {
