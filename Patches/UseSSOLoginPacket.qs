@@ -7,6 +7,7 @@ function UseSSOLogin() {
   //To Do - did not find it in old client
   
   //Step 1 - Find the LangType comparison
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
     return "Failed in Part 1 - LangType not found";
     

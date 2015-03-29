@@ -64,37 +64,34 @@ function EnableProxySupport() {
   
   //Step 4a - Create the IP Saving code (g_SaveIP will be filled later. for now we use filler)
   var jmpCode =  
-      " A1 CC CC CC C1"  // MOV  EAX,DWORD PTR DS:[<g_SaveIP>]
+      " A1" + genVarHex(1)  // MOV  EAX,DWORD PTR DS:[<g_SaveIP>]
     + " 85 C0"           // TEST EAX,EAX
     + " 75 08"           // JNZ  SHORT to 'MOV [ESI+C], EAX'
     + " 8B 46 0C"        // MOV  EAX,DWORD PTR DS:[ESI+C]
-    + " A3 CC CC CC C1"  // MOV  DWORD PTR DS:[<g_SaveIP>],EAX
+    + " A3" + genVarHex(2)  // MOV  DWORD PTR DS:[<g_SaveIP>],EAX
     + " 89 46 0C"        // MOV  DWORD PTR DS:[ESI+C],EAX
     ;
 
   if (bIndirectCALL)
-  {
     jmpCode += " FF 25" + connAddr.packToHex(4) // JMP DWORD PTR DS:[<&WS2_32.connect>]
-  }
-  else 
-  {
-    jmpCode += " E9 CC CC CC C2"  // JMP <&WS2_32.connect> - will be filled later
-  }
+  else
+    jmpCode += " E9" + genVarHex(3)  // JMP <&WS2_32.connect> - will be filled later
   
   //Step 4b - Allocate space for Adding the code.
-  var jCSize = jmpCode.hexlength();
+  var jcSize = jmpCode.hexlength();
   
   offset = exe.findZeros(0x4+jcSize);//First 4 bytes are for g_SaveIP
   if (offset === -1)
-    return "Failed in Part 5";
+    return "Failed in Part 4";
   
   //Step 4c - Set g_SaveIP
-  jmpCode = jmpCode.replace(/ CC CC CC C1/g, offset.packToHex(4));
+  jmpCode = remVarHex(jmpCode, 1, offset);
+  jmpCode = remVarHex(jmpCode, 2, offset);
   
   //Step 4d - Set connect address for Direct call - need relative offset
   if (!bIndirectCALL) {
     connAddr += exe.Raw2Rva(offset+5) - exe.Raw2Rva(offset+jcSize);//Get Offset relative to JMP 
-    jmpCode = jmpCode.replace(" CC CC CC C2", connAddr.packToHex(4));
+    jmpCode = remVarHex(jmpCode, 3, connAddr);
   }
   
   //Step 5a - Redirect connect call to our code.

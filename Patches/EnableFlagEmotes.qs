@@ -38,6 +38,7 @@ function EnableFlagEmotes() {
   f.close();
   
   //Step 3a - Prep code that constitutes the Emote caller
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
     return "Failed in Part 2 - LangType not found";
     

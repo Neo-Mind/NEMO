@@ -7,7 +7,7 @@ function ReadMsgstringtabledottxt() {
   
   //Step 1 - Find the comparison which is at the start of the function
   //         Old clients have slightly different pattern <- To Do
-  
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceTypes
   if (LANGTYPE === -1)
     return "Failed in Part 1 - LangType not found"
 

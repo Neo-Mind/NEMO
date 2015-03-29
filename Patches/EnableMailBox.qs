@@ -38,6 +38,10 @@ function EnableMailBox() {
   exe.replace(offset-2, " EB 0C", PTYPE_HEX);
   
   //Step 3a - Prep codes for finding Long jumps
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
+  if (LANGTYPE === -1)
+    return "Failed in Part 3 - LangType not found";
+  
   code =
       " 0F 84 AB AB 00 00" //JE addr1 (prev statement is either TEST EAX, EAX or CMP EAX, r32 => both instructions use 2 bytes)
     + " 83 F8 08"          //CMP EAX,08

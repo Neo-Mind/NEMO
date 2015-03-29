@@ -10,6 +10,7 @@ function ReadQuestid2displaydottxt() {
   //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   // Step 1 - Find the LangType comparison
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
     return "Failed in Part 1 - LangType not found";
 

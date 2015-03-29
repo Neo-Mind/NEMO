@@ -106,7 +106,7 @@ function DisableHShield() {
   //Step 4c - Check for Use Custom DLL patch - needed since it modifies the import table location
   var hasCustomDLL = (exe.getActivePatches().indexOf(211) !== -1);
   
-  if (hasCustomDLL) {
+  if (hasCustomDLL && typeof(Imp_DATA) !== "undefined") {
     //Step 4d - Accommodate for the above if true - does the import table fix here.
     var tblData = Imp_DATA.valueSuf;
     var newTblData = "";

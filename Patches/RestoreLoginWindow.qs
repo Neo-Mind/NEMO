@@ -71,6 +71,7 @@ function RestoreLoginWindow() {
   
   //Step 4 - Force the client to send old login packet irrespective of LangType (Also inside CLoginMode::ChangeState)
   //          all JZ will be NOPed out
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
     return "Failed in Part 4 - LangType not found";
     

@@ -17,22 +17,23 @@ function EnableCustomJobs() {
     return "Failed in Part 1 - Novice info not found";
   
   //Step 1b - Find the location where novPath is referred (there are 3 we need - jobsprite, imf, palette)
-  var validLocs = "";
+  var validLocs = [];
   for (var j = 0; j < 4; j++) {
     var code = " C7 0" + j + novPath + " 8B";// C7 01 to C7 03 :D just to avoid wildcard fetching other patterns.
-    var offsets = exe.findCodes(code, PTYPE_HEX, false, " ");
+    var offsets = exe.findCodes(code, PTYPE_HEX, false);
     if (offsets[0])
-      validLocs += "," + offsets;
+      validLocs = validLocs.concat(offsets);
   }
-  validLocs = validLocs.replace(",", "").split(",").sort();
+  validLocs = validLocs.sort(function(a, b){return a-b});
   
   //Step 1c - For latest clients the 2nd offset expected wont be found in Step 1b.
   //          This is meant to be a TEMPORARY FIX - need to find a pattern that satisfies for all dates
   if (validLocs.length !== 3 && exe.getClientDate() >= 20131223) {
     validLocs[2] = validLocs[1];
-    var offset = exe.find(" E8 AB AB AB AB B9", PTYPE_HEX, true, "\xAB", validLocs[0], validLocs[1]);
+    var offset = exe.find(" E8 AB AB AB AB B9" + novPath, PTYPE_HEX, true, "\xAB", validLocs[0], validLocs[2]);
     if (offset === -1)
       return "Failed in Part 1 - 2nd Location missing";
+    
     validLocs[1] = offset+16;
   }
   if (validLocs.length !== 3)
@@ -42,45 +43,30 @@ function EnableCustomJobs() {
   var offset = exe.find(" E8 AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", validLocs[0] - 16, validLocs[0]);
   if (offset === -1)
     return "Failed in Part 1 - Job prefix missing";
+  
   var pathBegin = offset + 5;
   
   //Step 1e - Calculate Imf & Pal insert locations
   var imfBegin = validLocs[1] - 6;
   var palBegin = validLocs[2] - 6;
   
-  //Step 1f - Repeat Step 1b for Job Weapon/Shield prefix
-  var code = " E8 AB AB AB AB AB" + novHand + " 8B";
-  var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
-  var handBegin = -1;
-  
-  if (offsets.length > 1) {
-    for (var i=0; i<offsets.length; i++) {
-      var offset = offsets[i];
-      var assigner = exe.fetchHex(offset+5, 5);
-      for (var j = 0xB8; j<0xBB; j++) {
-        code = j.packToHex(1) + novHand;
-        if (assigner === code) break;
-      }
-      if (j<0xBB) break;
-    }
-    if (i !== offsets.length)
-      handBegin = offsets[i];
+  //Step 1f - Find location where Job Weapon/Shield prefix is referenced
+  for (var i = 0xB8; i < 0xBB; i++) {
+    var code = " E8 AB AB AB AB" + i.packToHex(1) + novHand + " 8B";
+    var handBegin = exe.find(code, PTYPE_HEX, true, "\xAB", imfBegin, palBegin);
+    if (handBegin !== -1) break;
   }
-  else
-    handBegin = offsets[0];
-  
   if (handBegin === -1)
     return "Failed in Part 1 - Hand prefix missing";
   
   //Step 1g -  Calculate Weapon/Shield insert location
   handBegin = handBegin + 10;
   
-  //Step 1h - Repeat Step 1b for Novice Job Name
+  //Step 1h - Find location where Novice Job Name is referenced
   for (var j = 0; j < 4; j++) {
     code = " C7 0" + j + novName + " 8B";// C7 01 to C7 03 :D just to avoid wildcard fetching other patterns.
     offset = exe.findCode(code, PTYPE_HEX, false);
-    if (offset === -1) continue;
-    break;
+    if (offset !== -1) break;
   }
   
   if (offset === -1)
@@ -90,62 +76,66 @@ function EnableCustomJobs() {
   offset = exe.find(" E8 AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", offset - 16, offset);
   if (offset === -1)
     return "Failed in Part 1 - Name location missing";
+  
   var nameBegin = offset + 5;
   
   //--- Find End Locations to jump to ---//
   //Step 2a - Job Path
-  var pathEnd = exe.find(" 8B 75 AB C7 AB 28 04 00 00", PTYPE_HEX, true, "\xAB", pathBegin, imfBegin);
+  var pathEnd = exe.find(" 8B 75 AB C7 AB 28 04 00 00", PTYPE_HEX, true, "\xAB", pathBegin, imfBegin);//MOV ESI, DWORD PTR SS:[LOCAL.4] => MOV DWORD PTR DS:[E*X+428], OFFSET addr1 ; "peco_rebellion"
   var pathnop = 3;
+  
   if (pathEnd === -1)
-    pathEnd = exe.find(" 8B 75 AB C7 AB 20 04 00 00", PTYPE_HEX, true, "\xAB", pathBegin, imfBegin);
+    pathEnd = exe.find(" 8B 75 AB C7 AB 20 04 00 00", PTYPE_HEX, true, "\xAB", pathBegin, imfBegin);//MOV ESI, DWORD PTR SS:[LOCAL.4] => MOV DWORD PTR DS:[E*X+420], OFFSET addr1 ; "frog_oboro"
   
   if (pathEnd === -1) {
-    pathEnd = exe.find(" 8B AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", pathBegin, imfBegin);
+    pathEnd = exe.find(" 8B AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", pathBegin, imfBegin);//MOV reg32_A, DWORD PTR DS:[ESI+const1] => MOV reg32_B, DWORD PTR DS:[ESI+const2]
     pathnop = false;
   }
+  
   if (pathEnd === -1)
     return "Failed in Part 2 - Job Path end missing";
   
   //Step 2b - Imf Path
-  var imfEnd = exe.find(" 8D AB AB AB AB AB 89 AB 20 04 00 00", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);
+  var imfEnd = exe.find(" 8D AB AB AB AB AB 89 AB 20 04 00 00", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);//LEA reg32_A, [ESI+const] => MOV DWORD PTR DS:[E*X+420], reg32_B
   var imfnop = 6;  
   if (imfEnd === -1) {
-    imfEnd = exe.find(" C7 44 24 AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);
+    imfEnd = exe.find(" C7 44 24 AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);//MOV DWORD PTR SS:[LOCAL.4],OFFSET addr => MOV EDX,DWORD PTR DS:[ECX+4]
     imfnop = false;  
   }
-  if (imfEnd === -1)
-    imfEnd = exe.find(" 8B AB AB AB AB AB C7 45", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);  
 
   if (imfEnd === -1)
-    imfEnd = exe.find(" 8B 8E AB AB 00 00 8B 96 AB AB 00 00", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);
+    imfEnd = exe.find(" 8B AB AB AB AB AB C7 45", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);// 
+
+  if (imfEnd === -1)
+    imfEnd = exe.find(" 8B 8E AB AB 00 00 8B 96 AB AB 00 00", PTYPE_HEX, true, "\xAB", imfBegin, handBegin);//MOV ECX,DWORD PTR DS:[ESI+const1] => MOV EDX,DWORD PTR DS:[ESI+const2]
 
   if (imfEnd === -1)
     return "Failed in Part 2 - Imf end missing";
   
   //Step 2c - Hand Path
-  var handEnd = exe.find(" 8B AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", handBegin, palBegin);
+  var handEnd = exe.find(" 8B AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", handBegin, palBegin);//MOV reg32_A, DWORD PTR DS:[ESI+const1] => MOV reg32_B, DWORD PTR DS:[ESI+const2]
   if (handEnd === -1)
     return "Failed in Part 2 - Hand end missing";
    
   //Step 2d - Pal Path
-  var palEnd = exe.find(" 8D AB AB AB AB AB 89 AB 20 04 00 00", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);
+  var palEnd = exe.find(" 8D AB AB AB AB AB 89 AB 20 04 00 00", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);//LEA reg32_A, [ESI+const1] => MOV DWORD PTR DS:[reg32_B+const2], reg32_C
   var palnop = 6;
   if (palEnd === -1) {
-    palEnd = exe.find(" C7 44 24 AB AB AB AB AB 8D", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);
+    palEnd = exe.find(" C7 44 24 AB AB AB AB AB 8D", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);//MOV DWORD PTR SS:[LOCAL.4], OFFSET addr => LEA  
     palnop = false;  
   }
   
   if (palEnd === -1)
-    palEnd = exe.find(" C7 45 AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);
+    palEnd = exe.find(" C7 45 AB AB AB AB AB 8B", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);//MOV DWORD PTR SS:[LOCAL.4], OFFSET addr => MOV
 
   if (palEnd === -1)
-    palEnd = exe.find(" 8B 8E AB AB 00 00 8B 96 AB AB 00 00", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);
+    palEnd = exe.find(" 8B 8E AB AB 00 00 8B 96 AB AB 00 00", PTYPE_HEX, true, "\xAB", palBegin, nameBegin);//MOV ECX,DWORD PTR DS:[ESI+const1] => MOV EDX,DWORD PTR DS:[ESI+const2]
 
   if (palEnd === -1)
     return "Failed in Part 2 - Pal end missing";
   
   //Step 2e - Job Name
-  var nameEnd = exe.find(" BF 2D 00 00 00 83 CB FF", PTYPE_HEX, false, " ",nameBegin);
+  var nameEnd = exe.find(" BF 2D 00 00 00 83 CB FF", PTYPE_HEX, false, " ",nameBegin);//MOV EDI, 2D => OR EBX, FFFFFFFFF
   if (nameEnd === -1)
     return "Failed in Part 2 - Job Name end missing";
   
@@ -181,9 +171,15 @@ function EnableCustomJobs() {
   var reqacc = exe.findString("ReqAccName",RVA).packToHex(4);
   var reqjob = exe.findString("ReqJobName",RVA).packToHex(4);
   
+  if (reqacc === " FF FF FF FF" || reqjob === " FF FF FF FF")
+    return "Failed in Part 4 - Lua functions missing";
+  
   //Step 4b - Find where they are referenced (ReqAccName only have 1 entry but ReqJobName has three or four of which we need the first)
-  var offset  = exe.findCode("68" + reqacc, PTYPE_HEX, false);
-  var offset2 = exe.findCode("68" + reqjob, PTYPE_HEX, false);
+  var offset  = exe.findCode(" 68" + reqacc, PTYPE_HEX, false);
+  var offset2 = exe.findCode(" 68" + reqjob, PTYPE_HEX, false);
+  
+  if (offset === -1 || offset2 === -1)
+    return "Failed in Part 4 - Lua references missing";
   
   //Step 4c - Read out the register and function addresses (Location differs based on Compiler version)
   if (exe.getClientDate() > 20130605) {
@@ -300,6 +296,7 @@ function EnableCustomJobs() {
   code = BuildInsertString(offset, OFDS, OFDD, "PCJobName_F", reqName_F, mapName_F, strAlloc, luaCaller, dsOff_Name, 0, true, nameEnd, max, 0) + " 90 90 90 90";
   code = code.replaceAt(3*60, " C3 90 90 90 90");
   exe.replace(offset, code, PTYPE_HEX);
+  
   var o2 = offset + code.hexlength();
   
   code = BuildInsertString(o2, OFDS, OFDD, "PCJobName_M", reqName_M , mapName_M , strAlloc, luaCaller, dsOff_Name, 0, true, nameEnd, max, 0);
@@ -412,19 +409,19 @@ function BuildInsertString(offset, OFDS, OFDD, fname, reqoff, mapoff, strAlloc, 
         " 83 EC 08"       // SUB ESP, 8
       + " 31 FF"          // XOR EDI,EDI
       + " BB 2C 00 00 00" // MOV EBX,2C
-      + " E8" + varHex(1) // CALL FNRQ - right after prefix
+      + " E8" + genVarHex(1) // CALL FNRQ - right after prefix
       + " BF" + basediff  // MOV EDI,0FA1
       + " BB" + maxdiff   // MOV EBX,1079
-      + " E8" + varHex(2) // CALL FNRQ - right after prefix
+      + " E8" + genVarHex(2) // CALL FNRQ - right after prefix
       + " 31 FF"          // XOR EDI,EDI
       + " BB 1D 00 00 00" // MOV EBX,1D
-      + " E8" + varHex(3) // CALL FNMP
+      + " E8" + genVarHex(3) // CALL FNMP
       + " BF" + basediff  // MOV EDI,0FA1
       + " BB" + maxdiff   // MOV EBX,1079
-      + " E8" + varHex(4) // CALL FNMP
+      + " E8" + genVarHex(4) // CALL FNMP
       + " 83 C4 08"       // ADD ESP, 8
       + " 8D 6D 00"       // LEA EBP,[EBP]
-      + " E9" + varHex(5) // JMP JM01
+      + " E9" + genVarHex(5) // JMP JM01
       + " 90 90 90"       // NOP - 3 times
       ;
 
@@ -438,12 +435,12 @@ function BuildInsertString(offset, OFDS, OFDD, fname, reqoff, mapoff, strAlloc, 
   var partsize = part1.hexlength();  
   var part2 = BuildLuaLoader(offset+prefsize+partsize, OFDD, "Map" + fname, mapoff, strAlloc, luaCaller, dsOff, esiDiff, isNameFn, "map");
   
-  prefix = prefix.replace(varHex(1), (prefsize-15).packToHex(4));//FNRQ
-  prefix = prefix.replace(varHex(2), (prefsize-30).packToHex(4));//FNRQ
-  prefix = prefix.replace(varHex(3), (prefsize-42 + partsize).packToHex(4));//FNMP
-  prefix = prefix.replace(varHex(4), (prefsize-57 + partsize).packToHex(4));//FNMP
+  prefix = remVarHex(prefix, 1, (prefsize-15));//FNRQ
+  prefix = remVarHex(prefix, 2, (prefsize-30));//FNRQ
+  prefix = remVarHex(prefix, 3, (prefsize-42 + partsize));//FNMP
+  prefix = remVarHex(prefix, 4, (prefsize-57 + partsize));//FNMP
   
-  prefix = prefix.replace(varHex(5), (jmpoff - (offset+prefsize-3)).packToHex(4)); //JMP instruction
+  prefix = remVarHex(prefix, 5, (jmpoff - (offset+prefsize-3))); //JMP instruction
   var code = prefix + part1 + part2;
   
   return code;

@@ -74,9 +74,9 @@ function EnableMultipleGRFsV2() {
   
   //Step 4a - Prep code for GRF loading
   var template = 
-      " 68" + varHex(1) // PUSH OFFSET addr; GRF name
+      " 68" + genVarHex(1) // PUSH OFFSET addr; GRF name
     + setECX            // MOV ECX, OFFSET g_fileMgr
-    + " E8" + varHex(2) // CALL CFileMgr::AddPak()
+    + " E8" + genVarHex(2) // CALL CFileMgr::AddPak()
     ;
     
   //Step 4b - Get Size of code & strings to allocate
@@ -90,15 +90,14 @@ function EnableMultipleGRFsV2() {
   
   var freeRva = exe.Raw2Rva(free);
   
-  //Step 4d - Starting offsets to replace varHex with
+  //Step 4d - Starting offsets to replace genVarHex with
   var o2 = freeRva + grfs.length * template.hexlength() + 2;
   var fn = AddPak - o2 + 2;
   
   //Step 4e - Create the full code from template for each grf & add strings
   var code = "";  
   for (var j = 0; grfs[j]; j++) {
-    code = template.replace(varHex(1), o2.packToHex(4)).replace(varHex(2), fn.packToHex(4)) + code ;
-    
+    code = remVarHex(remVarHex(template, 1, o2), 2, fn) + code;
     o2 += grfs[j].length + 1; //Extra 1 for NULL byte
     fn += template.hexlength();
   }

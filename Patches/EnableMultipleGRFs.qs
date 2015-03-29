@@ -60,19 +60,19 @@ function EnableMultipleGRFs() {
   var code =
         " C8 80 00 00"       // ENTER 80, 0
       + " 60"                // PUSHAD
-      + " 68" + varHex(1)    // PUSH addr1 ; "KERNEL32" => varHex(1)
-      + " FF 15" + varHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; varHex(2) 
+      + " 68" + genVarHex(1)    // PUSH addr1 ; "KERNEL32" => genVarHex(1)
+      + " FF 15" + genVarHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; genVarHex(2) 
       + " 85 C0"             // TEST EAX, EAX
       + " 74 23"             // JZ SHORT addr2
-      + " 8B 3D" + varHex(3) // MOV EDI,DWORD PTR DS:[<&KERNEL32.GetProcAddress>] ; varHex(3)
-      + " 68" + varHex(4)    // PUSH addr3 ; "GetPrivateProfileStringA" => varHex(4)
+      + " 8B 3D" + genVarHex(3) // MOV EDI,DWORD PTR DS:[<&KERNEL32.GetProcAddress>] ; genVarHex(3)
+      + " 68" + genVarHex(4)    // PUSH addr3 ; "GetPrivateProfileStringA" => genVarHex(4)
       + " 89 C3"             // MOV EBX, EAX
       + " 50"                // PUSH EAX ; hModule
       + " FF D7"             // CALL EDI ; GetProcAddress()
       + " 85 C0"             // TEST EAX, EAX
       + " 74 0F"             // JZ SHORT addr2
       + " 89 45 F6"          // MOV DWORD PTR SS:[EBP-0A], EAX
-      + " 68" + varHex(5)    // PUSH addr4 ; "WritePrivateProfileStringA" => varHex(5)
+      + " 68" + genVarHex(5)    // PUSH addr4 ; "WritePrivateProfileStringA" => genVarHex(5)
       + " 89 D8"             // MOV EAX, EBX
       + " 50"                // PUSH EAX ; hModule
       + " FF D7"             // CALL EDI ; GetProcAddress() 
@@ -82,14 +82,14 @@ function EnableMultipleGRFs() {
       + " 31 D2"             // XOR EDX, EDX
       + " 66 C7 45 FE 39 00" // MOV DWORD PTR SS:[EBP-2], 39 ; char 9
       + " 52"                // PUSH EDX
-      + " 68" + varHex(6)    // PUSH addr5 ; INI filename => varHex(6)
+      + " 68" + genVarHex(6)    // PUSH addr5 ; INI filename => genVarHex(6)
       + " 6A 74"             // PUSH 74
       + " 8D 5D 81"          // LEA EBX, [EBP-7F]
       + " 53"                // PUSH EBX
       + " 8D 45 FE"          // LEA EAX, [EBP-2]
       + " 50"                // PUSH EAX
       + " 50"                // PUSH EAX
-      + " 68" + varHex(7)    // PUSH addr6 ; "Data" => varHex(7)
+      + " 68" + genVarHex(7)    // PUSH addr6 ; "Data" => genVarHex(7)
       + " FF 55 F6"          // CALL DWORD PTR SS:[EBP-0A]
       + " 8D 4D FE"          // LEA ECX, [EBP-2]
       + " 66 8B 09"          // MOV CX, WORD PTR DS:[ECX]
@@ -100,7 +100,7 @@ function EnableMultipleGRFs() {
       + " 52"                // PUSH EDX
       + " 53"                // PUSH EBX
       +   setECX             // MOV ECX, g_fileMgr
-      + " E8" + varHex(8)    // CALL CFileMgr::AddPak() ; varHex(8)
+      + " E8" + genVarHex(8)    // CALL CFileMgr::AddPak() ; genVarHex(8)
       + " 5A"                // POP EDX
       + " 42"                // INC EDX
       + " FE 4D FE"          // DEC BYTE PTR SS:[EBP-2]
@@ -108,12 +108,12 @@ function EnableMultipleGRFs() {
       + " 73 C1"             // JNB SHORT addr8
       + " 85 D2"             // TEST EDX, EDX
       + " 75 20"             // JNZ SHORT addr9
-      + " 68" + varHex(9)    // PUSH addr10 ; INI filename => varHex(9)
+      + " 68" + genVarHex(9)    // PUSH addr10 ; INI filename => genVarHex(9)
       + " 68" + grf          // push addr11 ; "data.grf"
       + " 66 C7 45 FE 32 00" // MOV DWORD PTR SS:[EBP-2], 32
       + " 8D 45 FE"          // LEA EAX, [EBP-2]
       + " 50"                // PUSH EAX
-      + " 68" + varHex(10)   // PUSH addr12 ; "Data" => varHex(10)
+      + " 68" + genVarHex(10)   // PUSH addr12 ; "Data" => genVarHex(10)
       + " FF 55 FA"          // CALL DWORD PTR SS:[EBP-6]
       + " 85 C0"             // TEST EAX, EAX
       + " 75 97"             // JNZ SHORT 
@@ -152,25 +152,25 @@ function EnableMultipleGRFs() {
   
   //Step 5e - Replace the variables used in code
   var memPosition = freeRva + code.hexlength();
-  code = code.replace(varHex(1), memPosition.packToHex(4));//KERNEL32  
-  code = code.replace(varHex(2), exe.findFunction("GetModuleHandleA").packToHex(4));
-  code = code.replace(varHex(3), exe.findFunction("GetProcAddress").packToHex(4));
+  code = remVarHex(code, 1, memPosition);//KERNEL32  
+  code = remVarHex(code, 2, exe.findFunction("GetModuleHandleA"));
+  code = remVarHex(code, 3, exe.findFunction("GetProcAddress"));
   
   memPosition = memPosition + strings[0].length + 1;//1 for null
-  code = code.replace(varHex(4), memPosition.packToHex(4));//GetPrivateProfileStringA
+  code = remVarHex(code, 4, memPosition);//GetPrivateProfileStringA
   
   memPosition = memPosition + strings[1].length + 1;//1 for null
-  code = code.replace(varHex(5), memPosition.packToHex(4));//WritePrivateProfileStringA
+  code = remVarHex(code, 5, memPosition);//WritePrivateProfileStringA
 
   memPosition = memPosition + strings[2].length + 1;//1 for null
-  code = code.replace(varHex(7) , memPosition.packToHex(4));//INI file
-  code = code.replace(varHex(10), memPosition.packToHex(4));//INI file
+  code = remVarHex(code, 7, memPosition);//INI file
+  code = remVarHex(code, 10, memPosition);//INI file
   
   memPosition = memPosition + strings[3].length + 1;//1 for null
-  code = code.replace(varHex(6), memPosition.packToHex(4));//Data
-  code = code.replace(varHex(9), memPosition.packToHex(4));//Data
+  code = remVarHex(code, 6, memPosition);//Data
+  code = remVarHex(code, 9, memPosition);//Data
    
-  code = code.replace(varHex(8), (AddPak - (freeRva + 115) - 5).packToHex(4));//AddPak function
+  code = remVarHex(code, 8, (AddPak - (freeRva + 115) - 5));//AddPak function
   
   //Step 5f - Add the strings into our code as well
   for (var i=0; strings[i]; i++) {

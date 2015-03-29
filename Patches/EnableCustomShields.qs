@@ -237,15 +237,15 @@ function EnableCustomShields() {
   //Step 5f - Create Code
   var filecode = 
       prefix 
-    + " 68 00 00 00 00"       //PUSH ShieldTable
-    + " E8 00 00 00 00"        //CALL lualoader
+    + " 68" + genVarHex(1) //PUSH ShieldTable
+    + " E8" + genVarHex(2) //CALL lualoader
     + prefix 
-    + " 68 00 00 00 00"       //PUSH ShieldTable_F
-    + " E8 00 00 00 00"        //CALL lualoader
+    + " 68" + genVarHex(3) //PUSH ShieldTable_F
+    + " E8" + genVarHex(4) //CALL lualoader
     + prefix 
     + " 68" + newEff.packToHex(4)  //PUSH newEff
-    + " E8 00 00 00 00"    //CALL lualoader
-    + " E9 00 00 00 00"    //JMP back
+    + " E8" + genVarHex(5) //CALL lualoader
+    + " E9" + genVarHex(6) //JMP back
     + " 90 90 90"
     ;
   var fsize = filecode.hexlength();
@@ -261,18 +261,18 @@ function EnableCustomShields() {
   exe.replace(jmper, "E9" + GetRvaDiff(insertLocation, jmper+5), PTYPE_HEX);
   
   //Step 7b - return jmp 
-  filecode = filecode.replaceAt(-7*3, GetRvaDiff(jmpback, insertLocation + fsize-3));
+  filecode = remVarHex(filecode, 6, GetRvaDiff(jmpback, insertLocation + fsize-3));
   
   //Step 7c - Lua loaders
-  filecode = filecode.replaceAt( 3*(1*(prefsize+10)-4), GetRvaDiff(lualoader, insertLocation + (prefsize + 10)*1) );
-  filecode = filecode.replaceAt( 3*(2*(prefsize+10)-4), GetRvaDiff(lualoader, insertLocation + (prefsize + 10)*2) );
-  filecode = filecode.replaceAt( 3*(3*(prefsize+10)-4), GetRvaDiff(lualoader, insertLocation + (prefsize + 10)*3) );
+  filecode = remVarHex(filecode, 2, GetRvaDiff(lualoader, insertLocation + (prefsize + 10)*1) );
+  filecode = remVarHex(filecode, 4, GetRvaDiff(lualoader, insertLocation + (prefsize + 10)*2) );
+  filecode = remVarHex(filecode, 5, GetRvaDiff(lualoader, insertLocation + (prefsize + 10)*3) );
   
   var cbase = insertLocation + fsize;  //Lua Loader is done and code begins from this offset
   
   //Step 7d - ShieldTable & ShieldTable_F
-  filecode = filecode.replaceAt( 3*(1*(prefsize+10)-9), StrPack(cbase + csize - 64) );
-  filecode = filecode.replaceAt( 3*(2*(prefsize+10)-9), StrPack(cbase + csize - 33) );
+  filecode = remVarHex(filecode, 1, StrPack(cbase + csize - 64) );
+  filecode = remVarHex(filecode, 3, StrPack(cbase + csize - 33) );
 
   //Step 7e - GetShieldID & ReqShieldName
   code = code.replaceAt( rqLoc, StrPack(cbase + csize - 78) );
@@ -287,7 +287,6 @@ function EnableCustomShields() {
   //Step 7g - Lua Function Callers    
   code = code.replaceAt(fn2Loc1, GetRvaDiff(luaFnCaller, cbase + fn2Loc1/3 + 4) );
   code = code.replaceAt(fn2Loc2, GetRvaDiff(luaFnCaller, cbase + fn2Loc2/3 + 4) );
-  
   
   //Step 7h - Loop completion for Req  
   code = code.replaceAt(loopLoc, ((ReqBegin/3 + 9) - (loopLoc/3 + 1)).packToHex(1) );  

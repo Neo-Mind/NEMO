@@ -68,16 +68,16 @@ function DisableMultipleWindows() {
     
     //Step 4 - Prepare code for mutex windows
     code =
-        " E8" + varHex(0)    // CALL ResetTimer
+        " E8" + genVarHex(0)    // CALL ResetTimer
       + " 56"                // PUSH ESI
       + " 33 F6"             // XOR ESI,ESI
       + " E8 09 00 00 00"    // PUSH &JMP ; a little trick to use the string from
       + " 4B 45 52 4E 45 4C 33 32 00" // DB "KERNEL32",0
-      + " FF 15" + varHex(1) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
+      + " FF 15" + genVarHex(1) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
       + " E8 0D 00 00 00"    // PUSH &JMP
       + " 43 72 65 61 74 65 4D 75 74 65 78 41 00" // DB "CreateMutexA",0
       + " 50"                // PUSH EAX
-      + " FF 15" + varHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
+      + " FF 15" + genVarHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
       + " E8 0F 00 00 00"    // PUSH &JMP
       + " 47 6C 6F 62 61 6C 5C 53 75 72 66 61 63 65 00" // DB "Global\Surface",0
       + " 56"                // PUSH ESI
@@ -87,20 +87,20 @@ function DisableMultipleWindows() {
       + " 74 0F"             // JE addr1 -> ExitProcess call below
       + " 56"                // PUSH ESI
       + " 50"                // PUSH EAX
-      + " FF 15" + varHex(3) // CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
+      + " FF 15" + genVarHex(3) // CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
       + " 3D 02 01 00 00"    // CMP EAX, 258  ; WAIT_TIMEOUT
       + " 75 2F"             // JNZ addr2 -> POP ESI below
       + " E8 09 00 00 00"    // PUSH &JMP ; addr1
       + " 4B 45 52 4E 45 4C 33 32 00" // DB "KERNEL32",0
-      + " FF 15" + varHex(4) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
+      + " FF 15" + genVarHex(4) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
       + " E8 0C 00 00 00"    // PUSH &JMP
       + " 45 78 69 74 50 72 6F 63 65 73 73 00" // DB "ExitProcess",0
       + " 50"                // PUSH EAX
-      + " FF 15" + varHex(5) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
+      + " FF 15" + genVarHex(5) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
       + " 56"                // PUSH ESI
       + " FF D0"             // CALL EAX
       + " 5E"                // POP ESI ; addr2
-      + " E9" + varHex(6)    // JMP AfterStolenCall
+      + " E9" + genVarHex(6)    // JMP AfterStolenCall
       ;
       
     //Step 6 - Get Free Offset
@@ -112,13 +112,13 @@ function DisableMultipleWindows() {
     exe.replace(offset-5, "E9" + (exe.Raw2Rva(free)-exe.Raw2Rva(offset)).packToHex(4), PTYPE_HEX);
   
     //Step 8 - Fill the call instruction.
-    code = code.replace(varHex(0), (resetTimer - exe.Raw2Rva(free + 5)).packToHex(4));
-    code = code.replace(varHex(1), exe.findFunction("GetModuleHandleA"   ).packToHex(4));
-    code = code.replace(varHex(2), exe.findFunction("GetProcAddress"     ).packToHex(4));
-    code = code.replace(varHex(3), exe.findFunction("WaitForSingleObject").packToHex(4));
-    code = code.replace(varHex(4), exe.findFunction("GetModuleHandleA"   ).packToHex(4));
-    code = code.replace(varHex(5), exe.findFunction("GetProcAddress"     ).packToHex(4));
-    code = code.replace(varHex(6), (exe.Raw2Rva(offset) - exe.Raw2Rva(free + 0x95)).packToHex(4));
+    code = remVarHex(code, 0, (resetTimer - exe.Raw2Rva(free + 5)));
+    code = remVarHex(code, 1, exe.findFunction("GetModuleHandleA"   ));
+    code = remVarHex(code, 2, exe.findFunction("GetProcAddress"     ));
+    code = remVarHex(code, 3, exe.findFunction("WaitForSingleObject"));
+    code = remVarHex(code, 4, exe.findFunction("GetModuleHandleA"   ));
+    code = remVarHex(code, 5, exe.findFunction("GetProcAddress"     ));
+    code = remVarHex(code, 6, (exe.Raw2Rva(offset) - exe.Raw2Rva(free + 0x95)));
     
     //Step 9 - Insert the ASM code
     exe.insert(free, 0x95, code, PTYPE_HEX);

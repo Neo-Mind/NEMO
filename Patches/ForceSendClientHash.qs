@@ -6,6 +6,7 @@ function ForceSendClientHash() {
   /////////////////////////////////////////////////////////////////////////
   
   //Step 1a - Find the 1st LangType comparison
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
     return "Failed in Part 1 - LangType not found";
     

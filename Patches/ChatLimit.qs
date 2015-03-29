@@ -24,6 +24,7 @@ function ChatLimit(option) {
   
   //Step 1a - Get the comparison pattern (changes for different client dates because of ebp/esp shift)
   
+  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
     return "Failed in Part 1 - LangType not found";
     

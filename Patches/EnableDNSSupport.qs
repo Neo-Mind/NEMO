@@ -5,7 +5,7 @@ function EnableDNSSupport() {
   //       g_accountAddr value                             //
   ///////////////////////////////////////////////////////////
 
-  //To do - FOr old clients search patterns differs slightly
+  //To do - For old clients search patterns differs slightly
   
   // Step 1a - Find the code to hook our function to
   var code =
@@ -28,11 +28,11 @@ function EnableDNSSupport() {
   
   //Step 2a - Construct our function
   var dnscode =
-      " E8" + varHex(1)    // CALL g_ResMgr ; call the actual function that was supposed to be run
+      " E8" + genVarHex(1)    // CALL g_ResMgr ; call the actual function that was supposed to be run
     + " 60"                // PUSHAD
-    + " 8B 35" + varHex(2) // MOV ESI,DWORD PTR DS:[g_accountAddr]
+    + " 8B 35" + genVarHex(2) // MOV ESI,DWORD PTR DS:[g_accountAddr]
     + " 56"                // PUSH ESI
-    + " FF 15" + varHex(3) // CALL DWORD PTR DS:[<&WS2_32.#52>] ; WS2_32.gethostbyname()
+    + " FF 15" + genVarHex(3) // CALL DWORD PTR DS:[<&WS2_32.#52>] ; WS2_32.gethostbyname()
     + " 8B 48 0C"          // MOV ECX,DWORD PTR DS:[EAX+0C]
     + " 8B 11"             // MOV EDX,DWORD PTR DS:[ECX]
     + " 89 D0"             // MOV EAX,EDX
@@ -44,11 +44,11 @@ function EnableDNSSupport() {
     + " 51"                // PUSH ECX
     + " 0F B6 08"          // MOVZX ECX,BYTE PTR DS:[EAX]
     + " 51"                // PUSH ECX
-    + " 68" + varHex(4)    // PUSH OFFSET addr1 ; ASCII "%d.%d.%d.%d"
-    + " 68" + varHex(5)    // PUSH OFFSET addr2 ; location is at the end of the code with Initial value "127.0.0.1"
-    + " FF 15" + varHex(6) // CALL DWORD PTR DS:[<&MSVCR90.sprintf>]
+    + " 68" + genVarHex(4)    // PUSH OFFSET addr1 ; ASCII "%d.%d.%d.%d"
+    + " 68" + genVarHex(5)    // PUSH OFFSET addr2 ; location is at the end of the code with Initial value "127.0.0.1"
+    + " FF 15" + genVarHex(6) // CALL DWORD PTR DS:[<&MSVCR90.sprintf>]
     + " 83 C4 18"          // ADD ESP,18
-    + " C7 05" + varHex(7) + varHex(8) // MOV DWORD PTR DS:[g_accountAddr], addr2 ; Replace g_accountAddr current value with its ip address
+    + " C7 05" + genVarHex(7) + genVarHex(8) // MOV DWORD PTR DS:[g_accountAddr], addr2 ; Replace g_accountAddr current value with its ip address
     + " 61"                // POPAD
     + " C3"                // RETN
     + " 00" +  "127.0.0.1\x00".toHex() // addr2
@@ -100,14 +100,14 @@ function EnableDNSSupport() {
   uRVAfreeoffset = exe.Raw2Rva(free + 77);
   
   //Step 3g - Replace all the variables
-  dnscode = dnscode.replace(varHex(1), gResMgr.packToHex(4) );
-  dnscode = dnscode.replace(varHex(2), gAccountAddr.packToHex(4) );
-  dnscode = dnscode.replace(varHex(3), uGethostbyname.packToHex(4) );
-  dnscode = dnscode.replace(varHex(4), uIPScheme.packToHex(4) );
-  dnscode = dnscode.replace(varHex(5), uRVAfreeoffset.packToHex(4) );
-  dnscode = dnscode.replace(varHex(6), uSprintf.packToHex(4) );
-  dnscode = dnscode.replace(varHex(7), gAccountAddr.packToHex(4) );
-  dnscode = dnscode.replace(varHex(8), uRVAfreeoffset.packToHex(4) );
+  dnscode = remVarHex(dnscode, 1, gResMgr);
+  dnscode = remVarHex(dnscode, 2, gAccountAddr);
+  dnscode = remVarHex(dnscode, 3, uGethostbyname);
+  dnscode = remVarHex(dnscode, 4, uIPScheme);
+  dnscode = remVarHex(dnscode, 5, uRVAfreeoffset);
+  dnscode = remVarHex(dnscode, 6, uSprintf);
+  dnscode = remVarHex(dnscode, 7, gAccountAddr);
+  dnscode = remVarHex(dnscode, 8, uRVAfreeoffset);
   
   //Step 4 - Finally, insert everything.
   exe.insert(free, size + 4, dnscode, PTYPE_HEX);        

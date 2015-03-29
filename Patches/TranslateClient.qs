@@ -61,6 +61,7 @@
  }
  
  //Step 4a - Translate Taekwon Job names. Find the Langtype Check
+ var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
  if (LANGTYPE === -1)
    return "Failed in Part 4 - LangType not found";
   

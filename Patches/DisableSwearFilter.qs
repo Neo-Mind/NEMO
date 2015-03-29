@@ -35,7 +35,7 @@ function DisableSwearFilter() {
     var code =
         " 8B 45 08"       // MOV EAX,DWORD PTR SS:[ARG.1]
       + " 50"             // PUSH EAX
-      + " E8 AB AB FF FF" // CALL func -> Contains CInsultFilter::IsBadSentence
+      + " E8 AB AB AB FF" // CALL func -> Contains CInsultFilter::IsBadSentence
       + " 33 C9"          // XOR ECX,ECX
       + " 84 C0"          // TEST AL,AL
       + " 0F 94 C0"       // SETZ AL
@@ -44,9 +44,8 @@ function DisableSwearFilter() {
       ;
 
     var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-    if (offset !== -1) {
+    if (offset === -1)
       return "Failed in part 1";
-    }
     
     //Step 2 - Replace the TEST + SETZ instruction with XOR AL, AL followed by NOP which will make AL = 0
     exe.replace(offset+13, " 30 C0 90", PTYPE_HEX);

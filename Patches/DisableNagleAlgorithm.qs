@@ -17,7 +17,7 @@ function DisableNagleAlgorithm() {
     + " 51"                    // PUSH ECX
     + " 8B 55 08"              // MOV EDX,DWORD PTR SS:[EBP+8]
     + " 52"                    // PUSH EDX
-    + " A1" + varHex(1)       // MOV EAX,DWORD PTR DS:[<&WS2_32.#23>] ; WS2_32.socket() => varHex(1)
+    + " A1" + genVarHex(1)       // MOV EAX,DWORD PTR DS:[<&WS2_32.#23>] ; WS2_32.socket() => genVarHex(1)
     + " FF D0"                 // CALL EAX
     + " 89 45 FC"              // MOV DWORD PTR SS:[EBP-4],EAX
     + " 83 7D FC FF"           // CMP DWORD PTR SS:[EBP-4],-1
@@ -26,10 +26,10 @@ function DisableNagleAlgorithm() {
     + " 73 65 74 73 6F 63 6B 6F 70 74 00" // DB "setsockopt\x00"
     + " E8 0B 00 00 00"        // JMP &PUSH
     + " 57 53 32 5F 33 32 2E 44 4C 4C 00" // DB "WS2_32.DLL\x00"
-    + " 8B 0D" + varHex(2)     // MOV ECX,DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; varHex(2)
+    + " 8B 0D" + genVarHex(2)     // MOV ECX,DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; genVarHex(2)
     + " FF D1"                 // CALL ECX
     + " 50"                    // PUSH EAX
-    + " 8B 15" + varHex(3)     // MOV EDX,DWORD PTR DS:[<&KERNEL32.GetProcAddress>]   ; varHex(3)
+    + " 8B 15" + genVarHex(3)     // MOV EDX,DWORD PTR DS:[<&KERNEL32.GetProcAddress>]   ; genVarHex(3)
     + " FF D2"                 // CALL EDX
     + " 89 45 F4"              // MOV DWORD PTR SS:[EBP-0C],EAX
     + " 83 7D F4 00"           // CMP DWORD PTR SS:[EBP-0C],0
@@ -94,9 +94,9 @@ function DisableNagleAlgorithm() {
     return "Failed in Part 3 - Function address is unknown";
   
   //Step 3c - Insert all the missing values into the replace code.
-  code = code.replace( varHex(1), sockFunc.packToHex(4)); // socket function at 26
-  code = code.replace( varHex(2), exe.findFunction("GetModuleHandleA").packToHex(4));
-  code = code.replace( varHex(3), exe.findFunction("GetProcAddress").packToHex(4));
+  code = remVarHex(code, 1, sockFunc); // socket function at 26
+  code = remVarHex(code, 2, exe.findFunction("GetModuleHandleA"));
+  code = remVarHex(code, 3, exe.findFunction("GetProcAddress"));
   
   //Step 4a - Now the allocated code needs to be called from the area where JMP to socket() found in each client.
   offset = exe.findCode("FF 25" + sockFunc.packToHex(4), PTYPE_HEX, false);//JMP DWORD PTR DS:[<&WS2_32.#23>]
