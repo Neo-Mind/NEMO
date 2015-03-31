@@ -19,7 +19,7 @@ function LoadCustomQuestLua() {
   var jmpback = offset + 10;
   
   //Step 1c - Find the starting part of the lua file loading code 
-  var jmpfrom = exe.find(" 8B 0D AB AB AB 00", PTYPE_HEX, true, "\xAB", offset - 10, offset);//Need to overwrite to a jump at this location
+  var jmpfrom = exe.find(" 8B AB AB AB AB 00", PTYPE_HEX, true, "\xAB", offset - 10, offset);//Need to overwrite to a jump at this location
   if (jmpfrom === -1)
     return "Failed in Part 3";
   

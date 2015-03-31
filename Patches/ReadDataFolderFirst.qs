@@ -30,7 +30,7 @@ function ReadDataFolderFirst() {
   var readFolder = exe.fetchHex(offset+18, 4);  // store variable address of ReadFolder
   
   //Step 3 - Find comparison of g_readFolderFirst . Not sure why this is needed but anyways. 
-  if (exe.getClientDate() < 20120000) { // not sure of actual date,
+  if (exe.getClientDate() <= 20110810) { // not sure of actual date,
     code =  
         " 80 3D" + readFolder + " 00" // CMP g_readFolderFirst, 0
       + " 57"                          // PUSH EDI
@@ -39,7 +39,8 @@ function ReadDataFolderFirst() {
       + " 74"                          // JZ addr
       ;    
   }
-  else if (exe.getClientDate() <= 20130605) {
+  else
+  if (exe.getClientDate() <= 20130605) {
     code =  
         " 80 3D" + readFolder + " 00"  // CMP g_readFolderFirst, 0
       + " 53"                          // PUSH EBX

@@ -137,9 +137,9 @@ function UseCustomIcon(nomod) {
     memicondirentry.nID          = exe.fetchWord(pos+12);
     
     if (memicondirentry.bColorCount == 0 && memicondirentry.wBitCount == 8 && memicondirentry.bWidth == 32 && memicondirentry.bWidth == 32) {//8bit image
-      entry = GetResourceEntry(rsrcTree, [0x3, memicondirentry.nID, 0x412]);
-      if (entry >= 0)
-        break;
+      entry = GetResourceEntry(rsrcTree, [0x3, memicondirentry.nID, 0x412]);//returns negative number on fail or ResourceEntry object on success
+      if (entry < 0) continue;
+      break;
     }
     
     pos += 14;

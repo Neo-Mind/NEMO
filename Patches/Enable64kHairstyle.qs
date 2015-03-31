@@ -4,12 +4,16 @@ function Enable64kHairstyle() {
   //       generate hair style IDs ad-hoc instead  //
   ///////////////////////////////////////////////////
   
+  //--- Client Date Check ---//
+  if (exe.getClientDate() <= 20111102)
+    return "Unsupported client date";
+  
   // Step 1a - Find the pattern string
   var code = " C0 CE B0 A3 C1 B7 5C B8 D3 B8 AE C5 EB 5C 25 73 5C 25 73 5F 25 73 2E 25 73 00"; // 인간족\머리통\%s\%s_%s.%s
   
   var offset = exe.find(code, PTYPE_HEX, false);
   if (offset === -1)
-    return "Failed in part 1";
+    return "Failed in part 1 - String not found";
   
   // Step 1b - Change the last %s to %u
   exe.replace(offset+18, "75", PTYPE_HEX);
@@ -51,8 +55,8 @@ function Enable64kHairstyle() {
   else {
     code =
         " 8B 4D 18" // MOV ECX, DWORD PTR SS:[EBP+18]
-      +  " 8B 09"    // MOV ECX, DWORD PTR DS:[ECX]
-      
+      + " 8B 09"    // MOV ECX, DWORD PTR DS:[ECX]
+      ;
   }
   
   code +=
