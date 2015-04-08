@@ -24,7 +24,7 @@ function EnableFlagEmotes() {
   }
   
   //Step 2b - Read all the entries into an array
-  var consts = new Array();
+  var consts = [];
   while (!f.eof()) {
     var str = f.readline().trim();
     if (str.charAt(1) === "=") {

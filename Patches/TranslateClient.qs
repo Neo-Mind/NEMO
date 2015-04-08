@@ -11,7 +11,7 @@
  
  var offset = -1;
  var msg = ""; 
- var failmsgs = new Array();//Array to store all Failure messages
+ var failmsgs = [];//Array to store all Failure messages
  
  // Step 2 - Loop through the text file, get the respective strings & do findString + replace
  // M: = Failure message string
@@ -66,7 +66,7 @@
    return "Failed in Part 4 - LangType not found";
   
  var code = 
-      " 83 3D" + LANGTYPE + " 00" // CMP g_serviceType, 0
+      " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_serviceType], 0
     + " B9 AB AB AB AB"           // MOV ECX, addr1
     + " 75 59"                    // JNZ addr2
   ;

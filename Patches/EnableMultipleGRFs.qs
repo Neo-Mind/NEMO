@@ -130,8 +130,7 @@ function EnableMultipleGRFs() {
     iniFile = ".\\" + iniFile;
   
   //Step 5a - Put all the strings in an array
-  var strings = new Array();
-  strings.push("KERNEL32", "GetPrivateProfileStringA", "WritePrivateProfileStringA", "Data", iniFile);
+  var strings = ["KERNEL32", "GetPrivateProfileStringA", "WritePrivateProfileStringA", "Data", iniFile];
   
   //Step 5b - Calculate size of free space that the code & strings will need
   var size = code.hexlength();

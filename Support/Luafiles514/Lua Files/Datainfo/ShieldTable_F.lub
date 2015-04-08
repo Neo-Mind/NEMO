@@ -8,7 +8,7 @@ function ReqShieldName(id)
 end
 
 function GetShieldID(itemid)
-  local NameMsg = ShieldMapTable[index]
+  local NameMsg = ShieldMapTable[itemid]
   if NameMsg ~= nil then
     return NameMsg
   else

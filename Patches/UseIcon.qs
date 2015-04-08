@@ -16,7 +16,7 @@ function ReadIconFile(fname) {
   icondir.idReserved = fp.readHex(pos,2).unpackToInt();
   icondir.idType     = fp.readHex(pos+2,2).unpackToInt();
   icondir.idCount    = fp.readHex(pos+4,2).unpackToInt();
-  icondir.idEntries  = new Array();
+  icondir.idEntries  = [];
   pos += 6;
   
   //Step 4 - Read all the image entry + data

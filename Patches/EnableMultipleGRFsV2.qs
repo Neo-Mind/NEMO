@@ -49,8 +49,7 @@ function EnableMultipleGRFsV2() {
     return "Patch Cancelled";
   
   //Step 3b - Read the GRF filenames from the INI
-  var temp = new Array();
-  
+  var temp = [];  
   while (!f.eof()) {
     var str = f.readline().trim();
     if (str.charAt(1) === "=") {
@@ -63,8 +62,7 @@ function EnableMultipleGRFsV2() {
   f.close();
   
   //Step 3c - Put into an array in order.
-  var grfs = new Array();
-  
+  var grfs = [];  
   for (var i = 0; i < 10; i++) {
     if (temp[i])
       grfs.push(temp[i]);
@@ -97,7 +95,7 @@ function EnableMultipleGRFsV2() {
   //Step 4e - Create the full code from template for each grf & add strings
   var code = "";  
   for (var j = 0; grfs[j]; j++) {
-    code = remVarHex(remVarHex(template, 1, o2), 2, fn) + code;
+    code = remVarHex(template, [1, 2], [o2, fn]) + code;
     o2 += grfs[j].length + 1; //Extra 1 for NULL byte
     fn += template.hexlength();
   }

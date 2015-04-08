@@ -13,12 +13,7 @@ String.prototype.repeat = function(num) {
 }
 
 String.prototype.hexlength = function() {
-	var i=0;
-	var l=0;
-	while(i<this.length) {
-		if (this.charAt(i) !== " ") l++;
-		i++;
-	}
+	var l=this.replace(/ /g, "").length;
 	if (l%2 !== 0) l++;
 	return l/2;
 }

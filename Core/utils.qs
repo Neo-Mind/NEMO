@@ -6,15 +6,25 @@ function genVarHex(num) {
   return (0xCCCCCCC0 + num).packToHex(4);
 }
 
-function remVarHex(code, num, value) {
+function remVarHex(code, nums, values) {
   ////////////////////////////////////////////
   // GOAL: Remove "CC CC CC C0+num" hexcode //
   //       used as variable in insert codes //
   ////////////////////////////////////////////
-  if (typeof(value) === "number")
-    value = value.packToHex(4);
+  if (typeof(nums) === "number") {
+    nums = [nums];
+    values = [values];
+  }
   
-  return code.replace(genVarHex(num), value);
+  for (var i = 0; i < nums.length; i++) {
+    var num = nums[i];
+    var value = values[i];
+    if (typeof(value) === "number")
+      value = value.packToHex(4);
+    code = code.replace(genVarHex(num), value);
+  }
+  
+  return code;
 }
 
 function getLangType() {

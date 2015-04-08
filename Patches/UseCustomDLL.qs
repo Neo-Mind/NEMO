@@ -38,8 +38,8 @@ function UseCustomDLL() {
     return "Patch Cancelled";
   
   //Step 2b - Read the file and store the dll names and function names into arrays
-  var dllNames = new Array();
-  var fnNames = new Array();
+  var dllNames = [];
+  var fnNames = [];
   var dptr = -1;
   
   while (!fp.eof()) {
@@ -48,7 +48,7 @@ function UseCustomDLL() {
     if ((line.indexOf(".dll") - line.length) == -4) {
       dptr++;
       dllNames.push({"offset":0, "value":line});
-      fnNames[dptr] = new Array();
+      fnNames[dptr] = [];
     }
     else
       fnNames[dptr].push({"offset":0, "value":line});

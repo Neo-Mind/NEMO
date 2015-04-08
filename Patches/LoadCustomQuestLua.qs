@@ -43,7 +43,7 @@ function LoadCustomQuestLua() {
     return "Patch Cancelled";
   
   //Step 2b - Get the filenames from the list file
-  var files = new Array();
+  var files = [];
   var size = 0;
   while (!f.eof()) {
     var line = f.readline().trim();
