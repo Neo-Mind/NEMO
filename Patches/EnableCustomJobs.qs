@@ -37,12 +37,13 @@ function EnableCustomJobs() {
   
   //Step 1f - Extract ESI offsets
   EsiAddon = [];
-  for (var i = 0; i < Starters.length; i++) {
+  for (var i = 0; i < Starters.length-1; i++) {
     if (exe.fetchByte(Starters[i]-2) === 0)//Check if previous statement is a MOV reg32, DWORD PTR DS:[ESI+const]
       EsiAddon[i] = exe.fetchDWord(Starters[i]-4);
     else
       EsiAddon[i] = 0;
   }
+  EsiAddon[4] = 0;
   
   //--- Find Ending points of each table assignment---//
   Enders = [];
@@ -392,7 +393,7 @@ function EnableCustomJobs() {
   code = remVarHex(code, 1, maleStart - (offset+15));
 
   exe.replace(offset, code, PTYPE_HEX);
-  
+ 
   //--- Special Modification 1 = Cash Mount ---//
   //Step 9a - Find the function where the mount is checked
   code = 
@@ -498,13 +499,13 @@ function WriteLoader(index, fnSuffix, reqAddr, mapAddr, insAddr, endAddr) {
     allEnd = MaxJob - 3950;
   }
     
-  var code = " 83 EC 08"; // SUB ESP, 8
+  var code = " 83 EC 0C"; // SUB ESP, 0C
   code += GenLuaFnCall(insAddr + code.hexlength(), true , false, 3+fnSuffix.length, reqAddr, 0, 0x2C, EsiAddon[index]);
   code += GenLuaFnCall(insAddr + code.hexlength(), true , false, 3+fnSuffix.length, reqAddr, thirdStart, allEnd, EsiAddon[index]);
   code += GenLuaFnCall(insAddr + code.hexlength(), false, true, 3+fnSuffix.length, mapAddr, 0, 0x2C, EsiAddon[index]);
   code += GenLuaFnCall(insAddr + code.hexlength(), false, true, 3+fnSuffix.length, mapAddr, thirdStart, allEnd, EsiAddon[index]);
   code +=
-      " 83 C4 08" // ADD ESP, 8
+      " 83 C4 0C" // ADD ESP, 0C
     + " E9" + (endAddr - (insAddr + code.hexlength() + 8)).packToHex(4) // JMP addr2 -> outside table allocation
     ;
   exe.replace(insAddr, code, PTYPE_HEX);
