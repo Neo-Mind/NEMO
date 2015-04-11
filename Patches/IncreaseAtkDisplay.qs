@@ -242,7 +242,7 @@ function IncreaseAtkDisplay() {
     
     //Step 4g - Stack offset update. Change 34 to 44 in ADD ESP, 44
     offset = exe.find(" 83 C4", PTYPE_HEX, true, "\xAB", offset+4);
-    offsetStack(offset + 2);
+    offsetStack(offset + 2,1);
   }
   return true;
 }
