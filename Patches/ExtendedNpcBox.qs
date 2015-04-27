@@ -5,30 +5,26 @@ function ExtendNpcBox() {
   ///////////////////////////////////////////////////////////////////
  
   // Step 1a - Prep code to find the Stack allocation
+  var code = 
+      " 81 EC 08 08 00 00"  // SUB ESP,808 ; limit+4 = 804+4
+    + " A1 AB AB AB 00"     // MOV EAX,DWORD PTR DS:[___security_cookie]
+    + " 33 C4"              // XOR EAX,ESP
+    + " BackupEax"          // MOV DWORD PTR SS:[LOCAL.1],EAX ; limit . ESP+804 in pre-june 2013 clients & older and EBP For newer clients
+    + " 56"                 // PUSH ESI
+    ;
+    /*+ " 8B C1"              // MOV EAX, ECX
+    + " 57"                 // PUSH EDI
+    + " AssignEdi"          // MOV EDI, DWORD PTR SS:[ARG.1] ; ESP+814 in pre-june 2013 clients, EBP+8 for newer ones
+    ;*/
+    
   if (exe.getClientDate() <= 20130605) {
-    var code =
-        " 81 EC 08 08 00 00"    // SUB ESP,808 ; limit+4 = 804+4
-      + " A1 AB AB AB 00"       // MOV EAX,DWORD PTR DS:[___security_cookie]
-      + " 33 C4"                // XOR EAX,ESP
-      + " 89 84 24 04 08 00 00" // MOV DWORD PTR SS:[ESP+804],EAX ; limit
-      + " 56"                   // PUSH ESI
-      + " 8B C1"                // MOV EAX, ECX
-      + " 57"                   // PUSH EDI
-      + " 8B BC 24 14 08 00 00" // MOV EDI, DWORD PTR SS:[ESP+814] ; ARG.1
-      ;
+    code = code.replace(" BackupEax", " 89 84 24 04 08 00 00"); // MOV DWORD PTR SS:[ESP+804],EAX ; limit
+   // code = code.replace(" AssignEdi", " 8B BC 24 14 08 00 00"); // MOV EDI, DWORD PTR SS:[ESP+814] ; ARG.1
   }
   else {
-    var code =
-        " 81 EC 08 08 00 00"             // SUB ESP,808 ; limit+4 = 804+4
-      + " A1 AB AB AB 00"                // MOV EAX,DWORD PTR DS:[___security_cookie]
-      + " 33 C5"                         // XOR EAX,ESP
-      + " 89 45 FC"                      // MOV DWORD PTR SS:[EBP],EAX ; limit
-      + " 56"                            // PUSH ESI
-      + " 8B C1"                         // MOV EAX, ECX
-      + " 57"                            // PUSH EDI
-      + " 8B 7D 08"                      // MOV EDI, DWORD PTR SS:[ARG.1]
-      + " C7 80 E0 02 00 00 01 00 00 00" // MOV DWORD PTR DS:[EAX+2E0], 1
-      ;
+    code = code.replace(" 33 C4", " 33 C5");        //XOR EAX,ESP ; different opcode in newer clients
+    code = code.replace(" BackupEax", " 89 45 FC"); //MOV DWORD PTR SS:[EBP],EAX ; limit
+    //code = code.replace(" AssignEdi", " 8B 7D 08"); //MOV EDI, DWORD PTR SS:[ARG.1]
   }
 
   //Step 1b - Find the code

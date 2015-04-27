@@ -4,54 +4,53 @@ function DisableQuakeEffect() {
   //       functions to return without assigning any values //
   ////////////////////////////////////////////////////////////
   
-  // To Do - The Pattern is different in old client. Find when it changed.
-  
-  // Step 1 - Prep codes to find the two functions
-  if (exe.getClientDate() <= 20130605) {
-    var code =
-        " D9 44 24 04" // FLD DWORD PTR SS:[ARG.1]
-      + " D9 59 04"    // FSTP DWORD PTR DS:[ECX+4]
-      + " D9 44 24 0C" // FLD DWORD PTR SS:[ARG.3]
-      + " D9 59 0C"    // FSTP DWORD PTR DS:[ECX+0C]
-      + " D9 44 24 08" // FLD DWORD PTR SS:[ARG.2]
-      + " D9 59 08"    // FSTP DWORD PTR DS:[ECX+8]
-      + " C2 0C 00"    // RETN 0C
-      ;
-    
-    var code2 = " 8B 44 24 04" ; // MOV EAX, DWORD PTR SS:[ARG.1]
-  }
-  else {
-    var code =
-        " 55"       // PUSH EBP
-      + " 8B EC"    // MOV EBP, ESP
-      + " D9 45 08" // FLD DWORD PTR SS:[ARG.1]
-      + " D9 59 04" // FSTP DWORD PTR DS:[ECX+4]
-      + " D9 45 10" // FLD DWORD PTR SS:[ARG.3]
-      + " D9 59 0C" // FSTP DWORD PTR DS:[ECX+0C]
-      + " D9 45 0C" // FLD DWORD PTR SS:[ARG.2]
-      + " D9 59 08" // FSTP DWORD PTR DS:[ECX+8]
-      + " 5D"       // POP EBP
-      + " C2 0C 00" // RETN 0C
-      ;
-      
-    var code2 = 
-        " 55"       // PUSH EBP
-      + " 8B EC"    // MOV EBP, ESP
-      + " 8B 45 08" // MOV EAX, DWORD PTR SS:[ARG.1]
-      ;
-  }  
+  // To Do - The Pattern for the calls are different in old client. Find when it changed.
 
-  //Step 2 - Find the functions. SetQuake should be next function after SetQuakeInfo
-  var offset = exe.findCode(code, PTYPE_HEX, false);
+  //Step 1a - Find offset of .BMP
+  var offset = exe.findString(".BMP", RVA);
   if (offset === -1)
-    return "Failed in part 2 - SetQuakeInfo not found";
-
-  var offset2 = exe.find(code2, PTYPE_HEX, false, "", offset + code.hexlength());
+    return "Failed in Part 1 - BMP not found";
+  
+  //Step 1b - Find its reference
+  var code = 
+      " 68" + offset.packToHex(4) //PUSH OFFSET addr; ASCII ".BMP"
+    + " 8B"                       //MOV ECX, reg32_A
+    ;
+  offset = exe.findCode(code, PTYPE_HEX, false);
+  if (offset === -1)
+    return "Failed in Part 1 - BMP reference missing";
+  
+  //Step 2a - Find the SetQuakeInfo call (should be within 0x80 bytes before offset)
+  code =
+      " E8 AB AB AB AB" //CALL CView::SetQuakeInfo
+    + " 33 C0"          //XOR EAX, EAX
+    + " E9 AB AB 00 00" //JMP addr
+    ;
+  var offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0x80, offset);
   if (offset2 === -1)
-    return "Failed in part 2 - SetQuake not found";
-    
-  //Step 3 - Replace the functions.
-  exe.replace(offset , " C2 0C 00", PTYPE_HEX);
+    return "Failed in Part 2 - SetQuakeInfo call missing";
+  
+  //Step 2b - Extract the Raw Address of SetQuakeInfo
+  offset2 += exe.fetchDWord(offset2+1) + 5;
+  
+  //Step 2c - Replace the start with RETN 0C
+  exe.replace(offset2, " C2 0C 00", PTYPE_HEX);
+  
+  //Step 3a - Find the SetQuake call (should be within 0xA0 bytes before offset)
+  code =
+      " 6A 01"          //PUSH 1
+    + " E8 AB AB AB AB" //CALL CView::SetQuake
+    + " 33 C0"          //XOR EAX, EAX
+    + " E9 AB AB 00 00" //JMP addr
+    ;
+  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0xA0, offset);
+  if (offset2 === -1)
+    return "Failed in Part 3 - SetQuake call missing";
+  
+  //Step 3b - Extract the Raw Address of SetQuake
+  offset2 += exe.fetchDWord(offset2+3) + 7;
+  
+  //Step 3c - Replace the start with RETN 14
   exe.replace(offset2, " C2 14 00", PTYPE_HEX);
   
   return true;

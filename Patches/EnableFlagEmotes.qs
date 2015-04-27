@@ -2,20 +2,26 @@ function EnableFlagEmotes() {
   //////////////////////////////////////////////////////////////
   // GOAL: Modify all the Flag Emote callers for all the      //
   //       buttons Ctrl+1-9 in UIWindowMgr::ProcessPushButton //
+  //       For new clients this has been moved to seperate    //
+  //       function which gets called inside the above.       //
   //////////////////////////////////////////////////////////////
   
-  //To Do - Procedure is a bit different in old clients.
+  //To Do - Since the new function is not there in old clients, Procedure would vary.
   
-  //Step 1 - Find a signature after which the Emote callers come
-  
+  //Step 1a - Find the switch case selector for all the flag Emote callers  
   var code = 
-      " 05 2E FF FF FF" // ADD EAX,-D2
-    + " 83 F8 08"       // CMP EAX, 08
+      " 05 2E FF FF FF"    //ADD EAX,-D2
+    + " 83 F8 08"          //CMP EAX, 08
+    + " 0F 87 AB AB 00 00" //JA addr -> skip showing emotes
+    + " FF 24 85"          //JMP DWORD PTR DS:[EAX*4+refAddr]
     ;
     
-  var offset = exe.findCode(code, PTYPE_HEX, false);
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if (offset === -1)
-    return "Failed in Step 1";
+    return "Failed in Step 1 - switch not found";
+  
+  //Step 1b - Extract the refAddr
+  var refAddr = exe.Rva2Raw(exe.fetchDWord(offset + code.hexlength()));
   
   //Step 2a - Get Input file containing the list of Flag Emotes per key
   var f = new TextFile();
@@ -37,47 +43,55 @@ function EnableFlagEmotes() {
   }
   f.close();
   
-  //Step 3a - Prep code that constitutes the Emote caller
+  //Step 3a - Prep code that is part of each case (common portions that we need)
   var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE === -1)
-    return "Failed in Part 2 - LangType not found";
+    return "Failed in Part 3 - LangType not found";
     
   code  =
-      " A1" + LANGTYPE // MOV EAX, DS:[g_servicetype]
-    + " 85 C0"      // TEST EAX, EAX
-    ;
+      " A1" + LANGTYPE //MOV EAX, DS:[g_servicetype]
+    + " 85 C0"         //TEST EAX, EAX
+    ;                  //JZ SHORT addr or JZ addr
 
-  var code2 =
-      " 8B 01"     //MOV EAX,DWORD PTR DS:[ECX]
-    + " 8B 50 18"  //MOV EDX,DWORD PTR DS:[EAX+18]
-    + " 6A 00"     //PUSH 0
-    + " 6A 00"     //PUSH 0
-    + " 6A 00"     //PUSH 0
-    + " 6A AB"     //PUSH emoteConstant
-    + " 6A 1F"     //PUSH 1F
-    + " FF D2"     //CALL EDX
+  var code2 =      
+      " 6A 00" //PUSH 0
+    + " 6A 00" //PUSH 0
+    + " 6A 00" //PUSH 0
+    + " 6A AB" //PUSH emoteConstant
+    + " 6A 1F" //PUSH 1F
+    + " FF"    //CALL EDX or CALL DWORD PTR DS:[EAX+const]
     ;
 
   for (var i = 1; i < 10; i++) {
-    //Step 3b - Find the first part
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+1);
+    //Step 3b - Get the starting address of the case
+    var offset = exe.Rva2Raw(exe.fetchDWord(refAddr + (i-1)*4));
+    
+    //Step 3c - Find the first code. Ideally it would be at offset itself unless something changed
+    offset = exe.find(code, PTYPE_HEX, false, "", offset);
     if (offset === -1)
       return "Failed in Step 3 - First part missing : " + i;
     
-    //Step 3c - Find the second part
-    var jmpoffset = exe.find(code2, PTYPE_HEX, true, "\xAB", offset+7);
-    if (jmpoffset === -1)
-      return "Failed in Step 3 - Second part missing : " + i;
+    offset += code.hexlength();
+    
+    //Step 3d - Change the JZ to JMP & Get the JMPed address
+    if (exe.fetchByte(offset) === 0x0F) {//Long
+      exe.replace(offset, " 90 E9", PTYPE_HEX);
+      offset += exe.fetchDWord(offset+2) + 6;
+    }
+    else {//Short
+      exe.replace(offset, " EB", PTYPE_HEX);
+      offset += exe.fetchByte(offset+1) + 2;
+    }
+    
+    if (consts[i]) {
+      //Step 3e - Find the second code.
+      offset = exe.find(code2, PTYPE_HEX, true, "\xAB", offset);
+      if (offset === -1)
+        return "Failed in Step 3 - Second part missing : " + i;
   
-    //Step 3d - Replace the JNE after TEST EAX,EAX with JMP
-    if (consts[i]) {//If Entry is present set the constant to it and JMP to code2.
-      exe.replace(offset+7, " EB" + ( (jmpoffset) - (offset+9) ).packToHex(1), PTYPE_HEX);
-      exe.replace(jmpoffset+12, consts[i].toString(16), PTYPE_HEX);
+      //Step 3d - Replace the emoteConstant with the one we read from input file.
+      exe.replace(offset + code2.hexlength() - 4, consts[i].toString(16), PTYPE_HEX);
     }
-    else {//if not then set JMP to after code2
-      exe.replace(offset+7, " EB" + ( (jmpoffset + code2.hexlength()) - (offset+9) ).packToHex(1), PTYPE_HEX);
-    }
-    offset = jmpoffset+12;
   }
   
   return true;

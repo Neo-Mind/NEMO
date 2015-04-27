@@ -15,8 +15,8 @@ function ReadMsgstringtabledottxt() {
       " 83 3D " + LANGTYPE +" 00" // CMP DWORD PTR DS:[g_serviceType], 0
     + " 56"                       // PUSH ESI
     + " 75 24"                    // JNZ addr -> continue with string loading
-    + " 33 C9"                    // XOR ECX, ECX
-    + " 33 C0"                    // XOR EAX, EAX
+    + " 33 AB"                    // XOR reg32_A, reg32_A
+    + " 33 AB"                    // XOR reg32_B, reg32_B
     + " 8B FF"                    // MOV EDI, EDI
     ;
 

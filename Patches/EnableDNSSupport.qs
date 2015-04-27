@@ -9,26 +9,33 @@ function EnableDNSSupport() {
   
   // Step 1a - Find the code to hook our function to
   var code =
-      " E8 AB AB AB FF" // CALL g_resMgr                 
-    + " 8B C8"          // MOV ECX,EAX                   
-    + " E8 AB AB AB FF" // CALL CResMgr::Get             
-    + " 50"             // PUSH EAX                      
-    + " B9 AB AB AB 00" // MOV ECX,OFFSET g_windowMgr    
-    + " E8 AB AB AB FF" // CALL UIWindowMgr::SetWallpaper
-    + " A1"             // MOV EAX,DWORD PTR DS:[g_accountAddr]
+      " E8 AB AB AB FF" //CALL g_resMgr                 
+    + " 8B C8"          //MOV ECX,EAX                   
+    + " E8 AB AB AB FF" //CALL CResMgr::Get             
+    + " 50"             //PUSH EAX                      
+    + " B9 AB AB AB 00" //MOV ECX,OFFSET g_windowMgr    
+    + " E8 AB AB AB FF" //CALL UIWindowMgr::SetWallpaper
+    + " A1 AB AB AB 00" //MOV EAX,DWORD PTR DS:[g_accountAddr]
+    + " 8D"             //LEA reg32_A, [LOCAL.x]
     ;
 
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");  
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace(" A1", " 8B AB");//Change MOV EAX with MOV reg32_B
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1)
     return "Failed in part 1";
   
   //Step 1b - Extract g_resMgr and g_accountAddr
   var gResMgr = exe.Raw2Rva(offset+5) + exe.fetchDWord(offset+1);
-  var gAccountAddr = exe.fetchDWord(offset+code.hexlength());
+  var gAccountAddr = exe.fetchDWord(offset + code.hexlength()-5);
   
   //Step 2a - Construct our function
   var dnscode =
-      " E8" + genVarHex(1)    // CALL g_ResMgr ; call the actual function that was supposed to be run
+      " E8" + genVarHex(1) // CALL g_ResMgr ; call the actual function that was supposed to be run
     + " 60"                // PUSHAD
     + " 8B 35" + genVarHex(2) // MOV ESI,DWORD PTR DS:[g_accountAddr]
     + " 56"                // PUSH ESI
@@ -66,25 +73,12 @@ function EnableDNSSupport() {
   exe.replace(offset+1, (exe.Raw2Rva(free) - exe.Raw2Rva(offset+5)).packToHex(4), PTYPE_HEX);
   
   //Step 3b - Find gethostbyname() address
-  if (exe.getClientDate() <= 20130605)
-    code = " FF 15 AB AB AB 00 85 C0 75 29 8B AB AB AB AB 00";
-  else
-    code = " FF 15 AB AB AB 00 85 C0 75 2B 8B AB AB AB AB 00";
-
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  if (offset === -1) {
-    code = " E8 AB AB AB 00 85 C0 75 35 8B AB AB AB AB 00";
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-    if (offset !== -1)
-      offset = exe.Raw2Rva(offset+5) + exe.fetchDWord(offset+1);
-  }  
-  if (offset === -1)
-    return "Failed in part 3 - gethostbyname not found";
-  
-  var uGethostbyname = exe.fetchDWord(offset+2);
+  var uGethostbyname = exe.findFunction("gethostbyname");//By Name
+  if (uGethostbyname === -1)
+    uGethostbyname = findNumFunction("WS2_32.DLL", 52);//By Ordinal
   
   //Step 3c - Find sprintf function address
-  var uSprintf = exe.findFunction("sprintf", PTYPE_STRING, true);
+  var uSprintf = exe.findFunction("sprintf");
   if (uSprintf === -1)
     return "Failed in part 3 - sprintf not found";
   

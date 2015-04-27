@@ -10,9 +10,9 @@ function IncreaseAtkDisplay() {
   
   //Step 1a - Find the location where 999999 is checked
   var code = 
-      " 3F 42 0F 00"    // CMP reg32, 0F423F ; 999999 = 0x0F423F
+      " 3F 42 0F 00"    // CMP reg32_A, 0F423F ; 999999 = 0x0F423F
     + " 7E AB"          // JLE SHORT addr1
-    + " B9 3F 42 0F 00" // MOV ECX, 0F423F
+    + " AB 3F 42 0F 00" // MOV reg32_A, 0F423F
     ;
     
   var refoffset = exe.findCode(code, PTYPE_HEX, true, "\xAB");

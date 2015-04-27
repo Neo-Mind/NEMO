@@ -12,15 +12,26 @@ function UseOfficialClothPalette() {
   var code =
       " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_servicetype], 0
     + " 0F 85 AB AB 00 00"        // JNE addr
-    + " 8B"                       // MOV reg32_A , DWORD PTR DS:[reg32_b+const]
+    + " 8B"                       // MOV reg32_A , DWORD PTR DS:[reg32_B+const]
     ;
-    
+  var reploc = 7;
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = 
+      " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_servicetype], 0
+    + " 8B AB"                    // MOV reg32_A , DWORD PTR DS:[reg32_B]
+    + " 0F 85 AB AB 00 00"        // JNE addr
+    ;
+    reploc = 9;
+    
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");  
+  }
   if (offset === -1)
-    return "Failed in Part 4";
+    return "Failed in Part 1 - comparison not found";
   
   //Step 2 - NOP out the JNE
-  exe.replace(offset+7, " 90 90 90 90 90 90", PTYPE_HEX);
+  exe.replace(offset+reploc, " 90 90 90 90 90 90", PTYPE_HEX);
   
   return true;
 }

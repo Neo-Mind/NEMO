@@ -17,9 +17,12 @@ function DisableFilenameCheck() {
     
   var codeA = " E8 AB AB AB FF"; // CALL CSession::Create
   
-  var codeB = 
-      " 39 AB" + LANGTYPE // CMP DWORD PTR DS:[g_ServiceType], reg32
-    + " 75 AB"            // JNZ SHORT addr1
+  var codeB1 = " 39 AB" + LANGTYPE; // CMP DWORD PTR DS:[g_ServiceType], reg32
+  
+  var codeB2 = " 83 3D" + LANGTYPE + " 00"; // CMP DWORD PTR DS:[g_ServiceType], 0
+
+  var codeC =
+      " 75 AB"            // JNZ SHORT addr1
     + " E8 AB AB FF FF"   // CALL addr2 -> exe Name Check
     + " 84 C0"            // TEST AL, AL
     ;
@@ -27,16 +30,26 @@ function DisableFilenameCheck() {
   var jmpPos = 11;
   
   //Step 1b - Find the comparison - old pattern
-  var offset = exe.findCode(codeA + codeB, PTYPE_HEX, true, "\xAB");
+  var offset = exe.findCode(codeA + codeB1 + codeC, PTYPE_HEX, true, "\xAB");
   
   //Step 1c - If it fails, Find the comparison - new pattern (1 XOR instruction in between)
   if (offset === -1) {  
-    offset = exe.findCode(codeA + " AB AB" + codeB, PTYPE_HEX, true, "\xAB");
+    offset = exe.findCode(codeA + " AB AB" + codeB1 + codeC, PTYPE_HEX, true, "\xAB");
+    jmpPos += 2;
+  }
+  
+  if (offset === -1) {
+    offset = exe.findCode(codeA + codeB2 + codeC, PTYPE_HEX, true, "\xAB");
+    jmpPos = 11;
+  }
+  
+  if (offset === -1) {
+    offset = exe.findCode(codeA + " AB AB" + codeB2 + codeC, PTYPE_HEX, true, "\xAB");
     jmpPos += 2;
   }
   
   if (offset === -1)
-    return "Failed in Part 1";
+    return "Failed in Part 1 - Pattern not found";
   
   //Step 2 - Replace JNZ/JNE to JMP
   exe.replace(offset + jmpPos, "EB", PTYPE_HEX);

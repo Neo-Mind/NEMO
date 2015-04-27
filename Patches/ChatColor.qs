@@ -9,7 +9,7 @@ function ChatColorGuild() {
   //Step 1 - Find the area where color is pushed
   var code =
       " 6A 04"          // PUSH 4
-    + " 68 B4 FF B4 00" // PUSH B4,FF,B4 (light green)
+    + " 68 B4 FF B4 00" // PUSH B4,FF,B4 (Light Green)
     ;
   var offset = exe.findCode(code, PTYPE_HEX, false);
   if (offset === -1)
@@ -30,17 +30,17 @@ function ChatColorGM() {
   //       inside CGameMode::Zc_Notify_Chat       //
   //////////////////////////////////////////////////
   
-  // Step 1a - Find the unique color FF,8D,1D PUSHed (orange) for langtype 11
+  // Step 1a - Find the unique color FF, 8D, 1D (Orange) PUSH for langtype 11
   var offset1 = exe.findCode("68 FF 8D 1D 00", PTYPE_HEX, false);
   if (offset1 === -1)
     return "Failed in Part 1 - Orange color not found";
   
-  // Step 1b - Find FF, FF, 00 (cyan) PUSH in the vicinity of orange
+  // Step 1b - Find FF, FF, 00 (Cyan) PUSH in the vicinity of Orange
   var offset2 = exe.find("68 FF FF 00 00", PTYPE_HEX, false, " ", offset1 - 0x30, offset1 + 0x30);
   if (offset2 === -1)
     return "Failed in Part 1 - Cyan not found";
   
-  // Step 1c - Find 00, FF, FF (yellow) PUSH in the vicinity of orange
+  // Step 1c - Find 00, FF, FF (Yellow) PUSH in the vicinity of Orange
   var offset3 = exe.find("68 00 FF FF 00", PTYPE_HEX, false, " ", offset1 - 0x30, offset1 + 0x30);
   if (offset3 === -1)
     return "Failed in Part 1 - Yellow not found";
@@ -64,31 +64,25 @@ function ChatColorPlayerSelf() {
   
   //To Do: Old clients have different instruction between code1 and code4. Find when it changed.
   
-  //Step 1a - Prep the code parts (different clients have different composition)
-  var code1 = " 6A 01"  //PUSH 1
-  var code2 = " 1B C0"  //SBB EAX,EAX
-  var code3 = " 23 C1"  //AND EAX,ECX
-  var code4 = " 68 00 FF 00 00"  //PUSH 00,FF,00 (Green)
+  //Step 1a - Find PUSH 00,78,00 (Dark Green) offsets (the required Green color PUSH is within the vicinity of one of these)
+  var code = " 68 00 78 00 00";
+  var offsets = exe.findCodes(code, PTYPE_HEX, false);
+  if (offsets.length === 0)
+    return "Failed in Part 1 - Dark Green missing";
   
-  //Step 1b - Find the area where color is pushed
-  var colorLoc = 5;
-  var offset = exe.findCode(code1 + code2 + code4, PTYPE_HEX, false);
-  if (offset === -1) {//older 2013 client
-    colorLoc = 7;
-    offset = exe.findCode(code1 + code2 + code3 + code4, PTYPE_HEX, false);
-  }
-  if (offset === -1) {//2012 and older one.
-    colorLoc = 3;
-    offset = exe.findCode(code1 + code4, PTYPE_HEX, false);
+  //Step 1b - Find the Green color push.
+  for (var i = 0; i < offsets.length; i++) {
+    var offset = exe.find(" 68 00 FF 00 00", PTYPE_HEX, false, "", offsets[i] + 5, offsets[i] + 40);
+    if (offset !== -1) break;
   }
   if (offset === -1)
-    return "Failed in part 1";
+    return "Failed in Part 1 - Green not found";
   
   // Step 2 - Get the new color from user
   exe.getUserInput("$yourChatColor", XTYPE_COLOR, "Color input", "Select the new Self Chat Color", 0x0000FF00);
   
   //Step 3 - Replace with new color
-  exe.replace(offset+colorLoc, "$yourChatColor", PTYPE_STRING);
+  exe.replace(offset+1, "$yourChatColor", PTYPE_STRING);
   
   return true;
 }

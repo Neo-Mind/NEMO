@@ -11,10 +11,10 @@ function KoreaServiceTypeXMLFix() {
   
   //Step 1 - Find the called location
   var code = 
-      " E8 AB AB FF FF"  // CALL SelectKoreaClientInfo
-    + " E9 AB AB FF FF"  // JMP addr
+      " E8 AB AB AB AB"  // CALL SelectKoreaClientInfo
+    + " E9 AB AB AB AB"  // JMP addr
     + " 6A 00"           // PUSH 0
-    + " E8 AB AB FF FF"  // CALL SelectClientInfo
+    + " E8 AB AB AB AB"  // CALL SelectClientInfo
     + " 83 C4 04"        // ADD ESP, 4
     ;
     

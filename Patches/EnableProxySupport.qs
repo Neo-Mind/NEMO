@@ -15,30 +15,30 @@ function EnableProxySupport() {
   // CConnection::Connect() function.
   //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
-  //Step 1 - Find the String's virtual address.
+  //Step 1 - Find the String's address.
   var offset = exe.findString("Failed to setup select mode", RVA);
   if (offset === -1)
-    return "Failed in Part 1";
+    return "Failed in Part 1 - setup string not found";
 
-  //Step 2 - Find the string's referenced location (which is only inside CConnection::Connect)
+  //Step 1b - Find the string's referenced location (which is only inside CConnection::Connect)
   strOffset = exe.findCode("68" + offset.packToHex(4), PTYPE_HEX, false);
   if (strOffset === -1)
-    return "Failed in Part 2";
+    return "Failed in Part 1 - setup string reference missing";
   
-  //Step 3a - Find connect call (Indirect call pattern should be within 0x50 bytes before strOffset)  - VC9 onwards
+  //Step 2a - Find connect call (Indirect call pattern should be within 0x50 bytes before strOffset)  - VC9 onwards
   var code = 
       " FF 15 AB AB AB AB" // CALL NEAR DWORD PTR DS:[<&WS2_32.connect>]
     + " 83 F8 FF"          // CMP  EAX,-1
     + " 75 AB"             // JNZ  SHORT OFFSET v
-    + " 8B 3D AB AB AB AB" // MOV  EDI,DWORD PTR DS:[<&WS2_32.WSAGetLastError>]
-    + " FF D7"             // CALL NEAR EDI
+    + " 8B AB AB AB AB AB" // MOV  EDI,DWORD PTR DS:[<&WS2_32.WSAGetLastError>]
+    + " FF AB"             // CALL NEAR EDI
     + " 3D 33 27 00 00"    // CMP  EAX, 2733h
     ;
         
   var connOffset = exe.find(code, PTYPE_HEX, true, "\xAB", strOffset-0x50, strOffset);
   
   if (connOffset === -1) {  
-    //Step 3b - Find connect call (Direct call pattern should be within 0x90 bytes before strOffset) - VC6 for older clients
+    //Step 2b - Find connect call (Direct call pattern should be within 0x90 bytes before strOffset) - VC6 for older clients
     code =
       " E8 AB AB AB AB"    // CALL <&WS2_32.connect>
     + " 83 F8 FF"          // CMP  EAX,-1
@@ -49,7 +49,7 @@ function EnableProxySupport() {
     
     connOffset = exe.find(code, PTYPE_HEX, true, "\xAB", strOffset-0x90, strOffset);    
     if (connOffset === -1)
-      return "Failed in Part 3";//Both patterns failed    
+      return "Failed in Part 2";//Both patterns failed    
     
     var bIndirectCALL = false;
   }
@@ -59,10 +59,10 @@ function EnableProxySupport() {
     connOffset++;
   }
   
-  //Step 3c - Get ws2_32::connect address.
+  //Step 2c - Get ws2_32::connect address.
   var connAddr = exe.fetchDWord(connOffset+1);
   
-  //Step 4a - Create the IP Saving code (g_SaveIP will be filled later. for now we use filler)
+  //Step 3a - Create the IP Saving code (g_SaveIP will be filled later. for now we use filler)
   var jmpCode =  
       " A1" + genVarHex(1)  // MOV  EAX,DWORD PTR DS:[<g_SaveIP>]
     + " 85 C0"           // TEST EAX,EAX
@@ -77,28 +77,27 @@ function EnableProxySupport() {
   else
     jmpCode += " E9" + genVarHex(3)  // JMP <&WS2_32.connect> - will be filled later
   
-  //Step 4b - Allocate space for Adding the code.
+  //Step 3b - Allocate space for Adding the code.
   var jcSize = jmpCode.hexlength();
   
   offset = exe.findZeros(0x4+jcSize);//First 4 bytes are for g_SaveIP
   if (offset === -1)
-    return "Failed in Part 4";
+    return "Failed in Part 3 - Not enough space";
   
-  //Step 4c - Set g_SaveIP
-  jmpCode = remVarHex(jmpCode, 1, offset);
-  jmpCode = remVarHex(jmpCode, 2, offset);
+  //Step 3c - Set g_SaveIP
+  jmpCode = remVarHex(jmpCode, [1,2], [offset,offset]);
   
-  //Step 4d - Set connect address for Direct call - need relative offset
+  //Step 3d - Set connect address for Direct call - need relative offset
   if (!bIndirectCALL) {
     connAddr += exe.Raw2Rva(offset+5) - exe.Raw2Rva(offset+jcSize);//Get Offset relative to JMP 
     jmpCode = remVarHex(jmpCode, 3, connAddr);
   }
   
-  //Step 5a - Redirect connect call to our code.
+  //Step 4a - Redirect connect call to our code.
   var jmpdiff = exe.Raw2Rva(offset+4) - exe.Raw2Rva(connOffset+5);
   exe.replace(connOffset, " E8" + jmpdiff.packToHex(4), PTYPE_HEX);
   
-  //Step 5b - Add our code to the client
+  //Step 4b - Add our code to the client
   jmpCode = " 00 00 00 00" + jmpCode;//4 NULLs for g_SaveIP filler
   exe.insert(offset, 0x4+jcSize, PTYPE_HEX);
   

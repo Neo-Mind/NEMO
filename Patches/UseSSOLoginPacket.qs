@@ -12,12 +12,12 @@ function UseSSOLogin() {
     return "Failed in Part 1 - LangType not found";
     
   var code =
-      " A1" + LANGTYPE     // MOV EAX, DWORD PTR DS:[g_serviceType]
-    + " 85 C0"             // TEST EAX, EAX
-    + " 0F 84 AB AB AB AB" // JE addr
-    + " 83 F8 12"          // CMP EAX, 12
-    + " 0F 84 AB AB AB AB" // JE addr
-    + " 83 F8 0C"          // CMP EAX, 0C
+      LANGTYPE             // MOV reg32_A, DWORD PTR DS:[g_serviceType]
+    + " 85 AB"             // TEST reg32_A, reg32_A
+    + " 0F 84 AB AB 00 00" // JE addr
+    + " 83 AB 12"          // CMP reg32_A, 12
+    + " 0F 84 AB AB 00 00" // JE addr
+    + " 83 AB 0C"          // CMP reg32_A, 0C
     + " 0F 84"             // JE addr
     ;
   
@@ -26,7 +26,7 @@ function UseSSOLogin() {
     return "Failed in part 1";
   
   //Step 2 - Change first JE to JMP
-  exe.replace(offset+7, " 90 E9", PTYPE_HEX);
+  exe.replace(offset+6, " 90 E9", PTYPE_HEX);
   
   return true;
 }

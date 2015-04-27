@@ -10,46 +10,45 @@ function DisableSwearFilter() {
   //       However this wont work on old clients ~ To Do
   //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
-  if (exe.getClientDate() <= 20130605) {
-    //Step 1 - Find the Swear Filter call - pattern matches twice but only the first one is the one we want
-    var code =    
-        " 8B 44 24 04"    // MOV EAX,DWORD PTR SS:[ARG.1]
-      + " 50"             // PUSH EAX
-      + " E8 AB AB FF FF" // CALL func -> Contains CInsultFilter::IsBadSentence
-      + " 33 C9"          // XOR ECX,ECX
-      + " 84 C0"          // TEST AL,AL
-      + " 0F 94 C1"       // SETE CL
-      + " 8A C1"          // MOV AL,CL
-      + " C2 04 00"       // RETN 4
-      ;
-
-    var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
-    if (offsets.length !== 2)
-      return "Failed in part 1";
-
-    //Step 2 - Replace the TEST instruction with XOR AL, AL then SETE will make CL = 0 i.e. AL = 0
-    exe.replace(offsets[0]+17, " 30 C0", PTYPE_HEX);
-  }
-  else {
-    //Step 1 - Find the Swear Filter call
-    var code =
-        " 8B 45 08"       // MOV EAX,DWORD PTR SS:[ARG.1]
-      + " 50"             // PUSH EAX
-      + " E8 AB AB AB FF" // CALL func -> Contains CInsultFilter::IsBadSentence
-      + " 33 C9"          // XOR ECX,ECX
-      + " 84 C0"          // TEST AL,AL
-      + " 0F 94 C0"       // SETZ AL
-      + " 5D"             // POP EBP
-      + " C2 04 00"       // RETN 4
-      ;
-
-    var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-    if (offset === -1)
-      return "Failed in part 1";
-    
-    //Step 2 - Replace the TEST + SETZ instruction with XOR AL, AL followed by NOP which will make AL = 0
-    exe.replace(offset+13, " 30 C0 90", PTYPE_HEX);
+  //Step 1a - Find the Swear Filter call. Based on client date the starting portion of the pattern changes.
+  var code = 
+      " E8 AB AB AB AB" //CALL func -> Contains CInsultFilter::IsBadSentence
+    + " 33 C9"          //XOR ECX,ECX
+    + " 84 C0"          //TEST AL,AL
+    + " 0F 94"          //SETE reg8 ; reg8 could be either AL or CL, of-course the code could change all over again
+    ;
+  
+  var prefix = " 50"; //PUSH EAX
+  var offset = exe.findCode(prefix + code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    prefix = " FF 75 08"; //PUSH DWORD PTR SS:[ARG.1]
+    offset = exe.findCode(prefix + code, PTYPE_HEX, true, "\xAB");
   }
   
+  if (offset === -1)
+    return "Failed in Part 1";
+  
+  var repOffset = prefix.hexlength() + 7;
+  
+  //Step 1b - Find the return point in the function
+  if (exe.getClientDate() > 20130605)
+    code = " 5D"; //POP EBP
+  else
+    code = "";
+    
+  code += " C2 04 00"; //RETN 4
+  
+  var retOffset = exe.find(code, PTYPE_HEX, false, "", offset+11, offset+20);
+  if (retOffset === -1)
+    return "Failed in Part 1 - return not found";
+  
+  //Step 2 - Replace the AL assignment
+  code = 
+      " 30 C0" //XOR AL, AL
+    + " 90".repeat(retOffset-(repOffset+2))//Fill with NOPs till RETN
+    ;
+  exe.replace(repOffset, code, PTYPE_HEX);
+
   return true;
 }

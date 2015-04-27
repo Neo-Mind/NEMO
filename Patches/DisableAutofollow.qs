@@ -16,8 +16,13 @@
     + " 8B AB AB AB 00 00" // MOV reg32_A, DWORD PTR DS:[reg32_B+const]
     + " A3"    //MOV DWORD PTR DS:[CGameMode::m_lastLockOnPcGid], EAX
     ;
-  
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace(" FF D2", " FF AB 18"); //CALL DWORD PTR DS:[reg32_C+18]
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1)
     return "Failed in Part 1";
   

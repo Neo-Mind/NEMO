@@ -4,8 +4,8 @@ function EnableMailBox() {
   ///////////////////////////////////////////////////////////////////////
   
   //Step 1 - Check Date . Patch is only required for new clients
-  if (exe.getClientDate() < 20130320)
-    return "Only meant for Later 2013 and newer Clients";
+  if (exe.getClientDate() < 20130320 || exe.getClientDate() > 20140800)
+    return "Patch Cancelled - Only meant for Certain 2013 and 2014 Clients";
 
   //Step 2a - Prep codes for finding short jumps
   var code  =

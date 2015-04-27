@@ -212,16 +212,15 @@ function EnableCustomShields() {
     
     //Step 7d - Find the hardcoded limit checking
     code = 
-        " 81 C6 CB F7 FF FF" //ADD ESI,-835
-      + " 83 C4 04"          //ADD ESP,4
-      + " 83 FE 62"          //CMP ESI,62
-      + " 5E"                //POP ESI
-      + " 77 03"             //JA SHORT addr -> RETN
+        " CB F7 FF FF" //ADD reg32_A,-835 or LEA reg32_A, [reg32_B-835]
+      + " 83 C4 04"    //ADD ESP,4
       ;
-    
+      
     offset = exe.findCode(code, PTYPE_HEX, false);
     if (offset === -1)
       return "Failed in Part 7 - Limit Checker not found";
+    
+    offset -= 2; //Both subtraction types above require 2 opcodes
     
     //Step 7e - Fixup the code to call our function and return directly.
     code = 

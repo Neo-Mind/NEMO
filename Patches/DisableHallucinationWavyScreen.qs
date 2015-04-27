@@ -6,34 +6,30 @@ function DisableHallucinationWavyScreen() {
   //       regular JMP to skip the Effect                        //
   /////////////////////////////////////////////////////////////////
   
-  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  // To Do - Old Client doesnt have the address reference
-  //         Need to find which client onwards the pattern
-  //         is missing.
-  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
-  //Step 1a - Prep the pattern to find the address
-  if (exe.getClientDate() <= 20130605) {
-    var code = 
-      " 83 C6 AB" // ADD ESI, addrOff
-    + " 89 3D"    // MOV g_Special, EDI
-    ;
-  }
-  else {
-    var code =
-      " 8D 4E AB" // LEA ECX, [ESI + addrOff]
-    + " 89 3D"    // MOV g_Special, EDI
-    ;
-  }
-  
-  //Step 1b - Find the pattern
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  //Step 1a - Find offset of xmas_fild01.rsw
+  var offset = exe.findString("xmas_fild01.rsw", RVA);
   if (offset === -1)
-    return "Failed in part 1";
+    return "Failed in Part 1 - xmas_fild01 not found";
   
-  //Step 1c - Extract the Address
-  var spAddr = exe.fetchHex(offset+5, 4);
+  //Step 1b - Find its references. Preceding one of them is an assignment to our required offset (lets call it g_Special)
+  var code = " B8" + offset.packToHex(4); //MOV EAX, OFFSET addr; ASCII "xmas_fild01.rsw"
+  var offsets = exe.findCodes(code, PTYPE_HEX, false);
+  if (offsets.length === 0)
+    return "Failed in Part 1 - xmas_fild01 references missing";
   
+  //Step 1c - Look for the correct location which gets used in CGameMode::Initialize
+  code = " 89 AB AB AB AB 00"; //MOV DWORD PTR DS:[g_Special], reg32_A
+  for (var i = 0; i < offsets.length; i++) {
+    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offsets[i]-8, offsets[i]);
+    if (offset !== -1 && (exe.fetchByte(offset+1) & 0xC7) === 0x5) break;
+    offset = -1;
+  }
+  if (offset === -1)
+    return "Failed in Part 1 - no references matched";
+  
+  //Step 1d - Extract g_Special
+  var spAddr = exe.fetchHex(offset+2, 4);
+
   //Step 2 - Find the Special Offset reference
   code =
       " 8B AB"                   // MOV ECX, reg32

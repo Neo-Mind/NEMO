@@ -43,12 +43,7 @@ function RestoreLoginWindow() {
     + " 6A 00"             // PUSH 0
     + " 6A 00"             // PUSH 0
     + " 68" + numaccount   // PUSH addr ; "NUMACCOUNT"
-    + " 8B F8"             // MOV EDI, EAX
-    + " 8B 17"             // MOV EDX, DWORD PTR DS:[EDI]
-    + " 8B 82 AB 00 00 00" // MOV EAX, DWORD PTR DS:[EDX+offset]
-    + " 68 23 27 00 00"    // PUSH 2723
     ;
-      
   var o2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if (o2 === -1)
     return "Failed in Part 2 - MakeWindow not found";
@@ -81,15 +76,20 @@ function RestoreLoginWindow() {
     + " A1" + LANGTYPE        // MOV EAX, DWORD PTR DS:[g_serviceType]
     + " AB AB"                // TEST EAX, EAX - (some clients use CMP EAX, EBP instead)
     + " 0F AB AB AB 00 00"    // JZ addr2 -> Skip sending packet
-    + " 83 F8 12"             // CMP EAX, 12
+    + " 83 AB 12"             // CMP EAX, 12
     + " 0F 84 AB AB 00 00"    // JZ addr2 -> Skip sending packet
-    + " 83 F8 0C"             // CMP EAX, 0C
+    + " 83 AB 0C"             // CMP EAX, 0C
     + " 0F 84 AB AB 00 00"    // JZ addr2 -> Skip sending packet
-  ;
-
+    ;
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+ 
+  if (offset === -1) {
+    code = code.replace(" A1", " 8B AB");//MOV reg32_A, DWORD PTR DS:[g_serviceType]
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1)
-    return "Failed in part 5";
+    return "Failed in Part 5 - LangType comparison missing";
   
   var repl = " 90 90 90 90 90 90";
   exe.replace(offset+20, repl, PTYPE_HEX);
@@ -100,20 +100,46 @@ function RestoreLoginWindow() {
   //          For this in the CModeMgr::SendMsg function, we set the return mode to 3 (Login) and pass 0x271D as idle value 
   //          and skip the quit operation.
   
-  //Step 5a - First we find the code to get g_modeMgr & the mode setting function
+  // First we need to find the g_modeMgr & mode setting function address. The address is kept indirectly =>
+  // MOV ECX, DWORD PTR DS:[Reference]
+  // MOV EAX, DWORD PTR DS:[ECX]
+  // MOV EDX, DWORD PTR DS:[EAX+18]
+  // now ECX + C contains g_modeMgr & EDX is the function address we need. But these 3 instructions are not always kept together as of recent clients.
+  
+  //Step 5a - First we look for one location that appears always after g_modeMgr is retrieved
   code = 
-      " 8B 0D AB AB AB 00" // MOV ECX, DWORD PTR DS:[Reference]
-    + " 8B 01"             // MOV EAX, DWORD PTR DS:[ECX]
-    + " 8B 50 18"          // MOV EDX, DWORD PTR DS:[EAX+18]
+      " 6A 00"          //PUSH 0
+    + " 6A 00"          //PUSH 0
+    + " 6A 00"          //PUSH 0
+    + " 68 F6 00 00 00" //PUSH F6
+    + " FF"             //CALL reg32_A or CALL DWORD PTR DS:[reg32_A+const]
+    ;
+  offset = exe.findCode(code, PTYPE_HEX, false);
+  if (offset === -1)
+    return "Failed in Part 5 - Unable to find g_modeMgr code";
+  
+  //Step 5b - Find the start of the function
+  code = 
+      " 83 3D AB AB AB AB 01" //CMP DWORD PTR DS:[addr1], 1
+    + " 75 AB"                //JNE addr2
+    + " 8B 0D"                //MOV ECX, DWORD PTR DS:[Reference]
     ;
   
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//there are plenty of matches but they are all same
+  var offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset-30, offset);
   if (offset === -1)
-    return "Failed in Step 5 - Unable to find g_modeMgr code";
+    return "Failed in Part 5 - Start of Function missing";
   
-  var infix = exe.fetchHex(offset, 11);
+  //Step 5c - Extract the reference and construct the code for getting g_modeMgr to ECX + C & mode setter to EDX (same as shown initially)
+  var infix = 
+      exe.fetchHex(offset + code.hexlength()-2, 6) //MOV ECX, DWORD PTR DS:[Reference]
+    + " 8B 01"    // MOV EAX, DWORD PTR DS:[ECX]
+    + " 8B 50 18" // MOV EDX, DWORD PTR DS:[EAX+18]
+    ;
   
-  //Step 5b - Now we find the error handler - CModeMgr::SendMsg
+  //Step 5d - Find how many PUSH 0s are there. Older clients had 3 arguments but newer ones only have 3
+  var pushes = exe.findAll(" 6A 00", PTYPE_HEX, false, "", offset + code.hexlength() + 4, offset + code.hexlength() + 16);
+  
+  //Step 5e - Find error handler = CModeMgr::SendMsg
   code =
       " 8B F1"                    // MOV ESI,ECX
     + " 8B 46 04"                 // MOV EAX,DWORD PTR DS:[ESI+4]
@@ -131,37 +157,43 @@ function RestoreLoginWindow() {
     + " C7 06 00 00 00 00"        // MOV DWORD PTR DS:[ESI],0 (ESI is supposed to have g_modeMgr but it doesn't always point to it, so we assign it another way)
     ;
     // Shinryo:
-    // The easiest way would be propably to set this value to a random value instead of 0,
+    // The easiest way would be probably to set this value to a random value instead of 0,
     // but the client would dimmer down/flicker and appear again at login interface.
-
-  //Step 5c - Construct the replacement code
+    
+  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    //For recent client g_hMainWnd is directly pushed instead of assigning to ECX first
+    code = code.replace(" 75 1D 8B 0D AB AB AB 00", " 75 1C");//remove the ECX assignment and fix the JNE address accordingly
+    code = code.replace(" 51 FF 15 AB", " FF 35 AB AB AB 00 FF 15 AB");//replace PUSH ECX with PUSH DWORD PTR DS:[g_hMainWnd]
+    
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
+  if (offset === -1)
+    return "Failed in part 5 - Unable to find SendMsg function";
+  
+  //Step 5f - Construct the replacement code
   var replace =    
       " 52"                   // PUSH EDX
     + " 50"                   // PUSH EAX
     + infix                   // MOV ECX,DWORD PTR DS:[Reference]
                               // MOV EAX,DWORD PTR DS:[ECX]
                               // MOV EDX,DWORD PTR DS:[EAX+18]
-    + " 6A 00"                // PUSH 0
-    + " 6A 00"                // PUSH 0
-    + " 6A 00"                // PUSH 0
-    + " 6A 00"                // PUSH 0
+    + " 6A 00".repeat(pushes.length) // PUSH 0 sequence
     + " 68 1D 27 00 00"       // PUSH 271D
     + " C7 41 0C 03 00 00 00" // MOV DWORD PTR DS:[ECX+0C],3
     + " FF D2"                // CALL EDX
     + " 58"                   // POP EAX
     + " 5A"                   // POP EDX
-    + " 90".repeat(19)        // Bunch of NOPs
     ;
+  
+  replace += " 90".repeat(code.hexlength() - replace.hexlength()); // Bunch of NOPs
 
-  //Step 5d - Find the SendMsg function and overwrite.
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  if (offset === -1)
-    return "Failed in part 5 - Unable to find SendMsg function";
- 
+  //Step 5g - Overwrite the SendMsg function.
   exe.replace(offset, replace, PTYPE_HEX);
   
   //Extra for 2013 clients - Need to set return value to 1.
-  
   if(exe.getClientDate() >= 20130320 && exe.getClientDate() <= 20140226) {
   
     //Step 6a - Find offset of "ID"

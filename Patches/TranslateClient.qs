@@ -67,8 +67,8 @@
   
  var code = 
       " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_serviceType], 0
-    + " B9 AB AB AB AB"           // MOV ECX, addr1
-    + " 75 59"                    // JNZ addr2
+    + " B9 AB AB AB 00"           // MOV ECX, addr1
+    + " 75"                       // JNZ addr2
   ;
  
  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");

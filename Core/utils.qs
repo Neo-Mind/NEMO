@@ -48,6 +48,10 @@ function getLangType() {
 }
 
 function getInputFile(f, varname, title, prompt, fpath) {
+  ///////////////////////////////////////////////////////
+  // GOAL: Helper Function to receive a valid Filename //
+  //       as a string from User.                      //
+  ///////////////////////////////////////////////////////  
   var inp = "";
   while (inp === "") {
     inp = exe.getUserInput(varname, XTYPE_FILE, title, prompt, fpath);
@@ -63,14 +67,27 @@ function getInputFile(f, varname, title, prompt, fpath) {
 }
 
 function fetchPacketKeys() {
+  /////////////////////////////////////////////
+  // GOAL: Extract the 3 Packet Keys used in //
+  //       client for Encryption             //
+  /////////////////////////////////////////////
   return _fetchPacketKeyInfo(1);
 }
 
 function fetchPacketKeyAddrs() {
+  /////////////////////////////////////////////
+  // GOAL: Get the addresses where the 3 Keys//
+  //       are PUSHed                        //
+  /////////////////////////////////////////////
   return _fetchPacketKeyInfo(2);
 }
 
 function _fetchPacketKeyInfo(retType) {
+  /////////////////////////////////////////////////////
+  // GOAL: Helper Function which does the actual job //
+  //       for the above two                         //
+  /////////////////////////////////////////////////////
+  
   //Step 1 - Look for PACKET_CZ_ENTER push
   var offset = exe.findString("PACKET_CZ_ENTER", RVA);
   if (offset === -1)
@@ -190,7 +207,11 @@ function _fetchPacketKeyInfo(retType) {
   return "Failed in Step 2 - packet key assignment has been changed";
 }
 
-function convertToBE(le) {//le is in PTYPE_HEX format but output wont have spaces
+function convertToBE(le) {
+  /////////////////////////////////////////////////////////////
+  // GOAL: Helper Function which converts input in PTYPE_HEX //
+  //       format to Big Endian format (no space in between) //
+  /////////////////////////////////////////////////////////////
   var be = "";
   for (var i = le.length-3; i >= 0; i-=3) {
     be += le.substr(i,3);
@@ -198,7 +219,64 @@ function convertToBE(le) {//le is in PTYPE_HEX format but output wont have space
   return be.replace(/ /g,"");  
 }
 
-//Functions for extracting Resource Tree
+function findNumFunction(dllName, ordinal) {
+  ///////////////////////////////////////////////////////////
+  // GOAL: Alternative to exe.findFunction for Finding     //
+  //       Function address when it is imported by ordinal //
+  ///////////////////////////////////////////////////////////
+  
+  var flag = false;
+  var func = -1; //The address will be stored here.
+  var offset = GetDataDirectory(1).offset;//Import Table
+  
+  while (!flag) {
+    var ilt = exe.fetchDWord(offset); //Import Lookup Table
+    var ts = exe.fetchDWord(offset+4);//TimeStamp
+    var fchain = exe.fetchDWord(offset+8);  //Forwarder
+    var nameOff = exe.fetchDWord(offset+12);//Dll Name Offset (VA - ImageBase)
+    var iatOff = exe.fetchDWord(offset+16); //Thunk Offset - Start of the Imported Functions
+   
+    offset += 20;
+    flag = (ilt === 0 && ts === 0 && fchain === 0 && nameOff === 0 && iatOff === 0);//All Zeros mark end of table
+    if (flag) continue;
+    
+    nameOff = exe.Rva2Raw(nameOff + exe.getImageBase());
+    var nameEnd = exe.find("00", PTYPE_HEX, false, "", nameOff);
+    var curDllName = exe.fetch(nameOff, nameEnd-nameOff);
+    
+    if (dllName.toUpperCase() !== curDllName.toUpperCase()) continue;
+    iatOff = exe.Rva2Raw(iatOff + exe.getImageBase());
+    
+    do {      
+      var thunkVal = exe.fetchDWord(iatOff);
+      iatOff += 4;
+      if (thunkVal >= 0) continue;//Skip for Non-ordinal functions
+      
+      if ((thunkVal & 0xFFFF) === ordinal) {
+        func = exe.Raw2Rva(iatOff-4);
+        break; 
+      }
+    } while (thunkVal !== 0);
+    
+    if (func !== -1) break;
+  }
+  
+  return func;
+}
+
+function GetDataDirectory(index) {
+  ///////////////////////////////////////////////////////////////////
+  // GOAL: Gets the Offset and Size of the required Data Directory //
+  ///////////////////////////////////////////////////////////////////
+  
+  var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
+  if (PEoffset === -1) return -2;
+  var offset = exe.Rva2Raw(exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index) + exe.getImageBase());
+  var size = exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index + 0x4);
+  return {"offset":offset, "size":size};
+}
+
+//Functions for extracting Resource Tree - currently used in Custom Icon Function
 function GetResourceEntry(rTree, hierList) {
   var rDir = rTree;
   for(var i = 0; i < hierList.length; i++) {
@@ -237,12 +315,4 @@ function ResourceFile(rsrcAddr, addrOffset, id) {
   this.addr = rsrcAddr + addrOffset;
   this.dataAddr = exe.Rva2Raw(exe.fetchDWord(this.addr) + exe.getImageBase());
   this.dataSize = exe.fetchDWord(this.addr + 4);
-}
-
-function GetDataDirectory(index) {
-  var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
-  if (PEoffset === -1) return -2;
-  var offset = exe.Rva2Raw(exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index) + exe.getImageBase());
-  var size = exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index + 0x4);
-  return {"offset":offset, "size":size};
 }
