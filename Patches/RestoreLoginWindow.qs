@@ -91,10 +91,8 @@ function RestoreLoginWindow() {
   if (offset === -1)
     return "Failed in Part 5 - LangType comparison missing";
   
-  var repl = " 90 90 90 90 90 90";
-  exe.replace(offset+20, repl, PTYPE_HEX);
-  exe.replace(offset+29, repl, PTYPE_HEX);
-  exe.replace(offset+38, repl, PTYPE_HEX);
+  var repl = " EB 18";
+  exe.replace(offset + code.hexlength() - 0x1A, repl, PTYPE_HEX);
   
   // Shinryo: We need to make the client return to Login Interface when Error occurs (such as wrong password, failed to connect).
   //          For this in the CModeMgr::SendMsg function, we set the return mode to 3 (Login) and pass 0x271D as idle value 
