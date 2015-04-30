@@ -41,7 +41,7 @@ function FixCameraAngles(newvalue) {
     + " 8B CE"          //MOV ECX, ESI
     + " E8 AB AB AB AB" //CALL addr2
     ;
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0x50, offset);
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0x80, offset);
   if (offset === -1)
     return "Failed in Part 1 - Function Call Missing";
   

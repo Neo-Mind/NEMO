@@ -13,14 +13,20 @@ function RemoveHourlyAnnounce() {
     + " 66 8B 45 AB" //MOV AX, WORD PTR SS:[LOCAL.x]
     + " 66 85 C0"    //TEST AX, AX
     + " 75"          //JNZ SHORT addr2
-    ;
-    
+    ;  
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace(" 8B 45", " 8B 44 24");//change EBP-x to ESP+y
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1) {
     code = code.replace(" 66", "");//change the AX to EAX and WORD PTR to DWORD PTR in the MOV statement
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
-  if (offset === -1)
+  
+  if (offset === -1) 
     return "Failed in part 1";
 
   // Step 2 - Change JNZ to JMP

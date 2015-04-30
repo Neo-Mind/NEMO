@@ -76,7 +76,7 @@
   return "Failed in Part 4 - Translate Taekwon Job";
  
  //Step 4b - Change the JNZ to JMP so that Korean names never get assigned.
- exe.replace(offset+12, "EB", PTYPE_HEX);
+ exe.replace(offset+code.hexlength()-1, "EB", PTYPE_HEX);
  
  return true;
 }

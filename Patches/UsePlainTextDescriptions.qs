@@ -29,7 +29,7 @@ function UsePlainTextDescriptions() {
     return "Failed in part 1";
   
   //Step 2 - Change JNE/JNZ to JMP
-  exe.replace(offset, "EB", PTYPE_HEX);
+  exe.replace(offset+7, "EB", PTYPE_HEX);
   
   return true;
 }
