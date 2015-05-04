@@ -1,195 +1,270 @@
-function findStart(off, type) {//type=1 PUSH ESI, type=2 PUSH EBX
-	var code = " 83 EC 0C 56 8B F1";
-	var range = 0x20;
-	
-	if (type === 2) {
-		code = " 83 EC 0C 53";
-		range = 0x50;
-	}
-	
-	var startoff = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, " ", off - range, off);
-	if (startoff === -1) {
-		startoff = exe.find(code, PTYPE_HEX, false, " ", off - range, off);
-	}
-	return startoff;
-}
-
-
 function GenMapEffectPlugin() {
-	var fp = new BinFile();
-	if (!fp.open(APP_PATH + "/Input/rdll2.asi")) {
-		return "Base File - rdll2.asi is missing from Input folder..Exiting";
-	}
+  ////////////////////////////////////////////////////////////////////
+  // GOAL: Generate Curiosity's Map Effect Plugin for loaded client //
+  //       using the template DLL - rdll2.asi                       //
+  ////////////////////////////////////////////////////////////////////
+  
+	//Step 1 - Open the Template file (making sure it exists before anything else)
+  var fp = new BinFile();
+	if (!fp.open(APP_PATH + "/Input/rdll2.asi"))
+		throw "Error: Base File - rdll2.asi is missing from Input folder";
 	
-	var errorStr = "Script needs update";
-	var xmasRVA = exe.findString("xmas_fild01.rsw", RVA);
-	if (xmasRVA === -1) {
-		return errorStr;
-	}
+  //Step 2a - Find offset of xmas_fild01.rsw
+	var offset = exe.findString("xmas_fild01.rsw", RVA);
+	if (offset === -1)
+		throw "Error: xmas_fild01 missing";
 	
-	var CGIEntry = exe.findCode(xmasRVA.packToHex(4) + " 8A", PTYPE_HEX, false);
-	if (CGIEntry === -1) {
-		return errorStr;
-	}
-	CGIEntry--;
+  //Step 2b - Find the CGameMode_Initialize_EntryPtr using the offset
+	offset = exe.findCode(offset.packToHex(4) + " 8A", PTYPE_HEX, false);
+	if (offset === -1)
+		throw "Error: xmas_fild01 reference missing";
 	
-	var CGIExit = exe.find("E8 AB AB AB AB 8A", PTYPE_HEX, true, "\xAB", CGIEntry + 5);
-	if (CGIExit === -1) {
-		return errorStr;
-	}
-	var LCl = CGIExit + 5 + exe.fetchDWord(CGIExit+1);	
-	CGIExit += 5;
+  //Step 2c - Save the EntryPtr address.
+	var CI_Entry = offset - 1;
 	
-	var yunoRVA = exe.findString("yuno.rsw", RVA);
-	if (yunoRVA === -1) {
-		return errorStr;
-	}
-	var CGOEntry = exe.find(" B8" + yunoRVA.packToHex(4), PTYPE_HEX, false, " ", 0, CGIEntry-1);
-	if (CGOEntry === -1) {
-		CGOEntry = exe.find(" B8" + yunoRVA.packToHex(4), PTYPE_HEX, false, " ", CGIExit+8);
-	}
-	if (CGOEntry === -1) {
-		return errorStr;
-	}
-	
-	var CGOExit = exe.find("C7 AB AB AB AB AB FF 8B AB AB AB AB 00 8B", PTYPE_HEX, true, "\xAB", CGOEntry);
-	if (CGOExit === -1) {
-		return errorStr;
-	}
-	CGOExit += 7;
-	
-	var LNt = exe.findCode(" C6 01 01 C3", PTYPE_HEX, false);
-	if (LNt === -1) {
-		return errorStr;
-	}
-	
-	var offsets = exe.findCodes("81 F9 2C 01 00 00 7E AB B9", PTYPE_HEX, true, "\xAB");
-	if (offsets.length !== 3) {
-		return errorStr;
-	}
-	
-	var LSk = 0;
-	var LSn = 0;
-	var LMp = 0;
-	
-	for (var i = 0; i < 3; i++) {
-		var offset = findStart(offsets[i], 1);
-		if (exe.find(" 68 A2 00 00 00", PTYPE_HEX, false, " ", offsets[i], offsets[i]+0x60) !== -1) {
-			LSn = offset;
-		}
-		else if (exe.find(" 68 A3 00 00 00", PTYPE_HEX, false, " ", offsets[i], offsets[i]+0x60) !== -1) {
-			LSk = offset;
-		}		
-		else if (exe.find(" 68 4D 01 00 00", PTYPE_HEX, false, " ", offsets[i], offsets[i]+0x60) !== -1) {
-			LMp = offset;
-		}
-	}
-	if (LSn === -1 || LSk === -1 || LMp === -1) {
-		return errorStr;
-	}
-	
-	offsets = exe.findCodes("68 2D 01 00 00", PTYPE_HEX, false);
-	var LPk = findStart(offsets[1], 2);
-	if (LPk === -1) {
-		return errorStr;
-	}
-	
-	var offset = exe.find("B9 AB AB AB 00 E8", PTYPE_HEX, true, "\xAB", CGIEntry-0x10, CGIEntry);
-	if (offset === -1) {
-		return errorStr;
-	}
-	var GW = exe.fetchHex(offset+1,4);
-	var GU = 0;
-	
-	var df = 0;
-	
-	offset = exe.find("B9" + GW + " 39 1D", PTYPE_HEX, false);
-	
-	if (offset === -1) {
-		offset = exe.find("A1 AB AB AB 00 B9" + GW, PTYPE_HEX, true, "\xAB");
-		df = 1;
-	}
-	else {
-		df = 7;
-	}
-	
-	if (offset === -1) {
-		return errorStr;
-	}
-	
-	GU = exe.fetchHex(offset+df, 4);
-	
-	offset = exe.findCode("8B 0D AB AB AB 00 68 01 02 00 00 50", PTYPE_HEX, true, "\xAB");
-	if (offset === -1) {
-		return errorStr;
-	}
-	
-	var GC = exe.fetchHex(offset+2,4);
-	
-	var PEOff = exe.find(" 50 45 00 00", PTYPE_HEX, false);
-	if (PEOff === -1) {
-		return errorStr;
-	}
-	
-	var TS = exe.fetchHex(PEOff+0x08,4);
+  //Step 3a - Look for g_Weather assignment before EntryPtr
+  var code = 
+      " B9 AB AB AB 00" //MOV ECX, g_Weather
+    + " E8"             //CALL CWeather::ScriptProcess
+    ;
+    
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", CI_Entry-0x10, CI_Entry);
+  if (offset === -1)
+    throw "Error: g_Weather assignment missing";
+  
+  //Step 3b - Save the g_Weather address
+  var gWeather = exe.fetchHex(offset+1, 4);
+  
+  //Step 4a - Look for the ending pattern after CI_Entry to get CGameMode_Initialize_RetPtr
+  code = 
+      " 74 0A"         //JE SHORT addr -> after the call. this address is RetPtr
+    + " B9" + gWeather //MOV ECX, g_Weather
+    + " E8"            //CALL CWeather::LaunchPokJuk
+    ;
+  offset = exe.find(code, PTYPE_HEX, false, "", CI_Entry+1);
+  if (offset === -1)
+    throw "Error: CI_Return missing";
+  
+  //Step 4b - Save RetPtr.
+  var CI_Return = offset + code.hexlength() + 4;
+  
+  //Step 4c - Save CWeather::LaunchPokJuk address (not RAW)
+  var CW_LPokJuk = (exe.Raw2Rva(CI_Return) + exe.fetchDWord(CI_Return-4)).packToHex(4);
+  
+  //Step 5a - Find offset of yuno.rsw
+  var offset2 = exe.findString("yuno.rsw", RVA);
+  if (offset2 === -1)
+    throw "Error: yuno.rsw missing";
+  
+  //Step 5b - Find its reference between CI_Entry & CI_Return
+  offset = exe.find(offset2.packToHex(4) + " 8A", PTYPE_HEX, false, "", CI_Entry+1, CI_Return);
+  if (offset === -1)
+    throw "Error: yuno.rsw reference missing";
+  
+  //Step 5c - Find the JZ below it which leads to calling LaunchCloud
+  offset = exe.find(" 0F 84 AB AB 00 00", PTYPE_HEX, true, "\xAB", offset+5);
+  if (offset === -1)
+    throw "Error: LaunchCloud JZ missing";
+  
+  offset += exe.fetchDWord(offset+2) + 6;
+  
+  //Step 5d - Go Inside and extract g_useEffect
+  var opcode = exe.fetchByte(offset) & 0xFF;//and mask to fix up Sign issues
+  if (opcode === 0xA1)
+    var gUseEffect = exe.fetchHex(offset+1, 4);
+  else
+    var gUseEffect = exe.fetchHex(offset+2, 4);
+  
+  //Step 5e - Now look for LaunchCloud call after it
+  code = 
+      " B9" + gWeather //MOV ECX, g_Weather
+    + " E8"            //CALL CWeather::LaunchCloud
+    ;
+  
+  offset = exe.find(code, PTYPE_HEX, false, "", offset);
+  if (offset === -1)
+    throw "Error: LaunchCloud call missing";
+  
+  offset += code.hexlength();
+  
+  //Step 5f - Save CWeather::LaunchCloud address (not RAW)
+  var CW_LCloud = (exe.Raw2Rva(offset+4) + exe.fetchDWord(offset)).packToHex(4);
+  
+  //Step 6a - Find the 2nd reference to yuno.rsw - which will be at CGameMode_OnInit_EntryPtr
+  offset = exe.find(" B8" + offset2.packToHex(4), PTYPE_HEX, false, "", 0, CI_Entry-1);
 
+  if (offset === -1)
+    offset = exe.find(" B8" + offset2.packToHex(4), PTYPE_HEX, false, "", CI_Return+1);
+  
+  if (offset === -1)
+    throw "Error: 2nd yuno.rsw reference missing";
+  
+  //Step 6b - Save the EntryPtr
+  var CO_Entry = offset;
+  
+  //Step 7a - Find the closest JZ after CO_Entry. It jumps to a g_renderer assignment
+  offset = exe.find(" 0F 84 AB AB 00 00", PTYPE_HEX, true, "\xAB", CO_Entry+1);
+  if (offset === -1)
+    throw "Error: JZ after CO_Entry missing";
+  
+  offset += exe.fetchDWord(offset+2) + 6 + 1;//1 to skip the first opcode byte
+  
+  opcode = exe.fetchByte(offset-1) & 0xFF;//and mask to fix up Sign issues
+  if (opcode !== 0xA1)
+    offset++;//extra 1 to skip the second opcode byte
+  
+  //Step 7b - Save g_renderer & the g_renderer->ClearColor offset
+  var gRenderer = exe.fetchHex(offset, 4);
+  var gR_clrColor = exe.fetchHex(offset+6, 1);
+  
+  //Step 7c - Find pattern after offset that JMPs to CGameMode_OnInit_RetPtr
+  code =
+      gRenderer                               //MOV reg32_A, DWORD PTR DS:[g_renderer]
+    + " C7 AB" + gR_clrColor + " 33 00 33 FF" //MOV DWORD PTR DS:[reg32_A+const], FF330033
+    + " EB"                                   //JMP SHORT addr -> jumps to RetPtr
+    ;
+    
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+11);
+  if (offset === -1)
+    throw "Error: CO_Return missing";
+  
+  offset += code.hexlength();
+  offset += exe.fetchByte(offset) + 1;
+  
+  //Step 7d - Check if its really after the last map - new clients have more 
+  opcode = exe.fetchByte(offset) & 0xFF;
+  if (opcode != 0xA1 && (opcode !== 0x8B || (exe.fetchByte(offset+1) & 0xC7) !== 5)) {//not MOV EAX, [addr] or MOV reg32_A, [addr]
+    code = 
+        gRenderer               //MOV reg32_A, g_renderer
+      + " C7 AB" + gR_clrColor  //MOV DWORD PTR DS:[reg32_A+const], colorvalue
+      ;
+    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+1, offset+0x100);
+    if (offset === -1)
+      throw "Error: CO_Return missing 2";
+    
+    offset += code.hexlength() + 4;    
+  }
+  
+  //Step 7e - Save the RetPtr
+  var CO_Return = offset;
+  
+  //Step 8a - Find CWeather::LaunchNight function. It always has the same code
+  offset = exe.findCode(" C6 01 01 C3", PTYPE_HEX, false); //MOV BYTE PTR DS:[ECX],1 and RETN
+  if (offset === -1)
+    throw "Error: LaunchNight missing";
+  
+  //Step 8b - Save CWeather::LaunchNight address (not RAW)
+  var CW_LNight = exe.Raw2Rva(offset).packToHex(4);
+  
+  //Step 9a - Find CWeather::LaunchSnow function call. should be after xmas.rsw is PUSHed
+  code = 
+    " 74 07"          //JZ SHORT addr1 -> Skip LaunchSnow and call StopSnow instead
+  + " E8 AB AB AB AB" //CALL CWeather::LaunchSnow
+  + " EB 05"          //JMP SHORT addr2 -> Skip StopSnow call
+  + " E8"             //CALL CWeather::StopSnow
+  ;
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", CI_Entry);
+  if (offset === -1)
+    throw "Error: LaunchSnow call missing";
+  
+  //Step 9b - Save CWeather::LaunchSnow address (not RAW)
+  var CW_LSnow = (exe.Raw2Rva(offset+7) + exe.fetchDWord(offset+3)).packToHex(4);
+  
+  //Step 10a - Find the PUSH 14D (followed by MOV) inside CWeather::LaunchMaple
+  offset = exe.findCode(" 68 4D 01 00 00 89", PTYPE_HEX, false);
+  if (offset === -1)
+    throw "Error: LaunchMaple missing";
+  
+  //Step 10b - Find the start of the function
+  code = 
+      " 83 EC 0C" //SUB ESP, 0C
+    + " 56"       //PUSH ESI
+    + " 8B F1"    //MOV ESI, ECX
+    ;
+  offset2 = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, "", offset-0x60, offset);
+  
+  if (offset2 === -1)
+    offset2 = exe.find(code, PTYPE_HEX, false, "", offset-0x60, offset);
+  
+  if (offset2 === -1)
+    throw "Error: LaunchMaple start missing";
+  
+  //Step 10c - Save CWeather::LaunchMaple address (not RAW)
+  var CW_LMaple = exe.Raw2Rva(offset2).packToHex(4);
+  
+  //Step 11a - Find the PUSH A3 (followed by MOV) inside CWeather::LaunchSakura
+  offset = exe.findCode(" 68 A3 00 00 00 89", PTYPE_HEX, false);
+  if (offset === -1)
+    throw "Error: LaunchSakura missing";
+  
+  //Step 11b - Find the start of the function
+  offset2 = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, "", offset-0x60, offset);
+  
+  if (offset2 === -1)
+    offset2 = exe.find(code, PTYPE_HEX, false, "", offset-0x60, offset);
+  
+  if (offset2 === -1)
+    throw "Error: LaunchSakura start missing";
+  
+  //Step 11c - Save CWeather::LaunchSakura address (not RAW)
+  var CW_LSakura = exe.Raw2Rva(offset2).packToHex(4);
+  
+  //Step 12a - Read the input dll file
 	var dll = fp.readHex(0,0x2000);
 	fp.close();
-	
-	dll = dll.replace(/ 29 35 83 4F/i, TS);
-	dll = dll.replace(/ A0 1B 97 00/i, GW);
-	dll = dll.replace(/ D8 3D 8F 00/i, GC);
-	dll = dll.replace(/ EC 0E 9A 00/i, GU);
-	dll = dll.replace(/ 80 68 6C 00/i, exe.Raw2Rva(LCl).packToHex(4));
-	dll = dll.replace(/ 60 66 6C 00/i, exe.Raw2Rva(LSn).packToHex(4));
-	dll = dll.replace(/ C0 68 6C 00/i, exe.Raw2Rva(LMp).packToHex(4));
-	dll = dll.replace(/ 40 68 6C 00/i, exe.Raw2Rva(LSk).packToHex(4));
-	dll = dll.replace(/ 30 6B 6C 00/i, exe.Raw2Rva(LPk).packToHex(4));
-	dll = dll.replace(/ E0 6B 6C 00/i, exe.Raw2Rva(LNt).packToHex(4));
-	
-	dll = dll.replace(/ 61 AB 72 00/i, exe.Raw2Rva(CGIEntry).packToHex(4));
-	dll = dll.replace(/ 48 B4 72 00/i, exe.Raw2Rva(CGIExit ).packToHex(4));
-	dll = dll.replace(/ ED 37 73 00/i, exe.Raw2Rva(CGOEntry).packToHex(4));
-	dll = dll.replace(/ 08 49 73 00/i, exe.Raw2Rva(CGOExit ).packToHex(4));
-	
+  
+  //Step 12b - Fill in the values
+  dll = dll.replace(/ C1 C1 C1 C1/i, gWeather);
+  dll = dll.replace(/ C2 C2 C2 C2/i, gRenderer);
+  dll = dll.replace(/ C3 C3 C3 C3/i, gUseEffect);
+  
+  code = 
+      CW_LCloud
+    + CW_LSnow
+    + CW_LMaple
+    + CW_LSakura
+    + CW_LPokJuk
+    + CW_LNight
+    ;
+  dll = dll.replace(/ C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4 C4/i, code);
+  
+  dll = dll.replace(/ C5 C5 C5 C5/i, exe.Raw2Rva(CI_Entry).packToHex(4));
+  dll = dll.replace(/ C6 C6 C6 C6/i, exe.Raw2Rva(CO_Entry).packToHex(4));
+  dll = dll.replace(/ C7 C7 C7 C7/i, exe.Raw2Rva(CI_Return).packToHex(4));
+  dll = dll.replace(/ C8 C8 C8 C8/i, exe.Raw2Rva(CO_Return).packToHex(4));
+  
+  dll = dll.replace(/ 6C 5D C3/i, gR_clrColor + " 5D C3");
+ 
+  //Step 12c - Write to output dll file.
 	fp.open(APP_PATH + "/Output/rdll2_" + exe.getClientDate() + ".asi", "w");
 	fp.writeHex(0,dll);
 	fp.close();
-	
-	/* - Use incase you need the source file
+  
+	//Step 12d - Also write out the values to header file (client.h)
 	fp2 = new TextFile();
 	fp2.open(APP_PATH + "/Output/client_" + exe.getClientDate() + ".h", "w");
 	fp2.writeline("#include <WTypes.h>");
-	fp2.writeline("\n//Client Date : " + exe.getClientDate());
-	fp2.writeline("#define CLIENT_TIMESTAMP " + le2be(TS));
-	fp2.writeline("\n//Client offsets");
-	fp2.writeline("void* G_WEATHER = (void*)" + le2be(GW) + ";");
-	fp2.writeline("void** G_CRENDERER = (void**)" + le2be(GC) + ";");
-	fp2.writeline("void* G_USEEFFECT = (void*)" + le2be(GU) + ";");
+	fp2.writeline("\n// Client Date : " + exe.getClientDate());
+	fp2.writeline("\n// Client offsets - some are #define because they were appearing in multiple locations unnecessarily");
+	fp2.writeline("#define G_WEATHER 0x" + convertToBE(gWeather) + ";");
+	fp2.writeline("#define G_RENDERER 0x" + convertToBE(gRenderer) + ";");
+	fp2.writeline("#define G_USEEFFECT 0x" + convertToBE(gUseEffect) + ";");
 	fp2.writeline("\nDWORD CWeather_EffectId2LaunchFuncAddr[] = {\n\tNULL, //CEFFECT_NONE");
-	fp2.writeline("\t" + le2be(exe.Raw2Rva(LCl).packToHex(4)) + ", // CEFFECT_SKY -> void CWeather::LaunchCloud(CWeather this<ecx>, char param)");
-	fp2.writeline("\t" + le2be(exe.Raw2Rva(LSn).packToHex(4)) + ", // CEFFECT_SNOW -> void CWeather::LaunchSnow(CWeather this<ecx>)");
-	fp2.writeline("\t" + le2be(exe.Raw2Rva(LMp).packToHex(4)) + ", // CEFFECT_MAPLE -> void CWeather::LaunchMaple(CWeather this<ecx>)");
-	fp2.writeline("\t" + le2be(exe.Raw2Rva(LSk).packToHex(4)) + ", // CEFFECT_SAKURA -> void CWeather::LaunchSakura(CWeather this<ecx>)");
-	fp2.writeline("\t" + le2be(exe.Raw2Rva(LPk).packToHex(4)) + ", // CEFFECT_POKJUK -> void CWeather::LaunchPokJuk(CWeather this<ecx>)");
-	fp2.writeline("\t" + le2be(exe.Raw2Rva(LNt).packToHex(4)) + ", // CEFFECT_NIGHT -> void CWeather::LaunchNight(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + convertToBE(CW_LCloud) + ", // CEFFECT_SKY -> void CWeather::LaunchCloud(CWeather this<ecx>, char param)");
+	fp2.writeline("\t0x" + convertToBE(CW_LSnow) + ", // CEFFECT_SNOW -> void CWeather::LaunchSnow(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + convertToBE(CW_LMaple) + ", // CEFFECT_MAPLE -> void CWeather::LaunchMaple(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + convertToBE(CW_LSakura) + ", // CEFFECT_SAKURA -> void CWeather::LaunchSakura(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + convertToBE(CW_LPokJuk) + ", // CEFFECT_POKJUK -> void CWeather::LaunchPokJuk(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + convertToBE(CW_LNight) + ", // CEFFECT_NIGHT -> void CWeather::LaunchNight(CWeather this<ecx>)");
 	fp2.writeline("};\n");
 	
-	fp2.writeline("void* CGameMode_Initialize_EntryPtr = (void*)" + le2be(exe.Raw2Rva(CGIEntry).packToHex(4)) + ";");
-	fp2.writeline("void* CGameMode_Initialize_RetPtr = (void*)" + le2be(exe.Raw2Rva(CGIExit ).packToHex(4)) + ";");
-	fp2.writeline("void* CGameMode_OnInit_EntryPtr = (void*)" + le2be(exe.Raw2Rva(CGOEntry).packToHex(4)) + ";");
-	fp2.writeline("void* CGameMode_OnInit_RetPtr = (void*)" + le2be(exe.Raw2Rva(CGOExit ).packToHex(4)) + ";");
+	fp2.writeline("#define CGameMode_Initialize_EntryPtr (void*)0x" + convertToBE(exe.Raw2Rva(CI_Entry) ) + ";");
+	fp2.writeline("#define CGameMode_OnInit_EntryPtr (void*)0x"     + convertToBE(exe.Raw2Rva(CO_Entry) ) + ";");
+	fp2.writeline("void* CGameMode_Initialize_RetPtr = (void*)0x"   + convertToBE(exe.Raw2Rva(CI_Return)) + ";");
+	fp2.writeline("void* CGameMode_OnInit_RetPtr = (void*)0x"       + convertToBE(exe.Raw2Rva(CO_Return)) + ";");
 
+  fp2.writeline("\r\n#define GR_CLEAR " + (parseInt(gR_clrColor, 16)/4) + ";");
 	fp2.close();
-	*/
 	
 	return "MapEffect plugin for the loaded client has been generated in Output folder";
-}
-
-function le2be(le) {
-	var be = "";
-	for (var i = le.length-3; i >= 0; i-=3) {
-		be += le.substring(i,i+3);
-	}
-	return "0x" + be.replace(/ /g,"");	
 }

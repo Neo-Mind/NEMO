@@ -37,11 +37,11 @@ function EnableCustom3DBones() {
   //Step 4 - Modify JA/JGE address to the code for using 3dmob_bone. Do not care about which CMP we hit,
   //         the important thing is the conditional JGE/JA after it, be it SHORT or LONG.
   //         Also let"s trust the client here, that it never calls the function with nAniIdx outside of [0;4]
-  var bite = exe.fetchByte(offset);
+  var opcode = exe.fetchByte(offset) & 0xFF;//and mask is to avoid sign issues
   
-  if (bite === 0x77 || bite === 0x7D) // Short Jump
+  if (opcode === 0x77 || opcode === 0x7D) // Short Jump
     exe.replace(offset+1, (finish-offset-2).packToHex(1), PTYPE_HEX);
-  else if (bite === 0x0F) // Long Jump
+  else if (opcode === 0x0F) // Long Jump
     exe.replace(offset+2, (finish-offset-6).packToHex(4), PTYPE_HEX);
   else
     return "Failed in Part 4";

@@ -11,7 +11,7 @@
 //	Remember the functionName needs to be in quotes (single or double) here but no quotes should be used while defining it.
 //  
 //  description is what shows up in the Addon menu of NEMO.
-//  tooltip - text which shows detail about what a particualar tool/addon does - need to check if its actually visible.
+//  tooltip - text which shows detail about what a particular tool/addon does - need to check if its actually visible.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,7 +19,10 @@ registerAddon("ExtractMsgTable", "Extract msgstringtable", "Extracts embedded ms
 
 registerAddon("ExtractTxtNames", "Extract txt file names", "Extracts embedded txt file names in the loaded client");
 
+registerAddon("GenMapEffectPlugin", "Generate Mapeffect plugin by Curiosity", "Generates Curiosity's mapeffect plugin for the loaded client");
+
+registerAddon("GenPktExtractDLL", "Generate Packet Extract DLL", "Generates Packet Extractor DLL for the loaded client");
+
 registerAddon("GetPacketKeys", "Get Packet Keys", "Retrieves the packet keys used in the loaded client for Obfuscation");
 
-//registerAddon("GenMapEffectPlugin", "Generate Mapeffect plugin by Curiosity", "Generates Curiosity's mapeffect plugin for loaded client");
-//Disabled since it needs to be fixed.
+registerAddon("DumpImportTable", "Dump Import Table", "Dumps the Full Import table (dll names and imported functions) for the loaded client")

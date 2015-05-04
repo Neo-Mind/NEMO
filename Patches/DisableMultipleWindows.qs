@@ -31,7 +31,7 @@ function DisableMultipleWindows() {
   
   //Step 1c - If the MOV EAX statement follows the above its the old client where Multiple client check is there,
   //          So Replace it with MOV EAX, 00FFFFFF
-  var opcode = exe.fetchByte(offset + code.hexlength());
+  var opcode = exe.fetchByte(offset + code.hexlength()) & 0xFF;//and mask is to avoid sign issues
   if (opcode === 0xA1) {//MOV EAX, DWORD PTR DS:[addr]
     exe.replace(offset + code.hexlength(), " B8 FF FF FF 00");
     return true;
@@ -70,7 +70,7 @@ function DisableMultipleWindows() {
     + " FF 15" + genVarHex(3) // CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
     + " 3D 02 01 00 00"       // CMP EAX, 258  ; WAIT_TIMEOUT
     + " 75 2F"                // JNZ addr2 -> POP ESI below
-    + " E8 09 00 00 00"       // PUSH &JMP ; addr1
+    + " E8 09 00 00 00"       // PUSH &JMP
     + " 4B 45 52 4E 45 4C 33 32 00" // DB "KERNEL32",0
     + " FF 15" + genVarHex(4) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
     + " E8 0C 00 00 00"       // PUSH &JMP

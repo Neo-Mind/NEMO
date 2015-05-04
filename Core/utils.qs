@@ -211,7 +211,13 @@ function convertToBE(le) {
   /////////////////////////////////////////////////////////////
   // GOAL: Helper Function which converts input in PTYPE_HEX //
   //       format to Big Endian format (no space in between) //
+  //       If the input is a number it outputs corresponding //
+  //       hex number in Big Endian format                   //
   /////////////////////////////////////////////////////////////
+  
+  if (typeof(le) === "number")
+    le = le.packToHex(4);
+  
   var be = "";
   for (var i = le.length-3; i >= 0; i-=3) {
     be += le.substr(i,3);
