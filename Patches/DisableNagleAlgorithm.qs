@@ -6,8 +6,9 @@ function DisableNagleAlgorithm() {
   
   //Step 1 - Construct the Function to overwrite with - Missing addresses to be added later
   //         we will use constants starting from CC CC CC C1 as fillers (to avoid keeping offsets)
-  var code =    
-      " 55"                    // PUSH EBP
+  var code = 
+      genVarHex(0)
+    + " 55"                    // PUSH EBP
     + " 8B EC"                 // MOV EBP,ESP
     + " 83 EC 0C"              // SUB ESP,0C
     + " C7 45 F8 01 00 00 00"  // MOV DWORD PTR SS:[EBP-8],1
@@ -17,20 +18,16 @@ function DisableNagleAlgorithm() {
     + " 51"                    // PUSH ECX
     + " 8B 55 08"              // MOV EDX,DWORD PTR SS:[EBP+8]
     + " 52"                    // PUSH EDX
-    + " A1" + genVarHex(1)       // MOV EAX,DWORD PTR DS:[<&WS2_32.#23>] ; WS2_32.socket() => genVarHex(1)
-    + " FF D0"                 // CALL EAX
+    + " FF 15" + genVarHex(1)  // CALL DWORD PTR DS:[<&WS2_32.#23>] ; WS2_32.socket() => genVarHex(1)
     + " 89 45 FC"              // MOV DWORD PTR SS:[EBP-4],EAX
     + " 83 7D FC FF"           // CMP DWORD PTR SS:[EBP-4],-1
-    + " 74 4B"                 // JE SHORT addr1
+    + " 74 3C"                 // JE SHORT addr1
     + " E8 0B 00 00 00"        // JMP &PUSH ; a little trick to directly push the following string onto the stack
     + " 73 65 74 73 6F 63 6B 6F 70 74 00" // DB "setsockopt\x00"
-    + " E8 0B 00 00 00"        // JMP &PUSH
-    + " 57 53 32 5F 33 32 2E 44 4C 4C 00" // DB "WS2_32.DLL\x00"
-    + " 8B 0D" + genVarHex(2)     // MOV ECX,DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; genVarHex(2)
-    + " FF D1"                 // CALL ECX
+    + " 68" + genVarHex(2)     // PUSH OFFSET addr2; ASCII "ws2_32.dll"  => genVarHex(2)
+    + " FF 15" + genVarHex(3)  // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>] ; genVarHex(3)
     + " 50"                    // PUSH EAX
-    + " 8B 15" + genVarHex(3)     // MOV EDX,DWORD PTR DS:[<&KERNEL32.GetProcAddress>]   ; genVarHex(3)
-    + " FF D2"                 // CALL EDX
+    + " FF 15" + genVarHex(4)  // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]   ; genVarHex(4)
     + " 89 45 F4"              // MOV DWORD PTR SS:[EBP-0C],EAX
     + " 83 7D F4 00"           // CMP DWORD PTR SS:[EBP-0C],0
     + " 74 11"                 // JE SHORT addr1
@@ -42,84 +39,52 @@ function DisableNagleAlgorithm() {
     + " 8B 4D FC"              // MOV ECX,DWORD PTR SS:[EBP-4]
     + " 51"                    // PUSH ECX
     + " FF 55 F4"              // CALL DWORD PTR SS:[EBP-0C]
-    + " 8B 45 FC"              // MOV EAX,DWORD PTR SS:[EBP-4]
+    + " 8B 45 FC"              // MOV EAX,DWORD PTR SS:[EBP-4]; addr1
     + " 8B E5"                 // MOV ESP,EBP
     + " 5D"                    // POP EBP
     + " C2 0C 00"              // RETN 0C
     ;
-  
-  // Step 2 - Allocate Free Space for adding the code above.
+    
+  // Step 2a - Allocate Free Space for adding the code above.
   var size = code.hexlength();
-  var free = exe.findZeros(size+4);
+  var free = exe.findZeros(size);
   if (free === -1)
     return "Failed in part 2 - Not enough free space";
  
   var freeRva = exe.Raw2Rva(free);
-  //$free += 247 + 4 + 4 + 90 + 4; ??dunno what this is
   
-  //Now we get the addresses of the dll imported functions
+  //Step 2b - Find address of ws2_32.socket
+  var sockFunc = exe.findFunction("socket");
   
-  //Step 3a - Find a call to ds:[<&ws2_32.socket>] - indirect call or ws2_32.socket - direct call.
-  //          Needed since it could be imported by ordinal instead of name
+  if (sockFunc === -1)//Imported by ordinal
+    sockFunc = findNumFunction("ws2_32.dll", 23);
+
+  if (sockFunc === -1)
+    return "Failed in Part 2 - socket function missing";
+ 
+  //Step 2c - Insert all the missing values into the replace code.
+  code = remVarHex(code, 0, freeRva+4);
+  code = remVarHex(code, 1, sockFunc);
+  code = remVarHex(code, 2, exe.findString("ws2_32.dll", RVA));
+  code = remVarHex(code, 3, exe.findFunction("GetModuleHandleA"));
+  code = remVarHex(code, 4, exe.findFunction("GetProcAddress"));
   
-  var sockcode_pre =
-      " E8 AB AB 00 00" // CALL CPacketQueue::Init
-    + " 6A 00"          // PUSH 0
-    + " 6A 01"          // PUSH 1
-    + " 6A 02"          // PUSH 2
+  //Step 2d - Insert the code to allocated area
+  exe.insert(free, size, code, PTYPE_HEX);
   
-  var sockcode_indirect = "FF 15 AB AB AB 00"; //CALL DWORD PTR DS:[<&socket>]
-  var sockcode_direct = "E8 AB AB AB 00" ; //CALL socket
+  //Step 3a - Find all JMP DWORD PTR to socket function
+  var offsets = exe.findCodes(" FF 25" + sockFunc.packToHex(4), PTYPE_HEX, false);
   
-  var bIndirectCALL = true;
-  var sockoff = sockcode_pre.hexlength() + 2;
+  //Step 3b - Replace the address with our function.
+  for (var i = 0; i < offsets.length; i++)
+    exe.replaceDWord(offsets[i]+2, freeRva);
   
-  var offset = exe.findCode(sockcode_pre + sockcode_indirect, PTYPE_HEX, true, "\xAB");
+  //Step 3c - Find all CALL DWORD PTR to socket function
+  offsets = exe.findCodes(" FF 15" + sockFunc.packToHex(4), PTYPE_HEX, false);
   
-  if (offset === -1) {
-    offset = exe.findCode(sockcode_pre + sockcode_direct, PTYPE_HEX, true, "\xAB");
-    sockoff--;
-    bIndirectCALL = false;
-  }
-  
-  if (offset === -1)
-    return "Failed in Part 3 - Unable to find socket call";
-  
-  //Step 3b - Extract the socket function address
-  var sockFunc = exe.fetchDWord(offset + sockoff);
-  if (!bIndirectCALL)
-    sockFunc = exe.Raw2Rva(offset + sockoff + 4) + sockFunc;
-  
-  if (sockFunc < 0)
-    return "Failed in Part 3 - Function address is unknown";
-  
-  //Step 3c - Insert all the missing values into the replace code.
-  code = remVarHex(code, 1, sockFunc); // socket function at 26
-  code = remVarHex(code, 2, exe.findFunction("GetModuleHandleA"));
-  code = remVarHex(code, 3, exe.findFunction("GetProcAddress"));
-  
-  //Step 4a - Now the allocated code needs to be called from the area where JMP to socket() found in each client.
-  offset = exe.findCode("FF 25" + sockFunc.packToHex(4), PTYPE_HEX, false);//JMP DWORD PTR DS:[<&WS2_32.#23>]
-  if (offset === -1)
-    return "Failed in part 4 - Unable to find socket jmp";
-  
-  //Step 4b - Replace the socket call with our function call
-  exe.replace(offset+2, freeRva.packToHex(4), PTYPE_HEX);
-  
-  //Step 4c - If socket is called Indirectly then we need to find all the instances of it and replace with call to our code.
-  if (bIndirectCALL) {
-    var offsets = exe.findCodes("FF 15" + sockFunc.packToHex(4), PTYPE_HEX, false);
-    if (!offsets[0])
-      return "Failed in Part 4 - unable to find indirect calls";
-        
-    for (var i = 0; offsets[i]; i++) {
-      var offset = offsets[i];
-      exe.replace(offset, " E8" + (freeRva - exe.Raw2Rva(offset) - 5).packToHex(4) + " 90", PTYPE_HEX);
-    }
-  }
-  
-  //Step 5 - Insert the code
-  exe.insert(free, size + 4, code, PTYPE_HEX);
+  //Step 3d - Replace the address with our function.
+  for (var i = 0; i < offsets.length; i++)
+    exe.replaceDWord(offsets[i]+2, freeRva);
   
   return true;
 }
