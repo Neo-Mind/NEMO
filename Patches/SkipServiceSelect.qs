@@ -1,4 +1,4 @@
-function SkipServiceSelect() { //incomplete
+function SkipServiceSelect() {
   /////////////////////////////////////////////
   // GOAL: Set g_hideAccountList always to 1 //
   /////////////////////////////////////////////

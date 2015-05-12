@@ -1,88 +1,92 @@
-function UseCustomAuraSprites(){//-Incomplete. Old patch seems to be changing different areas
+function UseCustomAuraSprites() {
+  /////////////////////////////////////////////////////////
+  // GOAL: Change the files used for Level99 Aura effect //
+  //       ring_blue.tga -> aurafloat.tga                //
+  //       pikapika2.bmp -> auraring.bmp                 //
+  /////////////////////////////////////////////////////////
   
-  //To Do - Patterns differ in old clients. Find when it changed.
-  
-  //Step 1a - Find offset of ring_blue.tga
-  var offset = exe.findString("effect\\ring_blue.tga", RVA);
+  //Step 1a - Find address of ring_blue.tga
+  var offset = exe.findString("effect\\ring_blue.tga", RVA, false);//false for not prefixing zero.
   if (offset === -1)
     return "Failed in Part 1 - ring_blue.tga not found";
-    
-  var erb = offset.packToHex(4);
   
-  //Step 1b - Find offset of pikapika2.bmp  
-  offset = exe.findString("effect\\pikapika2.bmp", RVA);
+  var rblue = " 68" + offset.packToHex(4);//PUSH OFFSET addr; ASCII "effect\ring_blue.tga"
+  
+  //Step 1b - Find address of pikapika2.bmp
+  offset = exe.findString("effect\\pikapika2.bmp", RVA, false);//false for not prefixing zero.
   if (offset === -1)
     return "Failed in Part 1 - pikapika2.bmp not found";
+  
+  var ppika2 = " 68" + offset.packToHex(4);//PUSH OFFSET addr; ASCII "effect\pikapika2.bmp"
+
+  //Step 1c - Allocate space for the replace strings
+  var strings = ["effect\\aurafloat.tga", "effect\\auraring.bmp"];
+  var code = strings.join("\x00") + "\x00";
+  
+  offset = exe.findZeros(code.length);
+
+  //Step 1d - Insert the strings into the allocated area
+  exe.insert(offset, code.length, code.toHex(), PTYPE_HEX);
+
+  var afloat = exe.Raw2Rva(offset).packToHex(4);
+  var aring = exe.Raw2Rva(offset + strings[0].length + 1).packToHex(4);
+  
+  //Step 2a - Find the reference of both where they are used to display the aura
+  var code1 =
+      rblue             //PUSH OFFSET addr; ASCII "effect\ring_blue.tga"
+    + " 8B AB"          //MOV ECX, reg32_A
+    + " E8 AB AB AB AB" //CALL addr2
+    + " E9 AB AB AB AB" //JMP addr3
+    ;
+  var code2 = code1.replace(rblue, ppika2);
+  var roff = code1.hexlength() + 2;
+  
+  offset = exe.findCode(code1 + " AB" + code2, PTYPE_HEX, true, "\xAB");//PUSH reg32_B in between
+  if (offset === -1) {
+    offset = exe.findCode(code1 + " 6A 00" + code2, PTYPE_HEX, true, "\xAB");//PUSH 0 in between
+    roff++;
+  }
+  
+  if (offset === -1)
+    return "Failed in Part 2";
+  
+  //Step 2b - Replace the two string addresses.
+  exe.replace(offset + 1, afloat, PTYPE_HEX);
+  exe.replace(offset + roff, aring, PTYPE_HEX);
+  
+  // For new clients the above is not being used apparently but just added it to avoid surprises
+
+  //Step 3a - Look for the second pattern in the new clients.
+  code = 
+      " 56"             //PUSH ESI
+    + " 8B F1"          //MOV ESI, ECX
+    + " E8 AB AB FF FF" //CALL addr1
+    + " 8B CE"          //MOV ECX, ESI
+    + " 5E"             //POP ESI
+    + " E9 AB AB FF FF" //JMP addr2
+    ;
+
+  var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
+  var offsetR = -1;
+  var offsetP = -1;
+  
+  //Step 3b - Find the pattern that calls pikapika2 effect followed by ring_blue
+  for (var i = 0; i < offsets.length; i++) {
+    offset = offsets[i] + 8 +  exe.fetchDWord(offsets[i] + 4);
+    offsetP = exe.find(ppika2, PTYPE_HEX, false, "", offset, offset + 0x100);
     
-  var epp = offset.packToHex(4);
-  
-  if (exe.getClientDate() <= 20130605) {
-    var code00 =  
-        " 68" + erb                // PUSH erb; ASCII "effect\ring_blue.tga"
-      + " FF 15 AB AB AB AB"       // CALL NEAR DWORD PTR DS:[&MSVCP90.std::basic_string<char>::basic_string<char>]
-      + " 89 AB AB AB"             // MOV DWORD PTR SS:[ESP+const1], EBP
-      + " C7 44 AB AB AB AB AB AB" // MOV DWORD PTR SS:[ESP+const2], const3
-      + " 8B CE"                   // MOV  ECX,ESI
-      + " E8 AB AB AB AB"          // CALL func1
-      + " 8B 57 AB"                // MOV EAX, DWORD PTR DS:[EDI+const4]
-      + " 56"                      // PUSH ESI
-      + " 8B CF"                   // MOV ECX, EDI
-      + " 89 AB AB"                // MOV DWORD PTR DS:[ESI+4], EDX
-      + " 89 AB AB"                // MOV DWORD PTR DS:[ESI+0C], EBX
-      + " 89 AB AB"                // MOV DWORD PTR DS:[ESI+10], EBP
-      + " C7 46 AB AB AB AB AB"    // MOV DWORD PTR DS:[ESI+8], 1
-      + " E8 AB AB AB AB"          // CALL func2
-      ;
-          
-    var code01 =
-        " 68" + epp // PUSH epp; ASCII "effect\pikapika2.bmp"
-      + " FF 15"    // CALL DWORD PTR DS:[&MSVCP90.std::basic_string<char>::basic_string<char>]
-      ;
+    offset = offsets[i] + 16 + exe.fetchDWord(offsets[i] + 12);
+    offsetR = exe.find(rblue,  PTYPE_HEX, false, "", offset, offset + 0x120);
+    
+    if (offsetP !== -1 && offsetR !== -1) break;
   }
-  else {
-    var code00 =
-        " 68" + erb             // PUSH erb; ASCII "effect\ring_blue.tga"
-      + " C6 01 00"             // MOV BYTE PTR DS:[ECX], 0
-      + " E8 AB AB AB AB"       // CALL addr1
-      + " C7 45 AB AB AB AB AB" // MOV DWORD PTR SS:[LOCAL.x], const1
-      + " C7 45 AB AB AB AB AB" // MOV DWORD PTR SS:[LOCAL.y], const2
-      + " 8B CE"                // MOV ECX, ESI
-      + " E8 AB AB AB AB"       // CALL addr2
-      + " 8B 57 04"             // MOV EDX, [EDI+4]
-      + " 56"                   // PUSH ESI
-      + " 8B CF"                // MOV ECX, EDI
-      + " 89 AB AB"             // MOV DWORD PTR DS:[ESI+4], EDX
-      + " 89 AB AB"             // MOV DWORD PTR DS:[ESI+0C], EBX
-      + " C7 46 AB AB AB AB AB" // MOV DWORD PTR DS:[ESI+10], 0
-      + " C7 46 AB AB AB AB AB" // MOV DWORD PTR DS:[ESI+8], 1
-      + " E8 AB AB AB AB"       // CALL addr3
-      ;
-
-    var code01 =
-        " 68" + epp       // PUSH epp; ASCII "effect\pikapika2.bmp"
-      + " C6 AB AB"       // MOV BYTE PTR DS:[ECX], 0
-      + " E8 AB AB AB AB" // CALL func
-      ;
-  }
-
-  var offset00 = exe.findCode(code00, PTYPE_HEX, true, "\xAB");
-  if (offset00 === -1)
-    return "Failed in part 1";
   
-  var offset01 = exe.findCode(code01, PTYPE_HEX, true, "\xAB");
-  if (offset01 === -1)
-    return "Failed in part 2";
-     
-  var code =  "effect\\aurafloat.tga\x00effect\\auraring.bmp\x00\x90";
-  var size =  code.length;
+  //Step 3c - Replace the two string addresses.
+  if (offsetP !== -1)
+    exe.replace(offsetP + 1, aring, PTYPE_HEX);
   
-  var free = exe.findZeros(size);
-  if (free === -1)
-    return "Failed to find enough free space";
-  
-  exe.replace(offset00+1,  exe.Raw2Rva(free+0 ).packToHex(4), PTYPE_HEX);
-  exe.replace(offset01+1,  exe.Raw2Rva(free+21).packToHex(4), PTYPE_HEX);
-  exe.insert(free, size, code.toHex(), PTYPE_HEX);
+  if (offsetR !== -1)
+    exe.replace(offsetR + 1, afloat, PTYPE_HEX);
   
   return true;
 }

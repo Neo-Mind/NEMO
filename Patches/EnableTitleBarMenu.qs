@@ -4,7 +4,7 @@ function EnableTitleBarMenu() {
   //////////////////////////////////////////////////////////
   
   //Step 1a - Find the function's address
-  var func = exe.findFunction("CreateWindowExA");
+  var func = getFuncAddr("CreateWindowExA");
   if (func === -1)
     return "Failed in Part 1 - CreateWindowExA not found";
   

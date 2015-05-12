@@ -72,13 +72,13 @@ function EnableDNSSupport() {
   //Step 3a - Create a call to our function at CALL g_ResMgr
   exe.replace(offset+1, (exe.Raw2Rva(free) - exe.Raw2Rva(offset+5)).packToHex(4), PTYPE_HEX);
   
-  //Step 3b - Find gethostbyname() address
-  var uGethostbyname = exe.findFunction("gethostbyname");//By Name
+  //Step 3b - Find gethostbyname function address (#52 when imported by ordinal)
+  var uGethostbyname = getFuncAddr("gethostbyname", "WS2_32.DLL", 52);//By Ordinal
   if (uGethostbyname === -1)
-    uGethostbyname = findNumFunction("WS2_32.DLL", 52);//By Ordinal
+    return "Failed in Part 3 - gethostbyname not found";
   
   //Step 3c - Find sprintf function address
-  var uSprintf = exe.findFunction("sprintf");
+  var uSprintf = getFuncAddr("sprintf");
   if (uSprintf === -1)
     return "Failed in part 3 - sprintf not found";
   

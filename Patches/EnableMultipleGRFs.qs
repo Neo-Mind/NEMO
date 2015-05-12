@@ -152,8 +152,8 @@ function EnableMultipleGRFs() {
   //Step 5e - Replace the variables used in code
   var memPosition = freeRva + code.hexlength();
   code = remVarHex(code, 1, memPosition);//KERNEL32  
-  code = remVarHex(code, 2, exe.findFunction("GetModuleHandleA"));
-  code = remVarHex(code, 3, exe.findFunction("GetProcAddress"));
+  code = remVarHex(code, 2, getFuncAddr("GetModuleHandleA"));
+  code = remVarHex(code, 3, getFuncAddr("GetProcAddress"));
   
   memPosition = memPosition + strings[0].length + 1;//1 for null
   code = remVarHex(code, 4, memPosition);//GetPrivateProfileStringA

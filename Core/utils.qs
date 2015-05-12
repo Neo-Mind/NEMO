@@ -225,94 +225,125 @@ function convertToBE(le) {
   return be.replace(/ /g,"");  
 }
 
-function findNumFunction(dllName, ordinal) {
-  ///////////////////////////////////////////////////////////
-  // GOAL: Alternative to exe.findFunction for Finding     //
-  //       Function address when it is imported by ordinal //
-  ///////////////////////////////////////////////////////////
+function getFuncAddr(funcName, dllName, ordinal) {
+  ///////////////////////////////////////////////////////////////
+  // GOAL: Find the virtual address of the Function specified. //
+  //       Additionally you can also pinpoint it to a DLL and  //
+  //       an alternative ordinal number to use                //
+  ///////////////////////////////////////////////////////////////
   
-  var flag = false;
-  var func = -1; //The address will be stored here.
+  //Step 1a - Prep the optional arguments 
+  if (typeof(dllName) === "undefined")
+    dllName = "";
+  else
+    dllName = dllName.toUpperCase();
+  
+  if (typeof(ordinal) === "undefined")
+    ordinal = -1;
+  
+  //Step 1b - Prep the constants and return variable
+  var funcAddr = -1; //The address will be stored here.
   var offset = GetDataDirectory(1).offset;//Import Table
+  var imgBase = exe.getImageBase();//The Image Base
   
-  while (!flag) {
-    var ilt = exe.fetchDWord(offset); //Import Lookup Table
-    var ts = exe.fetchDWord(offset+4);//TimeStamp
-    var fchain = exe.fetchDWord(offset+8);  //Forwarder
+  //Step 1c - Iterate through each IMAGE_IMPORT_DESCRIPTOR
+  for ( ;true; offset += 20) {
     var nameOff = exe.fetchDWord(offset+12);//Dll Name Offset (VA - ImageBase)
-    var iatOff = exe.fetchDWord(offset+16); //Thunk Offset - Start of the Imported Functions
-   
-    offset += 20;
-    flag = (ilt === 0 && ts === 0 && fchain === 0 && nameOff === 0 && iatOff === 0);//All Zeros mark end of table
-    if (flag) continue;
+    var iatOff  = exe.fetchDWord(offset+16); //Thunk Offset - Start of the Imported Functions
     
-    nameOff = exe.Rva2Raw(nameOff + exe.getImageBase());
-    var nameEnd = exe.find("00", PTYPE_HEX, false, "", nameOff);
-    var curDllName = exe.fetch(nameOff, nameEnd-nameOff);
+    if (nameOff <= 0) break;//Ending entry wont have dll name so its offset will be 0
+    if (iatOff  <= 0) continue;//Import Address Table <- points to the First Thunk
     
-    if (dllName.toUpperCase() !== curDllName.toUpperCase()) continue;
-    iatOff = exe.Rva2Raw(iatOff + exe.getImageBase());
+    //Step 1d - If DLL name is provided, only check if it matches with current DLL Name (case insensitively)
+    if (dllName !== "") {
+      nameOff = exe.Rva2Raw(nameOff + imgBase);
+      var nameEnd = exe.find("00", PTYPE_HEX, false, "", nameOff);
+      if (dllName !== exe.fetch(nameOff, nameEnd - nameOff).toUpperCase()) continue;
+    }
     
-    do {      
-      var thunkVal = exe.fetchDWord(iatOff);
-      iatOff += 4;
-      if (thunkVal >= 0) continue;//Skip for Non-ordinal functions
+    //Step 1e - Get Raw Offset of FIrst Thunk
+    var offset2 = exe.Rva2Raw(iatOff + imgBase);
+    
+    //Step 2a - Iterate through each IMAGE_THUNK_DATA
+    for ( ;true; offset2 += 4) {
+      var funcData = exe.fetchDWord(offset2);//Ordinal Number or Offset of Function Name and Hint
       
-      if ((thunkVal & 0xFFFF) === ordinal) {
-        func = exe.Raw2Rva(iatOff-4);
-        break; 
+      //Step 2b - Ends with a NULL DWORD
+      if (funcData === 0) break;
+      
+      //Step 2c - Sign Bit also serves as an indicator of whether this functions is imported by Name (0) or Ordinal (1)
+      if (funcData > 0) {
+       
+       //Step 2d - The Thunk will point to a location with first 2 bytes as Hint followed by Function Name.
+        //          So extract it after 2nd byte
+        nameOff = exe.Rva2Raw((funcData & 0x7FFFFFFF) + imgBase) + 2;
+        nameEnd = exe.find("00", PTYPE_HEX, false, "", nameOff);
+
+        //Step 2e - Check if the Function name matches. If it does, save the address in IAT and break
+        if (funcName === exe.fetch(nameOff, nameEnd - nameOff)) {
+          funcAddr = exe.Raw2Rva(offset2);
+          break;
+        }
       }
-    } while (thunkVal !== 0);
-    
-    if (func !== -1) break;
+      else if ((funcData & 0xFFFF) === ordinal) {//If ordinal import then just compare directly.
+        funcAddr = exe.Raw2Rva(offset2);
+        break;
+      }
+    }
+   
+    //Step 2f - If we already got the address break out of the loop   
+    if (funcAddr !== -1) break;
   }
   
-  return func;
+  return funcAddr;
 }
 
 function GetDataDirectory(index) {
   ///////////////////////////////////////////////////////////////////
   // GOAL: Gets the Offset and Size of the required Data Directory //
   ///////////////////////////////////////////////////////////////////
+  var offset = exe.getPEOffset() + 0x18 + 0x60;//Skipping header bytes unnecessary here.
+  if (offset === 0x67) //i.e. PE Offset === -1
+    return -2;
   
-  var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
-  if (PEoffset === -1) return -2;
-  var offset = exe.Rva2Raw(exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index) + exe.getImageBase());
-  var size = exe.fetchDWord(PEoffset + 0x18 + 0x60 + 0x8*index + 0x4);
+  var size = exe.fetchDWord(offset + 0x8*index + 0x4);
+  offset = exe.Rva2Raw(exe.fetchDWord(offset + 0x8*index) + exe.getImageBase());
+  
   return {"offset":offset, "size":size};
 }
 
-//Functions for extracting Resource Tree - currently used in Custom Icon Function
+//Functions for extracting Resource Tree - currently used only in Custom Icon Function
 function GetResourceEntry(rTree, hierList) {
-  var rDir = rTree;
-  for(var i = 0; i < hierList.length; i++) {
-    if (typeof(rDir.numEntries) === "undefined") 
+  
+  for (var i = 0; i < hierList.length; i++) {
+    if (typeof(rTree.numEntries) === "undefined") 
       break;
-    for(var j = 0; j < rDir.numEntries; j++) {
-      if (rDir.entries[j].id === hierList[i]) break;
+    for (var j = 0; j < rTree.numEntries; j++) {
+      if (rTree.entries[j].id === hierList[i]) break;
     }
-    if (j === rDir.numEntries) {
-      rDir = -(i+1);
+    if (j === rTree.numEntries) {
+      rTree = -(i+1);
       break;
     }
-    rDir = rDir.entries[j];
+    rTree = rTree.entries[j];
   }
-  return rDir;
+  return rTree;
 }
 
 function ResourceDir(rsrcAddr, addrOffset, id) {
   this.id = id;
   this.addr = rsrcAddr + addrOffset;
-  this.numEntries = exe.fetchWord(this.addr+12) + exe.fetchWord(this.addr+14)
-  this.entries = new Array(this.numEntries);
+  this.numEntries = exe.fetchWord(this.addr + 12) + exe.fetchWord(this.addr + 14)
+  this.entries = [];
   
-  for(var i = 0; i < this.numEntries; i++) {
+  for (var i = 0; i < this.numEntries; i++) {
     id = exe.fetchDWord(this.addr + 16 + i*8);
     addrOffset = exe.fetchDWord(this.addr + 16 + i*8 + 4);
+    
     if (addrOffset < 0)
-      this.entries[i] = new ResourceDir(rsrcAddr, addrOffset & 0x7FFFFFFF, id);
+      this.entries.push( new ResourceDir(rsrcAddr, addrOffset & 0x7FFFFFFF, id));
     else
-      this.entries[i] = new ResourceFile(rsrcAddr, addrOffset & 0x7FFFFFFF, id);
+      this.entries.push( new ResourceFile(rsrcAddr, addrOffset, id));
   }
 }
 

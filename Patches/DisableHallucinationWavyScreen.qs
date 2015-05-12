@@ -13,17 +13,21 @@ function DisableHallucinationWavyScreen() {
   
   //Step 1b - Find its references. Preceding one of them is an assignment to our required offset (lets call it g_Special)
   var code = " B8" + offset.packToHex(4); //MOV EAX, OFFSET addr; ASCII "xmas_fild01.rsw"
+  
   var offsets = exe.findCodes(code, PTYPE_HEX, false);
+  
   if (offsets.length === 0)
     return "Failed in Part 1 - xmas_fild01 references missing";
   
   //Step 1c - Look for the correct location which gets used in CGameMode::Initialize
   code = " 89 AB AB AB AB 00"; //MOV DWORD PTR DS:[g_Special], reg32_A
+  
   for (var i = 0; i < offsets.length; i++) {
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", offsets[i]-8, offsets[i]);
     if (offset !== -1 && (exe.fetchByte(offset+1) & 0xC7) === 0x5) break;
     offset = -1;
   }
+  
   if (offset === -1)
     return "Failed in Part 1 - no references matched";
   

@@ -44,7 +44,7 @@ function DisableNagleAlgorithm() {
     + " 5D"                    // POP EBP
     + " C2 0C 00"              // RETN 0C
     ;
-    
+  
   // Step 2a - Allocate Free Space for adding the code above.
   var size = code.hexlength();
   var free = exe.findZeros(size);
@@ -53,12 +53,8 @@ function DisableNagleAlgorithm() {
  
   var freeRva = exe.Raw2Rva(free);
   
-  //Step 2b - Find address of ws2_32.socket
-  var sockFunc = exe.findFunction("socket");
-  
-  if (sockFunc === -1)//Imported by ordinal
-    sockFunc = findNumFunction("ws2_32.dll", 23);
-
+  //Step 2b - Find address of ws2_32.socket (#23 when imported by ordinal)
+  var sockFunc = getFuncAddr("socket", "ws2_32.dll", 23);
   if (sockFunc === -1)
     return "Failed in Part 2 - socket function missing";
  
@@ -66,8 +62,8 @@ function DisableNagleAlgorithm() {
   code = remVarHex(code, 0, freeRva+4);
   code = remVarHex(code, 1, sockFunc);
   code = remVarHex(code, 2, exe.findString("ws2_32.dll", RVA));
-  code = remVarHex(code, 3, exe.findFunction("GetModuleHandleA"));
-  code = remVarHex(code, 4, exe.findFunction("GetProcAddress"));
+  code = remVarHex(code, 3, getFuncAddr("GetModuleHandleA"));
+  code = remVarHex(code, 4, getFuncAddr("GetProcAddress"));
   
   //Step 2d - Insert the code to allocated area
   exe.insert(free, size, code, PTYPE_HEX);

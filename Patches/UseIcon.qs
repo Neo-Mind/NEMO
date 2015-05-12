@@ -56,37 +56,31 @@ function UseCustomIcon(nomod) {
   //       data will be overwritten with data from the icon file //
   /////////////////////////////////////////////////////////////////
 
-  //Step 1 - Find PE Header & then Resource Table
-  var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
-  if (PEoffset === -1)
-    return "Failed in Part 1 - Unable to find the PE header";
-
-  var offset = PEoffset + 0x18 + 0x60 + 0x10;
-  var rsrcRva = exe.fetchDWord(offset) + exe.getImageBase(); //should be same as RSRC
-  var rsrcRaw = exe.Rva2Raw(rsrcRva);
+  //Step 1a - Find Resource Table
+  var offset = GetDataDirectory(2).offset;
   
-  //Step 2 - Get the Resource Tree (Check the function in core)
-  var rsrcTree = new ResourceDir(rsrcRaw, 0, 0);
-  
-  //Step 3a - Find the resource dir of RT_GROUP_ICON = 0xE (check the function in core)
+  //Step 1b - Get the Resource Tree (Check the function in core)
+  var rsrcTree = new ResourceDir(offset, 0, 0);
+ 
+  //Step 2a - Find the resource dir of RT_GROUP_ICON = 0xE (check the function in core)
   var entry = GetResourceEntry(rsrcTree, [0xE]);
   if (entry === -1)
-    return "Failed in Part 3 - Unable to find icongrp";
+    return "Failed in Part 2 - Unable to find icongrp";
   
-  offset = entry.addr;
-  var id = exe.fetchDWord(offset+0x10);
+  offset = entry.addr + 0x10;
+  var id = exe.fetchDWord(offset);
   
-  //Step 3b - Adjust 114 subdir to use 119 data - thus same icon will be used for both
+  //Step 2b - Adjust 114 subdir to use 119 data - thus same icon will be used for both
   if (id === 119) {
-    var newvalue = exe.fetchDWord(offset+0x10+0x4);
-    exe.replaceDWord(offset+0x10+0x8+0x4, newvalue);
+    var newvalue = exe.fetchDWord(offset + 0x4);
+    exe.replaceDWord(offset + 0x8 + 0x4, newvalue);
   }
   else {
-    var newvalue = exe.fetchDWord(offset+0x10+0x8+0x4);
-    exe.replaceDWord(offset+0x10+0x4, newvalue);
+    var newvalue = exe.fetchDWord(offset + 0x8 + 0x4);
+    exe.replaceDWord(offset + 0x4, newvalue);
   }
   
-  if(nomod)
+  if (nomod)
     return true;
     
   //---- Use Ragnarok Icon patch stops here ----
@@ -105,6 +99,7 @@ function UseCustomIcon(nomod) {
   var iconfile = getInputFile(fp, "$inpIconFile", "File Input - Use Custom Icon", "Enter the Icon File", APP_PATH);
   if (!iconfile)
     return "Patch Cancelled";
+  
   fp.close();
   
   var icondir = ReadIconFile(iconfile);
@@ -152,11 +147,11 @@ function UseCustomIcon(nomod) {
     return "Failed in Part 6 - Icon wont fit";//size should be 40 (header) + 256*4 (palette) + 32*32 (xor mask) + 32*32/8 (and mask)
 
   //Step 7 - Update the size in bytes dwBytesInRes and wPlanes as per the uploaded icon
-  exe.replaceWord(pos-14+4, icondirentry.wPlanes);
-  exe.replaceWord(pos-14+8, icondirentry.dwBytesInRes);
+  exe.replaceWord(pos - 14 + 4, icondirentry.wPlanes);
+  exe.replaceWord(pos - 14 + 8, icondirentry.dwBytesInRes);
 
   //Step 8 - Finally update the icon image
-  exe.replaceDWord(entry.addr+4, icondirentry.dwBytesInRes);
+  exe.replaceDWord(entry.addr + 4, icondirentry.dwBytesInRes);
   exe.replace(entry.dataAddr, icondirentry.iconimage, PTYPE_HEX);
 
   return true;

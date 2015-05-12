@@ -31,7 +31,7 @@ function ExtractMsgTable() {
 		throw "Error: msgString LUT missing";
 	
   //Step 1d - Extract the tblAddr
-	offset = exe.Rva2Raw(exe.fetchDWord(offset + code.hexlength()-4)) - 4;
+	offset = exe.Rva2Raw(exe.fetchDWord(offset2 + code.hexlength()-4)) - 4;
   
   //Step 2a - Read the reference file to an array - Korean in Hex
 	var fp = new TextFile();

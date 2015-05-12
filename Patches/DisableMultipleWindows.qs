@@ -7,7 +7,7 @@ function DisableMultipleWindows() {
   //////////////////////////////////////////////////////
   
   //Step 1a - Find Address of ole32.CoInitialize function
-  var offset = exe.findFunction("CoInitialize");
+  var offset = getFuncAddr("CoInitialize");
   if (offset === -1)
     return "Failed in Part 1 - CoInitialize not found";
   
@@ -19,6 +19,7 @@ function DisableMultipleWindows() {
     + " AB"             //PUSH reg32
     + " FF 15" + coInit //CALL DWORD PTR DS:[<&ole32.CoInitialize>]
     ;
+    
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
   if (offset === -1) {
@@ -95,11 +96,11 @@ function DisableMultipleWindows() {
   
   //Step 2e - Fill the call instruction.
   code = remVarHex(code, 0, (resetTimer - exe.Raw2Rva(free + 5)));
-  code = remVarHex(code, 1, exe.findFunction("GetModuleHandleA"   ));
-  code = remVarHex(code, 2, exe.findFunction("GetProcAddress"     ));
-  code = remVarHex(code, 3, exe.findFunction("WaitForSingleObject"));
-  code = remVarHex(code, 4, exe.findFunction("GetModuleHandleA"   ));
-  code = remVarHex(code, 5, exe.findFunction("GetProcAddress"     ));
+  code = remVarHex(code, 1, getFuncAddr("GetModuleHandleA"   ));
+  code = remVarHex(code, 2, getFuncAddr("GetProcAddress"     ));
+  code = remVarHex(code, 3, getFuncAddr("WaitForSingleObject"));
+  code = remVarHex(code, 4, getFuncAddr("GetModuleHandleA"   ));
+  code = remVarHex(code, 5, getFuncAddr("GetProcAddress"     ));
   code = remVarHex(code, 6, (exe.Raw2Rva(offset) - exe.Raw2Rva(free + csize)));
   
   //Step 2f - Insert the ASM code

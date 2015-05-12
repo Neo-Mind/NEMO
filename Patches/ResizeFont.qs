@@ -9,7 +9,7 @@ function ResizeFont() {
   //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   // Step 1a - Find CreateFontA function address
-  var offset = exe.findFunction("CreateFontA", PTYPE_STRING, true);
+  var offset = getFuncAddr("CreateFontA");
   if (offset === -1)
     return "Failed in Step 1 - CreateFontA not found";
   
