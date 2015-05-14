@@ -17,7 +17,7 @@ function OnlySelectedBackground(s1, s2) {
   if (s1 === "")
     fnd  += "\x00";
 
-  var rep = s2 + "배경" + "%d-%d.bmp" + "\x00";
+  var rep = s2 + "_배경" + "%d-%d.bmp" + "\x00";
   
   //Step 1b - Find the source format string
   var offset = exe.findString(fnd, RAW);
