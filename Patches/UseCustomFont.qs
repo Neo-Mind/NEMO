@@ -5,7 +5,7 @@ function UseCustomFont() {
   //////////////////////////////////////////////////////////////
   
   // Step 1a - Find offset of "Gulim" - Korean language font which serves as the first entry of the array
-  var goffset = exe.findString("Gulim", RVA);
+  var goffset = exe.findString("Gulim", RVA, false);
   if (goffset === -1)
     return "Failed in Part 1 - Gulim not found";
   
@@ -14,18 +14,23 @@ function UseCustomFont() {
   if (offset === -1)
     return "Failed in Part 1 - Gulim reference not found";
   
-  // Step 2a - Find space for inserting new font name - considering length of 20 chars
-  var free = exe.findZeros(20);
-  if (free === -1)
-    return "Failed in Step 2 - Not enough free space";
+  // Step 2a - Get the Font name from user
+  var newFont = exe.getUserInput('$newFont', XTYPE_FONT, 'Font input', 'Select the new Font Family', "Arial");
+  
+  // Step 2b - Get its address if its already existing
+  var free = exe.findString(newFont, RAW);
+  
+  // Step 2c - Otherwise Insert the font in the xdiff section
+  if (free === -1) {
+    free = exe.findZeros(newFont.length + 1);
     
+    if (free === -1)
+      return "Failed in Step 2 - Not enough free space";
+
+    exe.insert(free, newFont.length + 1, '$newFont', PTYPE_STRING);
+  }
+  
   var freeRva = exe.Raw2Rva(free).packToHex(4);
-  
-  // Step 2b - Get the Font name from user
-  exe.getUserInput('$newFont', XTYPE_FONT, 'Font input', 'Select the new Font Family', "Arial");
-  
-  // Step 2c - Insert the received Font name
-  exe.insert(free, 20, '$newFont', PTYPE_STRING);
   
   // Step 3 - Overwrite all entries with the custom font address
   goffset &= 0xFFF00000;

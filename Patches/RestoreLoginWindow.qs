@@ -34,16 +34,15 @@ function RestoreLoginWindow() {
   if (offset === -1)
     return "Failed in Part 2 - NUMACCOUNT not found";
   
-  var numaccount = offset.packToHex(4);
-  
   //Step 2b - Find the UIWindowMgr::MakeWindow call
   code =
       mov                  // MOV ECX, OFFSET g_windowMgr
     + " E8 AB AB AB FF"    // CALL UIWindowMgr::MakeWindow
     + " 6A 00"             // PUSH 0
     + " 6A 00"             // PUSH 0
-    + " 68" + numaccount   // PUSH addr ; "NUMACCOUNT"
+    + " 68" + offset.packToHex(4) // PUSH addr ; ASCII "NUMACCOUNT"
     ;
+    
   var o2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if (o2 === -1)
     return "Failed in Part 2 - MakeWindow not found";
