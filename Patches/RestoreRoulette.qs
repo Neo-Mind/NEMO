@@ -36,7 +36,7 @@ function RestoreRoulette() {
   offset = exe.findCode(code, PTYPE_HEX, false);
   if (offset === -1)
     return "Failed in Part 3";
-  debugValue(convertToBE(exe.Raw2Rva(offset)));
+
   var offset2 = offset + code.hexlength() + 4;
   
   //Step 3b - Check if the roulette icon is already created (check for PUSH 11D after the CALL)
