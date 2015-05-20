@@ -7,8 +7,8 @@ function EnableCustomShields() {
   var maxShield = 10;
   
   //--- Find first function insert location (function for storing the shield suffixes in memory) and accompanying values needed ---//
-  //Step 1a - Locate _가드 (Guard's suffix)
-  var offset = exe.findString("_가드", RVA);
+  //Step 1a - Find address of _가드 (Guard's suffix)
+  var offset = exe.findString("_\xB0\xA1\xB5\xE5", RVA);
   if (offset === -1)
     return "Failed in Step 1 - Guard not found";
   
@@ -24,12 +24,13 @@ function EnableCustomShields() {
   else
     var esiAddon = 0;
   
-  //Step 1d - Find the return jmp address to skip hard loading
+  //Step 1d - Find the address of _버클러 (Buckler's suffix)
   offset = exe.findString("_버클러", RVA);
   if (offset === -1)
     return "Failed in Step 1 - Buckler not found";
   
-  code = " C7 AB 08" + offset.packToHex(4); //MOV DWORD PTR DS:[E*X+4],OFFSET <guard suffix>
+  //Step 1d - Find the return jmp address to skip hard loading - after Buckler assignment
+  code = " C7 AB 08" + offset.packToHex(4); //MOV DWORD PTR DS:[E*X+4],OFFSET <buckler suffix>
   offset = exe.find(code, PTYPE_HEX, true, "\xAB", insReq, insReq + 0x31)
   if (offset === -1)
     return "Failed in Step 1 - Buckler reference missing";

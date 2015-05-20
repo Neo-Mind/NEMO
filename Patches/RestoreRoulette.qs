@@ -1,6 +1,7 @@
 function RestoreRoulette() {
-  //Step 1 - Find the address of the icon bmp (if its not there patch wont work)
-  var offset = exe.findString("유저인터페이스\\basic_interface\\roullette\\RoulletteIcon.bmp", RAW);
+  //Step 1 - Find the address of the icon bmp -> 유저인터페이스\basic_interface\roullette\RoulletteIcon.bmp
+  //         If its not there patch wont work.
+  var offset = exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\basic_interface\\roullette\\RoulletteIcon.bmp", RAW);
   if (offset === -1)
     return "Patch Cancelled - Roulette is not available for this client";
   

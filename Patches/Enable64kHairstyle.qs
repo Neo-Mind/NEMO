@@ -8,8 +8,8 @@ function Enable64kHairstyle() {
   if (exe.getClientDate() <= 20111102)
     return "Unsupported client date";
   
-  //Step 1a - Find address of Format String
-  var offset = exe.findString("인간족\\머리통\\%s\\%s_%s.%s", RAW);
+  //Step 1a - Find address of Format String -> 인간족\머리통\%s\%s_%s.%s
+  var offset = exe.findString("\xC0\xCE\xB0\xA3\xC1\xB7\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s", RAW);
   if (offset === -1)
     return "Failed in part 1 - String not found";
   

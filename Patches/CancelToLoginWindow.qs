@@ -19,8 +19,8 @@ function CancelToLoginWindow() {
   
   offset += code.hexlength() + 4;
   
-  //Step 1b - Find address of Korean version of "Message"
-  var offset2 = exe.findString("메시지", RVA);
+  //Step 1b - Find address of 메시지 => Korean version of "Message"
+  var offset2 = exe.findString("\xB8\xDE\xBD\xC3\xC1\xF6", RVA);
   if (offset2 === -1)
     return "Failed in Part 1 - Message not found";
   

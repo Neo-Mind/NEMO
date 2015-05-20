@@ -1,18 +1,26 @@
 // All have same procedure - Only format strings are different
 function SharedBodyPalettesV1() {
-  return SharedPalettes("个\\", "个\\body%.s_%s_%d.pal\x00"); //%.s is required. Skips jobname
+  // "个\%s_%s_%d.pal" => "个\body%.s_%s_%d.pal"
+  
+  return SharedPalettes("\xB8\xF6\\", "\xB8\xF6\\body%.s_%s_%d.pal\x00"); //%.s is required. Skips jobname
 }
 
 function SharedBodyPalettesV2() {
-  return SharedPalettes("个\\", "个\\body%.s%.s_%d.pal\x00"); //%.s is required. Skips jobname & gender
+  // "个\%s_%s_%d.pal" => "个\body%.s%.s_%d.pal"
+  
+  return SharedPalettes("\xB8\xF6\\", "\xB8\xF6\\body%.s%.s_%d.pal\x00"); //%.s is required. Skips jobname & gender
 }
 
 function SharedHeadPalettesV1() {
-  return SharedPalettes("赣府\\赣府", "赣府\\head%.s_%s_%d.pal\x00");// %.s is required. Skips jobname
+  // "赣府\赣府%s_%s_%d.pal" => "赣府\head%.s_%s_%d.pal"
+  
+  return SharedPalettes("\xB8\xD3\xB8\xAE\\\xB8\xD3\xB8\xAE", "\xB8\xD3\xB8\xAE\\head%.s_%s_%d.pal\x00");// %.s is required. Skips jobname
 }
 
 function SharedHeadPalettesV2() {
-  return SharedPalettes("赣府\\赣府", "赣府\\head%.s%.s_%d.pal\x00");// %.s is required. Skips jobname & gender
+  // "赣府\赣府%s_%s_%d.pal" => "赣府\head%.s%.s_%d.pal"
+  
+  return SharedPalettes("\xB8\xD3\xB8\xAE\\\xB8\xD3\xB8\xAE", "\xB8\xD3\xB8\xAE\\head%.s%.s_%d.pal\x00");// %.s is required. Skips jobname & gender
 }
 
 function SharedPalettes(prefix, newString) {

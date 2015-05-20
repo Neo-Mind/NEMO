@@ -8,8 +8,8 @@ function EnableCustomJobs() {
   
   //--- Find Starting Points of each table assignment---//
   //Step 1a - Get Offset of Reference strings. Swordsman's values used for Path and hand since code for novice changes too much.
-  var refPath = exe.findString("검사", RVA);
-  var refHand = exe.findString("검사\\검사", RVA);
+  var refPath = exe.findString("\xB0\xCB\xBB\xE7", RVA);// 검사
+  var refHand = exe.findString("\xB0\xCB\xBB\xE7\\\xB0\xCB\xBB\xE7", RVA);// 검사\검사
   var refName = exe.findString("Novice", RVA);
   
   //Step 1b - Sanity check

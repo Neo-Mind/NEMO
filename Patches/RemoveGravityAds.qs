@@ -3,15 +3,15 @@ function RemoveGravityAds() {
   // GOAL: Zero out all Gravity Ad Images //
   //////////////////////////////////////////
   
-  //Step 1a - Find 1st Pic
-  var offset = exe.findString("\\T_중력성인.tga", RAW, false);
+  //Step 1a - Find address of 1st Pic -> \T_중력성인.tga
+  var offset = exe.findString("\\T_\xC1\xDF\xB7\xC2\xBC\xBA\xC0\xCE.tga", RAW, false);
   if (offset === -1)
     return "Failed in part 1";
 
   //Step 1b - Replace with NULL
   exe.replace(offset+1, "00", PTYPE_HEX);
   
-  //Step 2a - Find 2nd Pic
+  //Step 2a - Find address of 2nd Pic
   offset = exe.findString("\\T_GameGrade.tga", RAW, false);
   if (offset === -1)
     return "Failed in part 2";
@@ -19,8 +19,8 @@ function RemoveGravityAds() {
   //Step 2b - Replace with NULL
   exe.replace(offset+1, "00", PTYPE_HEX);
 
-  //Step 3a - Find Last Pic
-  offset = exe.findString("\\T_테입%d.tga", RAW, false);
+  //Step 3a - Find address of Last Pic -> \T_테입%d.tga 
+  offset = exe.findString("\\T_\xC5\xD7\xC0\xD4%d.tga", RAW, false);
   if (offset === -1)
     return "Failed in part 3";
     
