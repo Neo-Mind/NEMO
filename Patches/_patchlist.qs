@@ -248,3 +248,5 @@ registerPatch(210, "UseCustomIcon", "Use Custom Icon", 'Custom', 43, "Neo", 'Mak
 registerPatch(211, "UseCustomDLL", "Use Custom DLL", 'Custom', 0, "Neo", 'Makes the hexed client load the specified DLL and functions');
 
 registerPatch(212, "RestoreRoulette", "Restore Roulette", 'Custom', 0, "Neo", 'Brings back the Roulette Icon that was removed in new clients');
+
+registerPatch(213, "DisableHelpMsg", "Disable Help Message on Login", 'Custom', 0, "Neo", 'Prevents the Help Message being shown on Login for all Langtypes');
