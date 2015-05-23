@@ -245,8 +245,8 @@ registerPatch(209, "EnableMailBox", "Enable Mail Box for All Langtypes", 'Custom
 
 registerPatch(210, "UseCustomIcon", "Use Custom Icon", 'Custom', 43, "Neo", 'Makes the hexed client use the User specified icon. Icon file should have an 8bpp (256 color) 32x32 image', false);
 
-registerPatch(211, "UseCustomDLL", "Use Custom DLL", 'Custom', 0, "Neo", 'Makes the hexed client load the specified DLL and functions');
+registerPatch(211, "UseCustomDLL", "Use Custom DLL", 'Custom', 0, "Neo", 'Makes the hexed client load the specified DLL and functions', false);
 
-registerPatch(212, "RestoreRoulette", "Restore Roulette", 'Custom', 0, "Neo", 'Brings back the Roulette Icon that was removed in new clients');
+registerPatch(212, "RestoreRoulette", "Restore Roulette", 'Custom', 0, "Neo", 'Brings back the Roulette Icon that was removed in new clients', false);
 
-registerPatch(213, "DisableHelpMsg", "Disable Help Message on Login", 'Custom', 0, "Neo", 'Prevents the Help Message being shown on Login for all Langtypes');
+registerPatch(213, "DisableHelpMsg", "Disable Help Message on Login", 'Custom', 0, "Neo", 'Prevents the Help Message being shown on Login for all Langtypes', true);
