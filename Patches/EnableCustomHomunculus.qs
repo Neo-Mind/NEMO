@@ -89,11 +89,25 @@ function EnableCustomHomunculus() {//Work In Progress
   ;
   
   offset = exe.findCode(code, PTYPE_HEX, false);
+  if (offset !== -1) {
+    //Step 4b - Replace the 33 with MaxHomun - 6001
+    exe.replace(offset + 6, (MaxHomun - 6001).packToHex(4), PTYPE_HEX);
+    return true; 
+  }
+  
+  //Step 4c - Find the limiter for Older clients
+  code =
+    " 3D 70 17 00 00" //CMP EAX, 1770
+  + " 7E 10"          //JLE SHORT addr
+  + " 3D A5 17 00 00" //CMP EAX, 17A5
+  ;
+  
+  offset = exe.findCode(code, PTYPE_HEX, false);
   if (offset === -1)
     return "Failed in Step 4";
   
-  //Step 5b - Replace the 33 with our maximum difference
-  exe.replace(offset + 6, (MaxHomun - 6001).packToHex(4), PTYPE_HEX);
+  //Step 4d - Replace 17A5 with MaxHomun
+  exe.replace(offset + code.hexlength() - 4, MaxHomun.packToHex(4), PTYPE_HEX);
   
   return true;
 }

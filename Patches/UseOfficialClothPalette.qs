@@ -1,36 +1,40 @@
-  /////////////////////////////////////////////////////
-  // GOAL: Skip the LangType comparison when loading //
-  //       Palette names into Palette Table          //
-  /////////////////////////////////////////////////////
+//##########################################################################
+//# Purpose: Change the JNE after LangType comparison when loading Palette #
+//#          prefixes into Palette Table in CSession::InitJobTable         #
+//##########################################################################
   
-function UseOfficialClothPalette() {//To be completed
+function UseOfficialClothPalette() {
   
-  // Step 1 - Find the comparison code in CSession::InitTable
-  var LANGTYPE = GetLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
-  if (LANGTYPE.length === 1)
-    return "Failed in Step 1 - " + LANGTYPE[0];
+  //Step 1a - Check if Custom Job patch is being used. Does not work with it
+  if (exe.getActivePatches().indexOf(202) !== -1)
+    return "Patch Cancelled - Turn off Custom Job patch first";
   
-  var code1 = " 83 3D" + LANGTYPE + " 00"; // CMP DWORD PTR DS:[g_servicetype], 0
-  var code2 = " 0F 85 AB AB 00 00";        // JNE addr
+  //Step 1b - Find offset of palette prefix for Archer - ±Ã¼ö
+  var offset = exe.findString("\xB1\xC3\xBC\xF6", RVA);// Same value is used for job path as well as imf
+  if (offset === -1)
+    return "Failed in Step 1 - Palette prefix missing";
   
-  var repLoc = code1.hexlength();
-  offset = exe.findCode(code1 + code2 + " 8B", PTYPE_HEX, true, "\xAB"); //8B -> MOV reg32_A , DWORD PTR DS:[reg32_B+const]
+  //Step 1c - Find its references
+  var offsets = exe.findCodes(" C7 AB 0C" + offset.packToHex(4), PTYPE_HEX, true, "\xAB");
+  if (offsets.length < 2 || offsets.length > 3)
+    return "Failed in Step 1 - Prefix reference missing or extra";
   
-  if (offset === -1) {
-    repLoc += 2;
-    offset = exe.findCode(code1 + " 8B AB" + code2, PTYPE_HEX, true, "\xAB"); //8B -> MOV reg32_A , DWORD PTR DS:[reg32_B]
+  if (offsets.length === 2) {//For Pre-VC9 client
+    offset = exe.findCode(" C7 AB" + offset.packToHex(4) + " E8", PTYPE_HEX, true, "\xAB");
+    if (offset === -1)
+      return "Failed in Step 1 - Prefix reference missing";
+  }
+  else {
+    offset = offsets[2];
   }
   
-  if (offset === -1) {
-    repLoc += 4;
-    offset = exe.findCode(code1 + " 8B AB AB AB 00 00" + code2, PTYPE_HEX, true, "\xAB"); //8B -> MOV reg32_A , DWORD PTR DS:[reg32_B+const]
-  }
- 
-  if (offset === -1) 
-    return "Failed in Step 1 - comparison not found";
+  //Step 2a - Find the JNE after offset
+  offset = exe.find(" 0F 85 AB AB 00 00", PTYPE_HEX, true, "\xAB", offset + 0x7, offset + 0x200);// JNE addr
+  if (offset === -1)
+    return "Failed in Step 2";
   
-  //Step 2 - NOP out the JNE
-  exe.replace(offset + repLoc, " 90 90 90 90 90 90", PTYPE_HEX);
+  //Step 2b - NOP out the JNE
+  exe.replace(offset, " 90 90 90 90 90 90", PTYPE_HEX);
   
   return true;
 }
