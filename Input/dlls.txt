@@ -3,5 +3,5 @@
 //For better clarity put spaces in front of functions
 
 Splash.dll
-    _DllMain@12
+// _DllMain@12
  

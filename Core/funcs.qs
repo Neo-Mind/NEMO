@@ -6,14 +6,14 @@ String.prototype.replaceAt = function(index, rstring) {
 
 String.prototype.repeat = function(num) {
   var result = '';
-  for (var i=0; i<num; i++) {
+  for (var i = 0; i < num; i++) {
     result += this.toString();
   }
   return result;
 }
 
 String.prototype.hexlength = function() {
-	var l=this.replace(/ /g, "").length;
+	var l = this.replace(/ /g, "").length;
 	if (l%2 !== 0) l++;
 	return l/2;
 }
@@ -55,12 +55,16 @@ String.prototype.unpackToInt = function() {
 	return parseInt("0x" + orig.split(" ").reverse().join(""),16);
 }
 
+String.prototype.toBE = function() {
+  return this.split(" ").reverse().join("");
+}
+
 Number.prototype.packToHex = function(size) {
 	var number = this;
 	if (number < 0)
 		number = 0xFFFFFFFF + number + 1;
 	
-	if (size > 4)
+	if (typeof(size) === "undefined" || size > 4)
 		size = 4;
 	
 	var hex = number.toString(16);
@@ -80,4 +84,8 @@ Number.prototype.packToHex = function(size) {
 	}
 	
 	return result;
+}
+
+Number.prototype.toBE = function(size) {
+  return this.packToHex(size).toBE();
 }

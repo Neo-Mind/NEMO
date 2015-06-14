@@ -1,3 +1,4 @@
+/* This file is going to be removed soon 
 function FixTetraVortex() {
   /////////////////////////////////////////////
   // GOAL: Remove the Tetra Vortex bmp names //
@@ -15,3 +16,4 @@ function FixTetraVortex() {
   }
   return true;
 }
+*/

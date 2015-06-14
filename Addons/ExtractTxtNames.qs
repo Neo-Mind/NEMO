@@ -1,7 +1,8 @@
+//#################################################################
+//# Purpose: Extract all .txt filenames used in the loaded client #
+//#################################################################
+
 function ExtractTxtNames() {
-	////////////////////////////////////////////////////////////////
-  // GOAL: Extract all .txt filenames used in the loaded client //
-	////////////////////////////////////////////////////////////////
   
   //Step 1 - Find all strings ending in .txt
   var offset = exe.getROffset(DATA);	

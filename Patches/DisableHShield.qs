@@ -1,153 +1,195 @@
+//###################################################################
+//# Purpose: Fix up all HackShield related functions/function calls #
+//#          and remove aossdk.dll import                           #
+//###################################################################
+
+delete Import_Info;//Removing any stray values before Patches are selected
+
 function DisableHShield() {
-  ////////////////////////////////////////////////////////////////////
-  // GOAL: Fix up all HackShield related functions/function calls & // 
-  //       remove aossdk.dll import                                 //
-  ////////////////////////////////////////////////////////////////////
-  
-  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  // To Do - 'webclinic.ahnlab.com' is not there in old client.
-  //         Need to find which client onwards it got added
-  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
-  //Step 1a - Construct the pattern to find the function containing 'webclinic.ahnlab.com' reference
-  if (exe.getClientDate() <= 20130605) {//alternative to finding webclinic
-    var code = 
-        " 51"                   // PUSH ECX
-      + " 83 3D AB AB AB 00 00" // CMP DWORD PTR DS:[addr1], 0
-      + " 74 04"                // JZ SHORT addr2 -> PUSH 'webclinic.ahnlab.com'
-      + " 33 C0"                // XOR EAX, EAX
-      + " 59"                   // POP ECX
-      + " C3"                   // RETN
-      ;
-  }
-  else {
-    var code =
-        " 51"                   // PUSH ECX
-      + " 83 3D AB AB AB 00 00" // CMP DWORD PTR DS:[addr1], 0
-      + " 74 06"                // JZ SHORT addr2 -> PUSH 'webclinic.ahnlab.com'
-      + " 33 C0"                // XOR EAX, EAX
-      + " 8B E5"                // MOV ESP, EBP
-      + " 5D"                   // POP EBP
-      + " C3"                   // RETN
-      ;
-  }
-
-  //Step 1b - Find the pattern
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    
+  //Step 1a - Find address of 'webclinic.ahnlab.com'
+  var offset = exe.findString("webclinic.ahnlab.com", RVA);
   if (offset === -1)
-    return "Failed in part 1";
-
-  //Step 1c - Replace the JZ + XOR with XOR + INC of EAX to return 1 without initializing AhnLab
-  exe.replace(offset+8, " 33 C0 40 90", PTYPE_HEX);
+    return "Failed in Step 1 - webclinic address missing";
+  
+  //Step 1b - Find its reference
+  var code = " 68" + offset.packToHex(4);  //PUSH OFFSET addr; ASCII 'webclinic.ahnlab.com'
+  
+  offset = exe.findCode(code, PTYPE_HEX, false);
+  if (offset === -1)
+    return "Failed in Step 1 - webclinic reference missing";
+  
+  //Step 1c - Find the JZ before the RETN that points to the PUSH
+  code = 
+    " 74 AB" //JZ addr2 -> PUSH OFFSET addr; ASCII 'webclinic.ahnlab.com'    
+  + " 33 C0" //XOR EAX, EAX
+  ;
+  
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x10, offset);
+  if (offset === -1)
+    return "Failed in Step 1 - JZ not found";
+  
+  //Step 1d - Replace the JZ + XOR with XOR + INC of EAX to return 1 without initializing AhnLab
+  exe.replace(offset, " 33 C0 40 90", PTYPE_HEX);
   
   //Step 2a - Find Failure message - this is there in newer clients (maybe all ragexe too?)
   offset = exe.findString("CHackShieldMgr::Monitoring() failed", RVA);
-  
-  //Step 2b - Find reference to Failure message
-  if (offset !== -1)
-    offset = exe.findCode(" 68" + offset.packToHex(4) + " FF 15", PTYPE_HEX, false);
-  
-  //Step 2c - Find Pattern before the referenced location within 0x40 bytes
+   
   if (offset !== -1) {
-    code = 
+    //Step 2b - Find reference to Failure message
+    offset = exe.findCode(" 68" + offset.packToHex(4) + " FF 15", PTYPE_HEX, false);
+
+    //Step 2c - Find Pattern before the referenced location within 0x40 bytes
+    if (offset !== -1) {
+      code = 
         " E8 AB AB AB AB"  // CALL func1
       + " 84 C0"           // TEST AL, AL
       + " 74 16"           // JZ SHORT addr1
       + " 8B AB"           // MOV ECX, ESI
       + " E8"              // CALL func2
       ;
- 
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x40, offset);
-  }
+      offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x40, offset);
+    }
   
-  //Step 2d - Replace the First call with code to return 1 and cleanup stack
-  if (offset !== -1) {
-    code = 
-        " B0 01" // MOV AL, 1
+    //Step 2d - Replace the First call with code to return 1 and cleanup stack
+    if (offset !== -1) {
+      code = 
+        " 90"    // NOP
+      + " B0 01" // MOV AL, 1
       + " 5E"    // POP ESI
       + " C3"    // RETN
-      ;
-    
-    exe.replace(offset, " B0 01 5E C3 90", PTYPE_HEX);
+      ;    
+      exe.replace(offset, code, PTYPE_HEX);
+    }
   }
   
-  //Step 3a - FailSafe to avoid the calls just in case. Get offset of 0 'ERROR' 0
+  //===================================================================//
+  // Now for a failsafe to avoid calls just in case - for VC9+ clients //
+  //===================================================================//
+  
+  //Step 3a - Find address of 'ERROR'
   offset = exe.findString("ERROR", RVA);
   if (offset === -1)
-    return "Failed in part 3 - Unable to Find 'ERROR'";
+    return "Failed in Step 3 - ERROR string missing";
   
-  //Step 3b - Find its reference
-  offset = exe.findCode(" 68" + offset.packToHex(4) + " 50", PTYPE_HEX, false);
-  if (offset === -1)
-    return "Failed in part 3 - Unable to find reference";
+  //Step 3b - Find address of MessageBoxA function
+  var offset2 = GetFunction("MessageBoxA");
+  if (offset2 === -1)
+    return "Failed in Step 3 - MessageBoxA not found";
   
-  
-  //Step 3c - Find the jne after it that skips the HShield calls
+  //Step 3c - Find ERROR reference followed by MessageBoxA call 
   code = 
-      " 80 3D AB AB AB AB 00" // CMP BYTE PTR DS:[addr1], 0
+    " 68" + offset.packToHex(4)     //PUSH OFFSET addr; ASCII "ERROR"
+  + " AB"                           //PUSH reg32_A
+  + " AB"                           //PUSH reg32_B
+  + " FF 15" + offset2.packToHex(4) //CALL DWORD PTR DS:[<&USER32.MessageBoxA>]
+  ;
+  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace(" AB AB FF 15", " AB 6A 00 FF 15");//Change PUSH reg32_B with PUSH 0
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
+  if (offset !== -1) {
+    //Step 3c - Find the JNE after it that skips the HShield calls
+    code = 
+      " 80 3D AB AB AB 00 00" // CMP BYTE PTR DS:[addr1], 0
     + " 75"                   // JNE SHORT addr2
     ;
+    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x80);
     
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset+0x80);
-  if (offset === -1)
-    return "Failed in part 3 - Unable to find the JNE";
+    if (offset2 === -1) {
+      code = 
+        " 39 AB AB AB AB 00" //CMP DWORD PTR DS:[addr1], reg32_A
+      + " 75"                //JNE SHORT addr2
+      ;
+      offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x80);
+    }
+    
+    //Step 3d - Replace JNE with JMP to always skip
+    if (offset2 !== -1)
+      exe.replace(offset2 + code.hexlength() - 1, "EB", PTYPE_HEX);//change JNE to JMP
+  }
+  return true;
   
-  //Step 3d - Replace JNE with JMP to always skip
-  exe.replace(offset+7, "EB", PTYPE_HEX);//change JNE to JMP
-
-  //Step 4a - Now to remove aossdk.dll. Find offset of the 'aossdk.dll'
-  var aOffset = exe.find("aossdk.dll", PTYPE_STRING, false);
+  /*
+  //The import removal is currently commented out since the patch seems to work fine without it.
+  
+  //======================================//
+  // Now we will remove aossdk.dll Import //
+  //======================================//
+  
+  //Step 4a - Find address of the "aossdk.dll"
+  var aOffset = exe.findString("aossdk.dll", PTYPE_STRING, false);
   if (aOffset === -1)
-    return "Failed in part 4";
+    return "Failed in Step 4";
     
-  //Step 4b - COnstruct the Image Descriptor Pattern (Relative Virtual Address prefixed by 8 zeros)
+  //Step 4b - Construct the Image Descriptor Pattern (Relative Virtual Address prefixed by 8 zeros)
   aOffset = " 00".repeat(8) + (exe.Raw2Rva(aOffset) - exe.getImageBase()).packToHex(4);
   
   //Step 4c - Check for Use Custom DLL patch - needed since it modifies the import table location
   var hasCustomDLL = (exe.getActivePatches().indexOf(211) !== -1);
   
-  if (hasCustomDLL && typeof(Imp_DATA) !== "undefined") {
-    //Step 4d - Accommodate for the above if true - does the import table fix here.
-    var tblData = Imp_DATA.valueSuf;
+  if (hasCustomDLL && typeof(Import_Info) !== "undefined") {
+    //Step 4d - If it is used, it means the table has been shifted and all related data is available in Import_Info.
+    //          First we will remove the asssdk import entry from the table saved in Import_Info
+    var tblData = Import_Info.valueSuf;
     var newTblData = "";
     
-    for (var i = 0; i < tblData.length; i+=20*3) {
+    for (var i = 0; i < tblData.length; i += 20*3) {
       var curValue = tblData.substr(i, 20*3);
       if (curValue.indexOf(aOffset) === 3*4) continue;//Skip aossdk import rest all are copied
       newTblData = newTblData + curValue;
     }
 
     if (newTblData !== tblData) {
-      //Add the changes to this patch instead.
+      //Step 4e - If the removal was not already done then Empty the Custom DLL patch and make the changes here instead.
       exe.emptyPatch(211);
       
-      var PEoffset = exe.find("50 45 00 00", PTYPE_HEX, false);
-      exe.insert(Imp_DATA.offset, (Imp_DATA.valuePre + newTblData).hexlength(), Imp_DATA.valuePre + newTblData, PTYPE_HEX);
-      exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0x8, Imp_DATA.tblAddr);
-      exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0xC, Imp_DATA.tblSize);
-    }    
+      var PEoffset = exe.getPEOffset();
+      exe.insert(Import_Info.offset, (Import_Info.valuePre + newTblData).hexlength(), Import_Info.valuePre + newTblData, PTYPE_HEX);
+      exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0x8, Import_Info.tblAddr);
+      exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0xC, Import_Info.tblSize);
+    }
   }
   else {
-    //Step 4e - If not present we swap out the aossdk entry with the last import and void the last import.
+    //Step 4f - If Custom DLL is not present then we need to traverse the Import table and remove the aossdk entry.
+    //          First we get the Import Table address and prep variables
     var dir = GetDataDirectory(1);
     var finalValue = " 00".repeat(20);
-    var offset = dir.offset;
-    var dllOffset = false;
+    var curValue;
+    var lastDLL = "";//
+    code = "";//will contain the import table
     
-    var curValue = exe.fetchHex(offset,20);
-    do {
-      if (curValue.indexOf(aOffset) === 3*4) dllOffset = offset;
-      offset += 20;
-      curValue = exe.fetchHex(offset,20);
-    } while(curValue !== finalValue);
-    
-    if (!dllOffset)
-      return "Failed in Part 4 - aossdk import not found";
+    for (offset = dir.offset; (curValue = exe.fetchHex(offset, 20)) !== finalValue; offset += 20) {
+      //Step 4e - Get the DLL Name for the import entry
+      offset2 = exe.Rva2Raw(exe.fetchDWord(offset + 12) + exe.getImageBase());
+      var offset3 = exe.find("00", PTYPE_HEX, false, "", offset2);
+      var curDLL = exe.fetch(offset2, offset3 - offset2);
       
-    var endOffset = offset - 20;//Last DLL Entry
-    exe.replace(dllOffset, exe.fetchHex(endOffset, 20), PTYPE_HEX);//Replace aossdk.dll import with the last import
-    exe.replace(endOffset, finalValue, PTYPE_HEX);//Replace last import with 0s to indicate end of table.  
+      //Step 4f - Make sure its not a duplicate or aossdk.dll
+      if (lastDLL === curDLL || curDLL === "aossdk.dll") continue;
+      
+      //Step 4g - Add the entry to code and save current DLL to compare next iteration
+      code += curValue;
+      lastDLL = curDLL;
+    }
+    
+    code += finalValue;
+    
+    //Step 4h - Overwrite import table with the one we got
+    exe.replace(dir.offset, code, PTYPE_HEX);
   }
   
   return true;
+  */
 }
+
+//============================//
+// Disable Unsupported client //
+//============================//
+if (exe.findString("aossdk.dll", PTYPE_STRING, false) === -1)
+  DisableHShield = null;
+
+//To Do: Accomodate for Disable HShield removal in Custom DLL patch when import removal is being used

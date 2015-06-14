@@ -1,61 +1,82 @@
+//####################################################################
+//# Purpose: Modify the stack allocation in CGameMode::Zc_Say_Dialog #
+//#          from 2052 to the user specified value                   #
+//####################################################################
+
 function ExtendNpcBox() {
-  ///////////////////////////////////////////////////////////////////
- // GOAL: Modify the stack allocation in CGameMode::Zc_Say_Dialog //
- //       from 2052 to the user specified value                   //
-  ///////////////////////////////////////////////////////////////////
+  
+  //Step 1a - Find offset of '|%02x'
+  var offset = exe.findString("|%02x", RVA);
+  if (offset === -1)
+    return "Failed in Step 1 - Format string missing";
  
-  // Step 1a - Prep code to find the Stack allocation
-  var code = 
-      " 81 EC 08 08 00 00"  // SUB ESP,808 ; limit+4 = 804+4
-    + " A1 AB AB AB 00"     // MOV EAX,DWORD PTR DS:[___security_cookie]
-    + " 33 C4"              // XOR EAX,ESP
-    + " BackupEax"          // MOV DWORD PTR SS:[LOCAL.1],EAX ; limit . ESP+804 in pre-june 2013 clients & older and EBP For newer clients
-    + " 56"                 // PUSH ESI
+  //Step 1b - Find its references
+  var offsets = exe.findCodes("68" + offset.packToHex(4), PTYPE_HEX, false);
+  if (offsets.length === 0)
+    return "Failed in Step 1 - String reference missing";
+  
+  //Step 1c - Find the Stack allocation address => SUB ESP, 804+x . Only 1 of the offsets matches
+  for (var i = 0; i < offsets.length; i++) {
+    offset = exe.find("81 EC AB 08 00 00", PTYPE_HEX, true, "\xAB", offsets[i] - 0x80, offsets[i]);
+    if (offset !== -1)
+      break;
+  }
+  
+  if (offset === -1)
+    return "Failed in Step 1 - Function not found";
+  
+  //Step 1d - Extract the x in SUB ESP,x
+  var stackSub = exe.fetchDWord(offset + 2);
+  
+  //Step 1e - Find the End of the Function.
+  var fpEnb = HasFramePointer();
+  if (fpEnb) {
+    code =
+      " 8B E5"    //MOV ESP, EBP
+    + " 5D"       //POP EBP
+    + " C2 04 00" //RETN 4
     ;
-    
-  if (exe.getClientDate() <= 20130605) {
-    code = code.replace(" BackupEax", " 89 84 24 04 08 00 00"); // MOV DWORD PTR SS:[ESP+804],EAX ; limit
   }
   else {
-    code = code.replace(" 33 C4", " 33 C5");        //XOR EAX,ESP ; different opcode in newer clients
-    code = code.replace(" BackupEax", " 89 45 FC"); //MOV DWORD PTR SS:[EBP],EAX ; limit
-  }
-
-  //Step 1b - Find the code
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  if (offset === -1)
-    return "Failed in part 1";
-  
-  //Step 2 - Get new value from user
-  var value = exe.getUserInput("$npcBoxLength", XTYPE_DWORD, "Number Input", "Enter new NPC Dialog box length (2052 - 4096)", 0x804, 0x804, 0x1000);
-  
-  //Step 3a - Replace with new value
-  exe.replaceDWord(offset+2, value+4);//For newest clients this is enough since it uses EBP for stack op
-  
-  if (exe.getClientDate() <= 20130605) {
-    //Step 3b - Update the other locations where the value is used
-    exe.replaceDWord(offset+16, value);
-    exe.replaceDWord(offset+27, value + 0x10);
-
-    //Step 3c - Adjust Stack cleanup with new value
-    offset += code.hexlength();
     code =
-        " FF D2"                // CALL EDX
-      + " 8B 8C 24 0C 08 00 00" // MOV ECX, DWORD PTR SS:[ESP+80C]
-      + " 5F"                   // POP EDI 
-      + " 5E"                   // POP ESI
-      + " 33 CC"                // XOR ECX, ESP  
-      + " E8 AB AB AB AB"       // CALL addr
-      + " 81 C4 08 08 00 00"    // ADD ESP, 808
-      ;
-        
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset);
-    if (offset === -1)
-      return "Failed in part 3";
-
-    exe.replaceDWord(offset+5,  value+8);
-    exe.replaceDWord(offset+20, value+4);
+      " 81 C4" + stackSub.packToHex(4) //ADD ESP, 804+x
+    + " C2 04 00"                      //RETN 4
+    ;
   }
   
+  var offset2 = exe.find(code, PTYPE_HEX, false, "", offsets[i] + 5, offset + 0x200);//i is from the for loop
+  if (offset2 === -1)
+    return "Failed in Step 1 - Function end missing";
+
+  //Step 2a - Get new value from user
+  var value = exe.getUserInput("$npcBoxLength", XTYPE_DWORD, "Number Input", "Enter new NPC Dialog box length (2052 - 4096)", 0x804, 0x804, 0x1000);
+  if (value === 0x804)
+    return false;
+  
+  //Step 2b - Change the Stack Allocation with new values
+  exe.replaceDWord(offset + 2, value + stackSub - 0x804);//Change x in SUB ESP, x
+  if (!fpEnb)
+    exe.replaceDWord(offset2 + 2, value + stackSub - 0x804);//Change x in ADD ESP, x
+  
+  if (fpEnb) {
+    //Step 2c - Update all EBP-x+i Stack references, for now we are limiting i to (0 - 3)
+    for (var i = 0; i <= 3; i++) {
+      code = (i - stackSub).packToHex(4);//-x+i
+      offsets = exe.findAll(code, PTYPE_HEX, false, "", offset + 6, offset2);
+      for (var j = 0; j < offsets.length; j++) {
+        exe.replaceDWord(offsets[j], i - value);
+      }
+    }
+  }
+  else {
+    //Step 2d - Update all ESP+i Stack references, where i is in (0x804 - 0x820)
+    for (var i = 0x804; i <= 0x820; i += 4 ) {
+      offsets = exe.findAll(i.packToHex(4), PTYPE_HEX, false, "", offset + 6, offset2);
+      for (var j = 0; j < offsets.length; j++) {
+        exe.replaceDWord(offsets[j], value + i - 0x804);
+      }
+    }
+  }
+
   return true;
 }

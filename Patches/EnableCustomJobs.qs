@@ -1,513 +1,464 @@
-//--Globals--//
-var Enders;
-var Starters;
-var EsiAddon;
-var MaxJob = 4400;
+//##############################################################################
+//# Purpose: Change the Hardcoded loading of Job tables (name, path prefix,    #
+//#          hand prefix, palette prefix and imf prefix) to use Lua functions. #
+//#                                                                            #
+//#          Also modify the sprite size checker and Cash Mount retrieval      #
+//#          codes to use Lua Functions.                                       #   
+//##############################################################################
 
-function EnableCustomJobs() {
+MaxJob = 4400;
+function EnableCustomJobs() {//Pre-VC9 Client support not completed
   
-  //--- Find Starting Points of each table assignment---//
-  //Step 1a - Get Offset of Reference strings. Swordsman's values used for Path and hand since code for novice changes too much.
-  var refPath = exe.findString("\xB0\xCB\xBB\xE7", RVA);// °Ë»ç
-  var refHand = exe.findString("\xB0\xCB\xBB\xE7\\\xB0\xCB\xBB\xE7", RVA);// °Ë»ç\°Ë»ç
-  var refName = exe.findString("Novice", RVA);
+  //===============================//
+  // Find all the inject locations //
+  //===============================//
   
-  //Step 1b - Sanity check
-  if (refPath === -1 || refHand === -1 || refName === -1)
-    return "Failed in Part 1 - Reference String missing";
+  //Step 1a - Get address of reference strings . (Pattern for Archer seems to be stable across clients hence we will use it)
+  var refPath = exe.findString("\xB1\xC3\xBC\xF6", RVA);// ±Ã¼ö for Archer. Same value is used for palette as well as imf
+  if (refPath === -1)
+    return "Failed in Step 1 - Path prefix missing";
   
-  //Step 1c - Find references of refPath - 3 should be there (job prefix, imf prefix, palette prefix)
-  var template = " C7 AB 04 " + genVarHex(1); //MOV DWORD PTR DS:[reg32_A+4], OFFSET addr
+  var refHand = exe.findString("\xB1\xC3\xBC\xF6\\\xB1\xC3\xBC\xF6", RVA);// ±Ã¼ö\±Ã¼ö for Archer
+  if (refHand === -1)
+    return "Failed in Step 1 - Hand prefix missing";
   
-  Starters = exe.findCodes(remVarHex(template, 1, refPath), PTYPE_HEX, true, "\xAB");
-  if (Starters.length !== 3)
-    return "Failed in Part 1 - less/more than 3 path references found";
+  var refName = exe.findString("Archer", RVA);
+  if (refName === -1)
+    return "Failed in Step 1 - Name prefix missing";
   
-  //Step 1d - Find reference of refHand
-  Starters[3] = exe.findCode(remVarHex(template, 1, refHand), PTYPE_HEX, true, "\xAB");
-  if (Starters[3] === -1)
-    return "Failed in Part 1 - hand reference not found";
   
-  //Step 1e - Find reference of refName
-  Starters[4] = exe.findCode(" C7 AB" + refName.packToHex(4), PTYPE_HEX, true, "\xAB");
-  if (Starters[4] === -1)
-    return "Failed in Part 1 - name reference not found";
+  //Step 1b - Find all references of refPath
+  var hooks = exe.findCodes("C7 AB 0C" + refPath.packToHex(4), PTYPE_HEX, true, "\xAB");
+  if (hooks.length !== 3)
+    return "Failed in Step 1 - Some Path references missing";
   
-  Starters = Starters.sort(function(a, b){return a-b});
-  
-  //Step 1f - Extract ESI offsets
-  EsiAddon = [];
-  for (var i = 0; i < Starters.length-1; i++) {
-    if (exe.fetchByte(Starters[i]-2) === 0)//Check if previous statement is a MOV reg32, DWORD PTR DS:[ESI+const]
-      EsiAddon[i] = exe.fetchDWord(Starters[i]-4);
-    else
-      EsiAddon[i] = 0;
-  }
-  EsiAddon[4] = 0;
-  
-  //--- Find Ending points of each table assignment---//
-  Enders = [];
-  //Step 2a - Job Path = Index 0
-  var nopOut = 3;
-  var code = 
-      " 8B 75 AB"          //MOV ESI, DWORD PTR SS:[LOCAL.4]
-    + " C7 AB AB 04 00 00" //MOV DWORD PTR DS:[reg32_A+42*], OFFSET addr ; "peco_rebellion" or "frog_oboro"
-    ;
-  var offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[0], Starters[1]);
-  
-  if (offset === -1) {
-    code = 
-        " 8D AB AB AB 00 00" //LEA reg32_A, [ESI+const]
-      + " C7 AB F8 03 00 00" //MOV DWORD PTR DS:[reg32_B+3F8], OFFSET addr
-      ;
-    nopOut = 6;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[0], Starters[1]);
-  }
-  
-  if (offset === -1) {
-    code = 
-        " 8B AB AB AB 00 00" //MOV reg32_A, DWORD PTR DS:[ESI+const1]
-      + " 8B AB AB AB 00 00" //MOV reg32_B, DWORD PTR DS:[ESI+const2]
-      ;
-    nopOut = false;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[0], Starters[1]);
-  }
-  
+  //Step 1c - Find reference of refHand
+  var offset = exe.findCode("C7 AB 0C" + refHand.packToHex(4), PTYPE_HEX, true, "\xAB");
   if (offset === -1)
-    return "Failed in Part 2 - Job Path end missing";
+    return "Failed in Step 1 - Hand reference missing";
   
-  if (nopOut)
-    exe.replace(offset+nopOut, " 8D 40 00 8D 49 00 8D 5B 00 90", PTYPE_HEX);
+  hooks[3] = offset;
   
-  Enders[0] = offset;
-  
-  //Step 2b - Imf Path = Index 1
-  nopOut = 6;
-  code = 
-      " 8D AB AB AB 00 00" //LEA reg32_A, [ESI+const]
-    + " 89 AB 20 04 00 00" //MOV DWORD PTR DS:[reg32_B+420], reg32_C
-    ;  
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[1], Starters[2]);
-  
-  if (offset === -1) {
-    code = 
-        " C7 44 24 AB AB AB AB AB" //MOV DWORD PTR SS:[LOCAL.x], OFFSET addr
-      + " 8B"                       //MOV reg32_A, DWORD PTR DS:[reg32_B+const]
-      ;
-    nopOut = false;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[1], Starters[2]);
-  }
-  
-  if (offset === -1) {
-    code = 
-        " 8B AB AB AB 00 00" //MOV reg32_A, DWORD PTR DS:[ESI+const]
-      + " C7 45"             //MOV DWORD PTR SS:[LOCAL.x], OFFSET addr
-      ;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[1], Starters[2]);
-  }
-  
-  if (offset === -1) {
-    code = 
-        " 8B 8E AB AB 00 00" //MOV ECX,DWORD PTR DS:[ESI+const1]
-      + " 8B 96 AB AB 00 00" //MOV EDX,DWORD PTR DS:[ESI+const2]
-      ;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[1], Starters[2]);
-  }
-  
+  //Step 1d - Find reference of refName
+  offset = exe.findCode("C7 AB 0C" + refName.packToHex(4), PTYPE_HEX, true, "\xAB");
   if (offset === -1)
-    return "Failed in Part 2 - Imf Path end missing";
+    return "Failed in Step 1 - Name reference missing";
   
-  if (nopOut)
-    exe.replace(offset+nopOut, " 8D 40 00 8D 49 00", PTYPE_HEX);
+  hooks[4] = offset;
   
-  Enders[1] = offset;
+  //===============================================================//
+  // Extract/Calculate all the required info for all the locations //
+  //===============================================================//
   
-  //Step 2c - Hand Path
-  nopOut = false;
-  code = 
-      " 8B AB AB AB 00 00" //MOV reg32_A, DWORD PTR DS:[ESI+const1]
-    + " 8B"                //MOV reg32_B, DWORD PTR DS:[ESI+const2]
-    ;
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[2], Starters[3]);
+  //Step 2a - Get the LangType address
+  var LANGTYPE = GetLangType();
+  if (LANGTYPE.length === 1)
+    return "Failed in Step 2 - " + LANGTYPE[0];
   
+  var refRegs = [];
+  var refOffs = [];
+  var curRegs = [];
+  var details = [];
+  
+  for (var i = 0; i < hooks.length; i++) {
+    
+    //Step 2b - Extract the reference Register (usually ESI), reference Offset and current Register for all hooks from the instruction before each
+    //          MOV curReg, DWORD PTR DS:[refReg + refOff]
+    //          curReg can also be extracted from code at hook location
+  
+    if (exe.fetchByte(hooks[i] - 2) === 0) {//refOff != 0
+      var modrm = exe.fetchByte(hooks[i] - 5);
+      refOffs[i] = exe.fetchDWord(hooks[i] - 4);
+    }
+    else {//refOff = 0
+      var modrm = exe.fetchByte(hooks[i] - 1);
+      refOffs[i] = 0;
+    }
+    refRegs[i] = modrm & 0x7;
+    curRegs[i] = (modrm & 0x38) >> 3;
+    
+    //Step 2c - Find Location after the Table assignments which is the location to jump to after lua based loading
+    //          Also extract all non-table related instuctions in between
+    details[i] = FetchTillEnd(hooks[i] + 7, refRegs[i], refOffs[i], LANGTYPE, CheckEoT);
+    
+    //debugValue(details[i].debug);//debug
+  }
+
+  //====================================//
+  // Add Function Names & Table Loaders //
+  //====================================//
+  
+  //Step 3 - Insert Lua Function Names into client (Since we wont be using the hardcoded JobNames we will overwrite suitable ones)
+  var Funcs = [];
+  
+  Funcs[0]  = OverwriteString("Professor",     "ReqPCPath");
+  Funcs[1]  = OverwriteString("Blacksmith",    "MapPCPath\x00");
+  Funcs[2]  = OverwriteString("Swordman",      "ReqPCImf");
+  Funcs[3]  = OverwriteString("Assassin",      "MapPCImf");
+  Funcs[4]  = OverwriteString("Magician",      "ReqPCPal");
+  Funcs[5]  = OverwriteString("Crusader",      "MapPCPal");  
+  Funcs[6]  = OverwriteString("Swordman High", "ReqPCHandPath");
+  Funcs[7]  = OverwriteString("Magician High", "MapPCHandPath");
+  Funcs[8]  = OverwriteString("White Smith_W", "ReqPCJobName_M");
+  Funcs[9]  = OverwriteString("High Wizard_W", "MapPCJobName_M");
+  Funcs[10] = OverwriteString("High Priest_W", "ReqPCJobName_F");
+  Funcs[11] = OverwriteString("Lord Knight_W", "MapPCJobName_F");
+  Funcs[12] = OverwriteString("Alchemist",     "GetHalter");
+  Funcs[13] = OverwriteString("Acolyte",       "IsDwarf");
+  
+  //Step 4a - Write the Loader into client for Path, Imf, Weapon and Palette
+  WriteLoader(hooks[0], curRegs[0], "PCPath"    , Funcs[0], Funcs[1], details[0].endOff, details[0].code);
+  WriteLoader(hooks[1], curRegs[1], "PCImf"     , Funcs[2], Funcs[3], details[1].endOff, details[1].code);
+  WriteLoader(hooks[2], curRegs[2], "PCPal"     , Funcs[4], Funcs[5], details[2].endOff, details[2].code);
+  WriteLoader(hooks[3], curRegs[3], "PCHandPath", Funcs[6], Funcs[7], details[3].endOff, details[3].code);
+  
+  //Step 4b - For Jobname we will simply add the extracted code and jmp to endOff instead of loading now
+  //          to avoid repetitive loading (happens again when gender is checked)
+  var code =
+    details[4].code
+  + " E9";
+  
+  code += (details[4].endOff - (hooks[4] + code.hexlength() + 4)).packToHex(4);
+  
+  exe.replace(hooks[4], code, PTYPE_HEX);
+  
+  //Step 4c - Update hook location to address after the JMP
+  hooks[4] += code.hexlength();
+  
+  //================================================================//
+  // Find Gender based Name assignment & Extract/Calculate all info //
+  //================================================================//
+  
+  //Step 5a - Find address of 'TaeKwon Girl'
+  offset = exe.findString("TaeKwon Girl", RVA);
   if (offset === -1)
-    return "Failed in Part 2 - Hand Path end missing";
+    return "Failed in Step 5 - 'TaeKwon Girl' missing";
   
-  Enders[2] = offset;
-  
-  //Step 2d - Pal Path
-  nopOut = 6;
+  //Step 5b - Find its reference - this is where we will jump out and start loading the table
   code =
-      " 8D AB AB AB 00 00" //LEA reg32_A, [ESI+const1]
-    + " 89 AB 20 04 00 00" //MOV DWORD PTR DS:[reg32_B+const2], reg32_C
-    ;
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[3], Starters[4]);
-  
-  if (offset === -1) {
-    code = 
-        " C7 44 24 AB AB AB AB AB" //MOV DWORD PTR SS:[LOCAL.x], OFFSET addr
-      + " 8D"                      //LEA reg32_A, [ESI+const]
-      ;
-    nopOut = false;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[3], Starters[4]);
-  }
-    
-  if (offset === -1) {
-    code =
-        " C7 45 AB AB AB AB AB" //MOV DWORD PTR SS:[LOCAL.x], OFFSET addr
-      + " 8B"                   //MOV reg32_A, DWORD PTR DS:[ESI+const]
-      ;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[3], Starters[4]);
-  }
-   
-  if (offset === -1) {
-    code = 
-        " 8B AB AB AB 00 00" //MOV reg32_A, DWORD PTR DS:[ESI+const1]
-      + " 8B AB AB AB 00 00" //MOV reg32_B, DWORD PTR DS:[ESI+const2]
-      ;
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", Starters[3], Starters[4]);
-  }
-  
-  if (offset === -1)
-    return "Failed in Part 2 - Pal Path end missing";
-  
-  if (nopOut)
-    exe.replace(offset+nopOut, " 8D 40 00 8D 49 00", PTYPE_HEX);
-  
-  Enders[3] = offset;
-  
-  //Step 2e - Job Name
-  code = 
-      " BF 2D 00 00 00" //MOV EDI, 2D
-    + " 83 CB FF"       //OR EBX, FFFFFFFFF
-    ;
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB", Starters[4]);
-  
-  if (offset === -1) {
-    code = 
-        " 68 AB AB AB 00" //PUSH OFFSET addr
-      + " 8D"             //LEA ECX, [LOCAL.x]
-      ;
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB", Starters[4]);
-  }
-  
-  if (offset === -1)
-    return "Failed in Part 2 - Job Name end missing";
-  
-  Enders[4] = offset;
-    
-  //Step 4 - Insert Function Names into Client (to save space we will overwrite existing class names) ---//
-  var ReqPath   = WriteString("Professor", "ReqPCPath");
-  var MapPath   = WriteString("Blacksmith", "MapPCPath\x00");
-  var ReqHand   = WriteString("Swordman High", "ReqPCHandPath");
-  var MapHand   = WriteString("Magician High", "MapPCHandPath");
-  var ReqImf    = WriteString("Swordman", "ReqPCImf");
-  var MapImf    = WriteString("Assassin", "MapPCImf");
-  var ReqPal    = WriteString("Magician", "ReqPCPal");
-  var MapPal    = WriteString("Crusader", "MapPCPal");  
-  var ReqName_M = WriteString("White Smith_W", "ReqPCJobName_M");
-  var MapName_M = WriteString("High Wizard_W", "MapPCJobName_M");
-  var ReqName_F = WriteString("High Priest_W", "ReqPCJobName_F");
-  var MapName_F = WriteString("Lord Knight_W", "MapPCJobName_F");
-  var GetHalter = WriteString("Alchemist", "GetHalter");
-  var IsDwarf   = WriteString("Acolyte", "IsDwarf");
-  
-  //Step 5 - Get Lua Constants and Function addresses ---//
-  GetLuaRefs();  
-  
-  //Step 6a - Build code for loading tables from lua and overwrite current mechanism with it ---//
-  WriteLoader(0, "PCPath", ReqPath, MapPath);
-  WriteLoader(1, "PCImf", ReqImf, MapImf);
-  WriteLoader(2, "PCHandPath", ReqHand, MapHand);
-  WriteLoader(3, "PCPal", ReqPal, MapPal);
-  
-  //Step 6b - For Job Name skip the loading now. The table will be loaded later based on Gender
-  exe.replace(Starters[4], " E9" + (Enders[4] - (Starters[4] + 5)).packToHex(4), PTYPE_HEX);
-  
-  //--- Build Code to load required lua files and write it in the area after Job Name Lua calls above---//
-  var loadStart = Starters[4] + 10; //free offset to use for writing Lua file loader code
+    " 85 C0"                                   //TEST EAX, EAX
+  + " 75 AB"                                   //JNZ SHORT addr -> TaeKwon Boy assignment
+  + " A1 AB AB AB 00"                          //MOV EAX, DWORD PTR DS:[g_jobName]
+  + " C7 AB 38 3F 00 00" + offset.packToHex(4) //MOV DWORD PTR DS:[EAX+3F38], OFFSET addr; ASCII "TaeKwon Girl"
+  ;
+  var gJobName = 5;
+  var offset2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");//VC9 Clients
 
-  //Step 7a - Find NPCIdentity offset
-  var npcIdent = exe.findString("Lua Files\\DataInfo\\NPCIdentity", RVA);
-  if (npcIdent === -1)
-    return "Failed in Part 3 - NPCIdentity missing";
-  
-  //Step 7b - Find its reference
-  offset = exe.findCode(" 68" + npcIdent.packToHex(4), PTYPE_HEX, false);
-  if (offset === -1)
-    return "Failed in Part 7 - NPCIdentity reference missing";
-  
-  //Step 7c - Extract the common assignments for Lua file loading 
-  //          MOV ECX, DS:[ESI+const] ; lua_state 
-  //          followed by argument PUSHes before NPCIdentity PUSH
-  
-  var hookPoint = exe.find(" 8B 8E AB AB 00 00", PTYPE_HEX, true, "\xAB", offset - 10, offset);
-  if (hookPoint === -1)
-    return "Failed in Part 7 - Loading code has changed";
-  
-  var hookReturn = offset + 10;
-  var preSize = offset - hookPoint;
-  var preCode = exe.fetchHex(hookPoint, preSize);
-  var luaLoader = offset + 10 + exe.fetchDWord(offset+6);
-  
-  //Step 7d - Find "Dark Collector". There are a lot of job names after it which makes it perfect place for what comes next
-  offset = exe.findString("Dark Collector", RVA);
-  if (offset === -1)
-    return "Failed in Part 7 - Dark Collector missing";
-  
-  //Step 7e - Overwrite above with File name strings to be read
-  var fileNames = [
-    "Lua Files\\Admin\\PCIds\x00",
-    "Lua Files\\Admin\\PCPaths\x00",
-    "Lua Files\\Admin\\PCImfs\x00",
-    "Lua Files\\Admin\\PCHands\x00",
-    "Lua Files\\Admin\\PCPals\x00",
-    "Lua Files\\Admin\\PCNames\x00",
-    "Lua Files\\Admin\\PCFuncs\x00"
-  ];
-  
-  exe.replace(exe.Rva2Raw(offset), fileNames.join("").toHex(), PTYPE_HEX);
-  
-  //Step 7f - Build up the code for each file
-  var template =
-      preCode
-    + " 68" + genVarHex(1)
-    + " E8" + genVarHex(2)
-    ;
-  var tmplSize = preSize + 10;
-  
-  var code = "";
-  var diff = luaLoader - (loadStart + tmplSize);
-  for (var i = 0; i < fileNames.length; i++) {
-    code += remVarHex(template, [1,2], [offset, diff]);
-    diff -= tmplSize;
-    offset += fileNames[i].length;  
+  if (offset2 === -1) {//Older clients
+    code = code.replace(" A1", " 8B AB");//Change EAX to reg32_A and update the JNZ
+    gJobName = 6;
+    offset2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   
-  //Step 7g - Now add same for NPCIdentity and finish off with a returning JMP
-  code += remVarHex(template, [1,2], [npcIdent, diff]);
-  code += " E9" + ( hookReturn - (loadStart + (fileNames.length + 1) * tmplSize + 5)).packToHex(4);
-  
-  //Step 7h - Write into client
-  exe.replace(loadStart, code, PTYPE_HEX);
-  
-  //Step 7i - Add Jump to Lua File loaders at hookPoint
-  exe.replace(hookPoint, " E9" + (loadStart - (hookPoint+5)).packToHex(4), PTYPE_HEX);
-  
-  //--- Build Code for Loading Job Name table based on Gender
-  //Step 8a - Location for adding
-  //var femStart = loadStart + code.hexlength() + 4;//Leaving 4 byte extra gap
-  
-  //Step 8b - Find "TaeKwon Girl"
-  var tg = exe.findString("TaeKwon Girl", RVA);
-  if (tg === -1)
-    return "Failed in Part 8 - TaeKwon Girl missing";
-  
-  //Step 8c - Find the reference
-  code = 
-      " 85 C0"                               //TEST EAX, EAX
-    + " 75 11"                               //JNZ SHORT addr -> TaeKwon Boy assignment
-    + " AB AB AB AB 00"                      //MOV EAX, DWORD PTR DS:[jobNameRef]
-    + " C7 AB 38 3F 00 00" + tg.packToHex(4) //MOV DWORD PTR DS:[EAX+3F38], OFFSET addr; "TaeKwon Girl"
-    ;
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-
-  if (offset === -1) {
-    code = 
-        " 85 C0"                               //TEST EAX, EAX
-      + " 75 12"                               //JNZ SHORT addr -> TaeKwon Boy assignment
-      + " 8B AB AB AB AB 00"                   //MOV reg32, DWORD PTR DS:[jobNameRef] 
-      + " C7 AB 38 3F 00 00" + tg.packToHex(4) //MOV DWORD PTR DS:[reg32+3F38], OFFSET addr; "TaeKwon Girl"
-      ;
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  }
-  
-  if (offset === -1)
-    return "Failed in Part 8 - TaeKwon Girl reference missing";
-  
-  //Step 8d - Extract the jobNameRef address
-  var jobNameRef = exe.fetchHex(offset + code.hexlength() - 14, 4);
-  
-  //Step 8e - Check for the Langtype comparison.  
-  var LANGTYPE = getLangType();
-  if (LANGTYPE === -1)
-    return "Failed in Part 8 - LangType not found";
-  
-  code = 
-      " 83 3D" + LANGTYPE + " 00" //CMP DWORD PTR DS:[g_serviceType], 0
-    + " B9 AB AB AB 00"           //MOV ECX, genderRef
-    + " 75 59"                    //JNZ addr
-    ;
-  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0x80,offset);
-  
-  if (offset2 === -1) {
+  if (offset2 === -1) {//Latest Clients
     code =
-        " A1" + LANGTYPE  //MOV EAX, DWORD PTR DS:[g_serviceType] 
-      + " B9 AB AB AB 00" //MOV ECX, genderRef
-      + " 85 C0"          //TEST EAX, EAX
-      + " 75 59"          //JNZ addr
-      ;
-    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0x80,offset);
+      " 85 C0"                    //TEST EAX, EAX
+    + " A1 AB AB AB 00"           //MOV EAX, DWORD PTR DS:[g_jobName]
+    + " AB" + offset.packToHex(4) //MOV reg32_A, OFFSET addr; ASCII "TaeKwon Girl"
+    ;
+    gJobName = 3;
+    offset2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   
   if (offset2 === -1)
-    return "Failed in Part 8 - LangType check not found";
+    return "Failed in Step 5 - 'TaeKwon Girl' reference missing";
   
-  //Step 8f - Convert JNZ to JMP
-  exe.replace(offset2 + code.hexlength() - 2, "EB", PTYPE_HEX);
+  //Step 5c - Extract the g_jobName address
+  gJobName = exe.fetchDWord(offset2 + gJobName);
   
-  //Step 8g - Find the endpoint to jmp to after loading table - only for old clients
-  code = 
-      " A1" + LANGTYPE //MOV EAX, DWORD PTR DS:[g_serviceType] 
-    + " 83 C4 10"      //ADD ESP, 10
-    + " 83 F8 06"      //CMP EAX, 6
-    ;
-  var endpoint = exe.find(code, PTYPE_HEX, false, " ", offset+0x10, offset+0x1000);
+  //Step 5d - Look for the LangType comparison before offset2 (in fact the JNZ should jump to a call after which we do the above TEST)
+  //          Steps 5d and 5e are also done in TranslateClient but we will keep it anyways as a failsafe
+  code =
+    " 83 3D" + LANGTYPE + " 00" //CMP DWORD PTR DS:[g_serviceType], 00
+  + " B9 AB AB AB 00"           //MOV ECX, g_session
+  + " 75"                       //JNE SHORT addr -> CALL CSession::GetSex
+  ;
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x80, offset2);
   
-  //Step 8f - Build code for selecting job name table loader
-  code = 
-      " 60"                //PUSHAD
-    + " BE" + jobNameRef   //MOV ESI, jobNameRef
-    + " 85 C0"             //TEST EAX, EAX
-    + " 74 00"             //JNE SHORT addr1 to Female Job Name loading
-    + " E9" + genVarHex(1) //JMP SHORT addr2 to Male Job Name loading
-    + " 61"                //POPAD
-    ;
-    
-  var jmpBack = offset + code.hexlength() - 1;
-  
-  if (endpoint === -1)
-    code += " C3"; //RETN
-  else
-    code += " E9" + (endpoint - (offset + code.hexlength() + 4)).packToHex(4); //JMP endpoint
-  
-  //Step 8g - Build & Write loader for Female and Male (essentially a repeat but for the time being there is no choice)
-  var femStart = offset + code.hexlength() + 4;
-  var maleStart = femStart +
-  WriteLoader(4, "PCJobName_F", ReqName_F, MapName_F, femStart, jmpBack);
-  
-  WriteLoader(4, "PCJobName_M", ReqName_M, MapName_M, maleStart, jmpBack);
-  
-  //Step 8h - Replace unknowns and insert the table selector code
-  code = code.replaceAt(3*9, (femStart - (offset+10)).packToHex(1));
-  code = remVarHex(code, 1, maleStart - (offset+15));
-
-  exe.replace(offset, code, PTYPE_HEX);
- 
-  //--- Special Modification 1 = Cash Mount ---//
-  //Step 9a - Find the function where the mount is checked
-  code = 
-      " 83 F8 19"        //CMP EAX, 19
-    + " 75 AB"           //JNE SHORT addr -> next CMP
-    + " B8 12 10 00 00"  //MOV EAX, 1012
-    ;
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  if (offset !== -1) {
-    //Step 9b - Calculate starting offset of the function
-    if (exe.getClientDate() > 20130605)
-      var mountBegin = offset-6;
-    else
-      var mountBegin = offset-4;
-    
-    //Step 9c - Build the replacement code using Lua functions
-    code =
-        " 55"       //PUSH EBP
-      + " 8B EC"    //MOV EBP, ESP
-      + " 51"       //PUSH ECX
-      + " 52"       //PUSH EDX
-      + " 57"       //PUSH EDI
-      + " 83 EC 0C" //SUB ESP,0C
-      + " 8B 7D 08" //MOV EDI,DWORD PTR SS:[EBP+8]
-      ;
-    code += GenLuaFnCall(mountBegin + code.hexlength(), false, false, "GetHalter".length, GetHalter);
-    code +=
-        " 8B 44 24 08" //MOV EAX,DWORD PTR SS:[ESP+8]
-      + " 83 C4 0C"    //ADD ESP,0C    
-      + " 5F"          //POP EDI
-      + " 5A"          //POP EDX
-      + " 59"          //POP ECX
-      + " 5D"          //POP EBP
-      + " C2 04 00"    //RETN 4
-      ;
-    
-    //Step 9d - Overwrite with the built code.
-    exe.replace(mountBegin, code, PTYPE_HEX);
+  if (offset === -1) {
+    code = code.replace(" 83 3D", " A1").replace(" AB AB 00 75", " AB AB 00 85 C0 75");//Change the CMP to MOV EAX, DWORD PTR DS:[g_serviceType] and insert TEST EAX, EAX before JNZ
+    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x80, offset2);
   }
   
-  //--- Special Modification 2 = Baby Jobs (Shrinking/Dwarfing) ---//
-  //Step 10a - Find the function where Baby Jobs are checked. Pattern not found in old client - To Do
+  if (offset === -1)
+    return "Failed in Step 5 - LangType comparison missing";
+  
+  //Step 5e - Change the JNE to JMP
+  exe.replace(offset + code.hexlength() - 1, "EB", PTYPE_HEX)
+  
+  offset = offset2;
+  
+  //Step 5f - Find the LangType comparison with 6 after offset => endpoint to jmp to once Table is loaded
+  //          If it is not found then this is a seperate function so we can RETN
+  code = 
+    " A1" + LANGTYPE //MOV EAX, DWORD PTR DS:[g_serviceType] 
+  + " 83 C4 10"      //ADD ESP, 10
+  + " 83 F8 06"      //CMP EAX, 6
+  ;
+  offset2 = exe.find(code, PTYPE_HEX, false, " ", offset + 0x10, offset + 0x1000);
+  
+  //======================//
+  // Add Job Name Loaders //
+  //======================//
+  
+  //Step 6a - Build the gender test
   code =
-      " 3D B7 0F 00 00" //CMP EAX, 0FB7
-    + " 7C AB"          //JL SHORT addr -> next CMP chain
-    + " 3D BD 0F 00 00" //CMP EAX, 0FBD
-    ;
+    " 85 C0"                //TEST EAX, EAX
+  + " 0F 85" + GenVarHex(1) //JNE addr1 -> Male Job Name Loading 
+  ;
+  
+  var csize = code.hexlength();
+  
+  //Step 6b - Write the Female Job Name Loader below
+  csize += WriteLoader(offset + csize, gJobName, "PCJobName_F", Funcs[10], Funcs[11], offset2, "").hexlength();
+  
+  //Step 6c - Write the Male Job Name Loader below 
+  WriteLoader(offset + csize, gJobName, "PCJobName_M", Funcs[8], Funcs[9], offset2, "");
+  
+  //Step 6d - Replace the variable in code (since we know where addr1 is now)
+  code = ReplaceVarHex(code, 1, csize - code.hexlength());
+  
+  //Step 6e - Add it to client
+  exe.replace(offset, code, PTYPE_HEX);
+  
+  //=========================//
+  // Inject Lua file loading //
+  //=========================//
+  
+  var retVal = InjectLuaFiles(
+    "Lua Files\\DataInfo\\NPCIdentity", 
+    [
+      "Lua Files\\Admin\\PCIds",
+      "Lua Files\\Admin\\PCPaths",
+      "Lua Files\\Admin\\PCImfs",
+      "Lua Files\\Admin\\PCHands",
+      "Lua Files\\Admin\\PCPals",
+      "Lua Files\\Admin\\PCNames",
+      "Lua Files\\Admin\\PCFuncs"
+    ],
+    hooks[4]
+  );
+  if (typeof(retVal) === "string")
+    return retVal;
+  
+  var fpEnb = HasFramePointer();
+  
+  //============================//
+  // Special Mod 1 : Cash Mount //
+  //============================//
+ 
+  //Step 7a - Find the function where the Cash Mount Job ID is assigned
+  code =
+    " 83 F8 19"        //CMP EAX, 19
+  + " 75 AB"           //JNE SHORT addr -> next CMP
+  + " B8 12 10 00 00"  //MOV EAX, 1012
+  ;
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
   if (offset !== -1) {
-    //Step 10b - Calculate starting offset of function
-    if (exe.getClientDate() > 20130605)
-      var dwarfBegin = offset - 6;
-    else
-      var dwarfBegin = offset - 4;
+    //Step 7b - Build the replacement code using GetHalter Lua function
+    code = 
+      " 52" //PUSH EDX
+    + GenLuaCaller(offset + 1, "GetHalter", Funcs[12], "d>d", " 50");
+    + " 5A" //POP EDX
+    ;
     
-    //Step 10c - Build the replacement code using Lua function
-    code =
-        " 55"       //PUSH EBP
-      + " 8B EC"    //MOV EBP, ESP
-      + " 57"       //PUSH EDI
-      + " 83 EC 0C" //SUB ESP,0C
-      + " 8B 7D 08" //MOV EDI,DWORD PTR SS:[EBP+8]
-      ;
-    code += GenLuaFnCall(dwarfBegin + code.hexlength(), false, false, "IsDwarf".length, IsDwarf);
-    code +=
-        " 8B 44 24 08" //MOV EAX,DWORD PTR SS:[ESP+8]
-      + " 83 C4 0C"    //ADD ESP,0C    
-      + " 5F"          //POP EDI
-      + " 5D"          //POP EBP
-      + " C2 04 00"    //RETN 4
-      ;
+    if (fpEnb)
+      code += " 5D";     //POP EBP
     
-    //Step 10d - Overwrite with the built code.
-    exe.replace(dwarfBegin, code, PTYPE_HEX);
+    code += " C2 04 00"; //RETN 4
+    
+    //Step 7c - Replace at offset
+    exe.replace(offset, code, PTYPE_HEX);
+  }
+  
+  //================================================//
+  // Special Mod 2 : Baby Jobs (Shrinking/Dwarfing) //
+  //================================================//
+  
+  //Step 8a - Find Function where Baby Jobs are checked (missing in old client)
+  code =
+    " 3D B7 0F 00 00" //CMP EAX, 0FB7
+  + " 7C AB"          //JL SHORT addr -> next CMP chain
+  + " 3D BD 0F 00 00" //CMP EAX, 0FBD
+  ;
+  offset2 = " 50"; //Don't mind the var name
+  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace(/ 3D/g, " 81 AB");//Change EAX with reg32_A
+    offset2 = "";
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
+  if (offset !== -1) {
+    //Step 8b - Get the PUSH register in case it is not EAX
+    if (offset2 === "")
+      offset2 = (0x50 + (exe.fetchByte(offset + 1) & 0x7)).packToHex(1);
+    
+    //Step 8c - Build the replacement code using IsDwarf Lua function
+    code = 
+      " 52" //PUSH EDX
+    + GenLuaCaller(offset + 1, "IsDwarf", Funcs[13], "d>d", offset2)
+    + " 5A" //POP EDX
+    ;
+    
+    if (fpEnb)
+      code += " 5D";     //POP EBP
+    
+    code += " C2 04 00"; //RETN 4
+    
+    //Step 8d - Replace at offset
+    exe.replace(offset, code, PTYPE_HEX);
   }
   
   return true;
 }
 
-function WriteString(srcStr, tgtStr) {
-  var offset = exe.findString(srcStr, RAW);
-  if (offset !== -1)
-    exe.replace(offset, tgtStr, PTYPE_STRING);
+//###############################################################
+//# Purpose: Check whether End of Table has been reached at the #
+//#          supplied offset. Used as argument to FetchTillEnd  #
+//###############################################################
+
+function CheckEoT(opcode, modrm, offset) {
+  //SUB reg32_A, reg32_B
+  //SAR reg32_A, 2
+  if (opcode === 0x2B && exe.fetchUByte(offset + 2) === 0xC1 && exe.fetchUByte(offset + 4) === 0x02 )
+    return true;
   
-  return exe.Raw2Rva(offset);  
+  //PUSH 524C
+  if (opcode === 0x68 && exe.fetchDWord(offset + 1) === 0x524C)
+    return true;
+  
+  //PUSH EAX
+  //PUSH 2 or PUSH 5
+  if (opcode === 0x50 && modrm === 0x6A && (exe.fetchByte(offset + 2) === 0x02 || exe.fetchByte(offset + 2) === 0x05))
+    return true;
+
+  //MOV EDI, EDI
+  if (opcode === 0x8B && modrm === 0xFF)
+    return true;
+  
+  //OR reg32_A, FFFFFFFF
+  if (opcode === 0x83 && (modrm & 0xF8) === 0xC8 && exe.fetchUByte(offset + 2) === 0xFF)
+    return true;
+  
+  //MOV EDI, 2D - deprecated since MOV EDI, EDI doesn't leave out any stray assignments
+  //if (opcode === 0xBF && exe.fetchDWord(offset + 1) === 0x2D)
+  //  return true;
+  
+  return false;
 }
 
-function WriteLoader(index, fnSuffix, reqAddr, mapAddr, insAddr, endAddr) {
-  if (typeof(insAddr) === "undefined")
-    insAddr = Starters[index];
+//###################################################################
+//# Purpose: Find address of srcString, overwrite it with tgtString #
+//#          and return it (RVA)                                    #
+//###################################################################
+
+function OverwriteString(srcString, tgtString) {
+  //Step 1 - Find address
+  var offset = exe.findString(srcString, RAW);
   
-  if (typeof(endAddr) === "undefined")
-    endAddr = Enders[index];
+  //Step 2a - Overwrite it
+  exe.replace(offset, tgtString, PTYPE_STRING);
   
-  var isJobNameFn = (fnSuffix.indexOf("Name") !== -1);
+  //Step 2b - Return the RVA of offset
+  return exe.Raw2Rva(offset);
+}
+
+//########################################################################
+//# Purpose: Overwrite code at hook with Lua function based table loader #
+//########################################################################
+function WriteLoader(hookLoc, curReg, suffix, reqAddr, mapAddr, jmpLoc, extraData) {
+
+  //Step 1 - Setup all arrays we will be using   
+  var prefixes = [];//Two prefixes for two range of Jobs
+  var templates = [];//Two templates one for Req functions and other for Map functions
+  var fnNames = ["Req" + suffix, "Map" + suffix]; // - do -
+  var fnAddrs = [reqAddr, mapAddr]; // - do -
+  var argFormats = ["d>s", "d>d"]; // - do -
   
-  if (isJobNameFn) {
-    thirdStart = 4001;
-    allEnd = MaxJob;
+  prefixes[0] =
+    " 33 FF"          //XOR EDI, EDI
+  + " BB 2C 00 00 00" //MOV EBX, 2C
+  ;
+  
+  if (suffix.indexOf("Name") !== -1) {
+    prefixes[1] = 
+      " 90"
+    + " BF A1 0F 00 00"           //MOV EDI, 0xFA1;//4001
+    + " BB" + MaxJob.packToHex(4) //MOV EBX, MaxJob
+    ;
   }
   else {
-    thirdStart = 4001 - 3950;
-    allEnd = MaxJob - 3950;
-  }
-    
-  var code = " 83 EC 0C"; // SUB ESP, 0C
-  code += GenLuaFnCall(insAddr + code.hexlength(), true , false, 3+fnSuffix.length, reqAddr, 0, 0x2C, EsiAddon[index]);
-  code += GenLuaFnCall(insAddr + code.hexlength(), true , false, 3+fnSuffix.length, reqAddr, thirdStart, allEnd, EsiAddon[index]);
-  code += GenLuaFnCall(insAddr + code.hexlength(), false, true, 3+fnSuffix.length, mapAddr, 0, 0x2C, EsiAddon[index]);
-  code += GenLuaFnCall(insAddr + code.hexlength(), false, true, 3+fnSuffix.length, mapAddr, thirdStart, allEnd, EsiAddon[index]);
-  code +=
-      " 83 C4 0C" // ADD ESP, 0C
-    + " E9" + (endAddr - (insAddr + code.hexlength() + 8)).packToHex(4) // JMP addr2 -> outside table allocation
+    prefixes[1] =
+      " 90"
+    + " BF 33 00 00 00"                    //MOV EDI, 0x33;//4001 - 3950
+    + " BB" + (MaxJob - 3950).packToHex(4) //MOV EBX, MaxJob-3950
     ;
-  exe.replace(insAddr, code, PTYPE_HEX);
-  return code.hexlength();
+  }
+  
+  templates[0] = 
+    " PrepVars"
+  + " GenCaller"
+  + " 8A 08"          //MOV CL, BYTE PTR DS:[EAX]
+  + " 84 C9"          //TEST CL, CL
+  + " 74 07"          //JE SHORT addr
+  + " 8B 4C 24 20"    //MOV ECX, DWORD PTR SS:[ESP+20]
+  + " 89 04 B9"       //MOV DWORD PTR DS:[EDI*4+ECX], EAX
+  + " 47"             //INC EDI; addr
+  + " 39 DF"          //CMP EDI,EBX
+  + " 7E ToGenCaller" //JLE SHORT addr2; to start of generate
+  ;
+  
+  templates[1] = 
+    " PrepVars"
+  + " GenCaller"
+  + " 85 C0"          //TEST EAX,EAX
+  + " 78 0A"          //JS SHORT addr
+  + " 8B 4C 24 20"    //MOV ECX, DWORD PTR SS:[ESP+20]
+  + " 8B 04 81"       //MOV EAX, DWORD PTR DS:[EAX*4+ECX]
+  + " 89 04 B9"       //MOV DWORD PTR DS:[EDI*4+ECX], EAX
+  + " 47"             //INC EDI; addr
+  + " 39 DF"          //CMP EDI, EBX
+  + " 7E ToGenCaller" //JLE SHORT addr2; to start of generate
+  ;
+
+  //Step 2a - Push the register containing first element and save all registers
+  if (curReg > 7)
+    var code = " FF 35" + curReg.packToHex(4); //PUSH OFFSET curReg
+  else
+    var code = (0x50 + curReg).packToHex(1);//PUSH reg32_A; reg32_A points to the location of first element of the tablell 
+  
+  code += " 60";                            //PUSHAD
+  
+  //Step 2b - Now for each template fill in the blanks with corresponding prefix and GenLuaCaller code
+  for (var i = 0; i < templates.length; i++) {
+    for (var j = 0; j < prefixes.length; j++) {
+      var coff = code.hexlength() + prefixes[j].hexlength(); //relative offset from hookLoc
+      
+      code += templates[i].replace(" PrepVars", prefixes[j]); //Change PrepVars to the actual prefix
+      code = code.replace(" GenCaller", GenLuaCaller(hookLoc + coff, fnNames[i], fnAddrs[i], argFormats[i], " 57")); //Change GenCaller with generated code
+      
+      code = code.replace(" ToGenCaller", "");//Remove ToGenCaller and 
+      code += (coff - (code.hexlength() + 1)).packToHex(1);//put the actual JLE distance
+    }
+  }
+  
+  //Step 2c - Add the finishing touches. 
+  //          Restore registers, Add the extracted code, Jump to jmpLoc or RETN
+  code += 
+    " 61"       //POPAD
+  + " 83 C4 04" //ADD ESP, 4
+  + extraData
+  ;
+  
+  if (jmpLoc !== -1)
+    code += " E9" + (jmpLoc - (hookLoc + code.hexlength() + 5)).packToHex(4); //JMP jmpLoc
+  else
+    code += " C3"; //RETN
+  
+  exe.replace(hookLoc, code, PTYPE_HEX);
+  
+  return code;
 }

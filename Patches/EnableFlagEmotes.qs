@@ -1,22 +1,24 @@
-function EnableFlagEmotes() {
-  //////////////////////////////////////////////////////////////
-  // GOAL: Modify all the Flag Emote callers for all the      //
-  //       buttons Ctrl+1-9 in UIWindowMgr::ProcessPushButton //
-  //       For new clients this has been moved to seperate    //
-  //       function which gets called inside the above.       //
-  //////////////////////////////////////////////////////////////
+//#################################################################
+//# Purpose: Change the Flag Emote callers for Ctrl+1 - Ctrl+9 in #
+//#          function called from UIWindowMgr::ProcessPushButton  #
+//#################################################################
+
+function EnableFlagEmotes() {//The function is not present in pre-2010 clients
   
-  //To Do - Since the new function is not there in old clients, Procedure would vary.
-  
-  //Step 1a - Find the switch case selector for all the flag Emote callers  
+  //Step 1a - Find the switch case selector for all the flag Emote callers
   var code = 
-      " 05 2E FF FF FF"    //ADD EAX,-D2
-    + " 83 F8 08"          //CMP EAX, 08
-    + " 0F 87 AB AB 00 00" //JA addr -> skip showing emotes
-    + " FF 24 85"          //JMP DWORD PTR DS:[EAX*4+refAddr]
-    ;
-    
+    " 05 2E FF FF FF"    //ADD EAX,-D2
+  + " 83 F8 08"          //CMP EAX, 08
+  + " 0F 87 AB AB 00 00" //JA addr -> skip showing emotes
+  + " FF 24 85"          //JMP DWORD PTR DS:[EAX*4+refAddr]
+  ;  
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace(" 05 2E FF FF FF", " 83 C0 AB");//change ADD EAX, -D2 with ADD EAX, -54
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1)
     return "Failed in Step 1 - switch not found";
   
@@ -25,7 +27,7 @@ function EnableFlagEmotes() {
   
   //Step 2a - Get Input file containing the list of Flag Emotes per key
   var f = new TextFile();
-  if (!getInputFile(f, "$inpFlag", "File Input - Enable Flag Emoticons", "Enter the Flags list file", APP_PATH + "/Input/flags.txt")) {
+  if (!GetInputFile(f, "$inpFlag", "File Input - Enable Flag Emoticons", "Enter the Flags list file", APP_PATH + "/Input/flags.txt")) {
     return "Patch Cancelled";
   }
   
@@ -44,27 +46,26 @@ function EnableFlagEmotes() {
   f.close();
   
   //Step 3a - Prep code that is part of each case (common portions that we need)
-  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
-  if (LANGTYPE === -1)
-    return "Failed in Part 3 - LangType not found";
+  var LANGTYPE = GetLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
+  if (LANGTYPE.length === 1)
+    return "Failed in Step 3 - " + LANGTYPE[0];
     
-  code  =
-      " A1" + LANGTYPE //MOV EAX, DS:[g_servicetype]
-    + " 85 C0"         //TEST EAX, EAX
-    ;                  //JZ SHORT addr or JZ addr
+  code =
+    " A1" + LANGTYPE //MOV EAX, DS:[g_servicetype]
+  + " 85 C0"         //TEST EAX, EAX
+  ;                  //JZ SHORT addr or JZ addr
 
   var code2 =      
-      " 6A 00" //PUSH 0
-    + " 6A 00" //PUSH 0
-    + " 6A 00" //PUSH 0
-    + " 6A AB" //PUSH emoteConstant
-    + " 6A 1F" //PUSH 1F
-    + " FF"    //CALL EDX or CALL DWORD PTR DS:[EAX+const]
-    ;
+    " 6A 00" //PUSH 0
+  + " 6A 00" //PUSH 0
+  + " 6A AB" //PUSH emoteConstant
+  + " 6A 1F" //PUSH 1F
+  + " FF"    //CALL EDX or CALL DWORD PTR DS:[EAX+const]
+  ;
 
   for (var i = 1; i < 10; i++) {
     //Step 3b - Get the starting address of the case
-    var offset = exe.Rva2Raw(exe.fetchDWord(refAddr + (i-1)*4));
+    var offset = exe.Rva2Raw(exe.fetchDWord(refAddr + (i - 1)*4));
     
     //Step 3c - Find the first code. Ideally it would be at offset itself unless something changed
     offset = exe.find(code, PTYPE_HEX, false, "", offset);
@@ -76,11 +77,11 @@ function EnableFlagEmotes() {
     //Step 3d - Change the JZ to JMP & Get the JMPed address
     if (exe.fetchByte(offset) === 0x0F) {//Long
       exe.replace(offset, " 90 E9", PTYPE_HEX);
-      offset += exe.fetchDWord(offset+2) + 6;
+      offset += exe.fetchDWord(offset + 2) + 6;
     }
     else {//Short
       exe.replace(offset, " EB", PTYPE_HEX);
-      offset += exe.fetchByte(offset+1) + 2;
+      offset += exe.fetchByte(offset + 1) + 2;
     }
     
     if (consts[i]) {

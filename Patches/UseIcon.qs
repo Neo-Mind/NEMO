@@ -1,25 +1,26 @@
+//###############################################################
+//# Purpose: Helper Function to read the data from an icon file #
+//#          to a useful structure (object)                     #
+//###############################################################
+
 function ReadIconFile(fname) {
-  //////////////////////////////////////////////////////////////
-  // GOAL: Helper Function to read the data from an icon file //
-  //       to a useful structure (object)                     //
-  //////////////////////////////////////////////////////////////
   
-  //Step 1 - Open the icon file 
+  //Step 1a - Open the icon file 
   var fp = new BinFile();
   fp.open(fname);
   
-  //Step 2 - Create a icondir structure/object which will hold all the info & images
+  //Step 1b - Create a icondir structure/object which will hold all the info & images
   var icondir = new Object();
   var pos = 0;
   
-  //Step 3 - Read Header Entries
+  //Step 2a - Read Header Entries
   icondir.idReserved = fp.readHex(pos,2).unpackToInt();
   icondir.idType     = fp.readHex(pos+2,2).unpackToInt();
   icondir.idCount    = fp.readHex(pos+4,2).unpackToInt();
   icondir.idEntries  = [];
   pos += 6;
   
-  //Step 4 - Read all the image entry + data
+  //Step 2b - Read all the image entry + data
   for(var i = 0; i < icondir.idCount; i++) {
     var icondirentry = new Object();
     icondirentry.bWidth        = fp.readHex(pos,1).unpackToInt();
@@ -35,27 +36,29 @@ function ReadIconFile(fname) {
     pos += 16;
   }
   
-  //Step 5 - Close the file
+  //Step 2c - Close the file
   fp.close();
   
-  //Step 6 - Return the structure created
+  //Step 3 - Return the structure created
   return icondir;
 }
 
-// Both patches use similar steps in the beginning. 
-// For custom icon some extra steps are needed obviously
+//==================================================================//
+// UseRagnarokIcon patch is already achieved in UseCustomIcon patch //
+// so we use the true argument to make the patch stop there         //
+//==================================================================//
 
 function UseRagnarokIcon() {
   UseCustomIcon(true);
 }
 
-function UseCustomIcon(nomod) {
-  /////////////////////////////////////////////////////////////////
-  // GOAL: Modify te resources table to use the 8bpp 32x32 icon  //
-  //       present in the client. For Custom Icon patch this     //
-  //       data will be overwritten with data from the icon file //
-  /////////////////////////////////////////////////////////////////
+//###################################################################################
+//# Purpose: Modify Resource Table to use the 8bpp 32x32 icon present in the client # <- UseRagnarokIcon stops here
+//#          and overwrite the icon data with the one from user specified icon file #
+//###################################################################################
 
+function UseCustomIcon(nomod) {
+  
   //Step 1a - Find Resource Table
   var offset = GetDataDirectory(2).offset;
   
@@ -65,7 +68,7 @@ function UseCustomIcon(nomod) {
   //Step 2a - Find the resource dir of RT_GROUP_ICON = 0xE (check the function in core)
   var entry = GetResourceEntry(rsrcTree, [0xE]);
   if (entry === -1)
-    return "Failed in Part 2 - Unable to find icongrp";
+    return "Failed in Step 2 - Unable to find icongrp";
   
   offset = entry.addr + 0x10;
   var id = exe.fetchDWord(offset);
@@ -82,21 +85,23 @@ function UseCustomIcon(nomod) {
   
   if (nomod)
     return true;
-    
-  //---- Use Ragnarok Icon patch stops here ----
+   
+  //============================================//   
+  // Now that icon is enabled lets overwrite it //
+  //============================================//
   
   //Step 4 - Find the RT_GROUP_ICON , 119, 1042 resource entry address
   var entry = GetResourceEntry(rsrcTree, [0xE, 0x77, 0x412]);//RT_GROUP_ICON , 119, 1042  
   switch (entry) {
-    case -2: return "Failed in Part 4 - Unable to find icongrp/lang";
-    case -3: return "Failed in Part 4 - Unable to find icongrp/lang/bundle";
+    case -2: return "Failed in Step 4 - Unable to find icongrp/lang";
+    case -3: return "Failed in Step 4 - Unable to find icongrp/lang/bundle";
   }
   
   var icogrpOff = entry.dataAddr;
   
   //Step 5a - Load the new icon
   var fp = new BinFile();
-  var iconfile = getInputFile(fp, "$inpIconFile", "File Input - Use Custom Icon", "Enter the Icon File", APP_PATH);
+  var iconfile = GetInputFile(fp, "$inpIconFile", "File Input - Use Custom Icon", "Enter the Icon File", APP_PATH);
   if (!iconfile)
     return "Patch Cancelled";
   
@@ -117,8 +122,8 @@ function UseCustomIcon(nomod) {
   var icondirentry = icondir.idEntries[i];
   
   //Step 6 - Find a valid RT_ICON - colorcount = 0, bpp = 8, and ofcourse the id will belong to valid resource
-  var idCount = exe.fetchWord(icogrpOff+4);
-  var pos = icogrpOff+6;
+  var idCount = exe.fetchWord(icogrpOff + 4);
+  var pos = icogrpOff + 6;
   
   for (var i = 0; i < idCount; i++) {
     var memicondirentry = new Object();
@@ -131,7 +136,7 @@ function UseCustomIcon(nomod) {
     memicondirentry.dwBytesInRes = exe.fetchDWord(pos+8);
     memicondirentry.nID          = exe.fetchWord(pos+12);
     
-    if (memicondirentry.bColorCount == 0 && memicondirentry.wBitCount == 8 && memicondirentry.bWidth == 32 && memicondirentry.bWidth == 32) {//8bit image
+    if (memicondirentry.bColorCount == 0 && memicondirentry.wBitCount == 8 && memicondirentry.bWidth == 32 && memicondirentry.bWidth == 32) {//8bpp 32x32 image
       entry = GetResourceEntry(rsrcTree, [0x3, memicondirentry.nID, 0x412]);//returns negative number on fail or ResourceEntry object on success
       if (entry < 0) continue;
       break;
@@ -141,16 +146,16 @@ function UseCustomIcon(nomod) {
   }
   
   if (i === idCount)
-    return "Failed in Part 6 - no suitable icon found in exe";
+    return "Failed in Step 6 - no suitable icon found in exe";
 
   if (memicondirentry.dwBytesInRes < icondirentry.dwBytesInRes)
-    return "Failed in Part 6 - Icon wont fit";//size should be 40 (header) + 256*4 (palette) + 32*32 (xor mask) + 32*32/8 (and mask)
+    return "Failed in Step 6 - Icon wont fit";//size should be 40 (header) + 256*4 (palette) + 32*32 (xor mask) + 32*32/8 (and mask)
 
-  //Step 7 - Update the size in bytes dwBytesInRes and wPlanes as per the uploaded icon
+  //Step 7a - Update the size in bytes dwBytesInRes and wPlanes as per the uploaded icon
   exe.replaceWord(pos - 14 + 4, icondirentry.wPlanes);
   exe.replaceWord(pos - 14 + 8, icondirentry.dwBytesInRes);
 
-  //Step 8 - Finally update the icon image
+  //Step 7b - Finally update the icon image
   exe.replaceDWord(entry.addr + 4, icondirentry.dwBytesInRes);
   exe.replace(entry.dataAddr, icondirentry.iconimage, PTYPE_HEX);
 

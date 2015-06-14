@@ -1,8 +1,9 @@
+//######################################################################
+//# Purpose: Generate Curiosity's Map Effect Plugin for loaded client  #
+//#          using the template DLL (rdll2.asi) along with header file #
+//######################################################################
+
 function GenMapEffectPlugin() {
-  ////////////////////////////////////////////////////////////////////
-  // GOAL: Generate Curiosity's Map Effect Plugin for loaded client //
-  //       using the template DLL - rdll2.asi                       //
-  ////////////////////////////////////////////////////////////////////
   
 	//Step 1 - Open the Template file (making sure it exists before anything else)
   var fp = new BinFile();

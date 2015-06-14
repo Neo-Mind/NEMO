@@ -1,31 +1,38 @@
+//##################################################################
+//# Purpose: Change the JNZ after LangType check in InitMsgStrings #
+//#          function to JMP.                                      #
+//##################################################################
+
 function ReadMsgstringtabledottxt() {
-  //////////////////////////////////////////////////////////////////
-  // GOAL: Convert the conditional jump from LangType check       //
-  //       to regular JMP so as to always load msgStringTable.txt //
-  //       inside "InitMsgStrings" function                       //
-  //////////////////////////////////////////////////////////////////
   
   //Step 1 - Find the comparison which is at the start of the function
   //         Old clients have slightly different pattern <- To Do
-  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceTypes
-  if (LANGTYPE === -1)
-    return "Failed in Part 1 - LangType not found"
+  var LANGTYPE = GetLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceTypes
+  if (LANGTYPE.length === 1)
+    return "Failed in Step 1 - " + LANGTYPE[0];
 
   var code = 
-      " 83 3D " + LANGTYPE +" 00" // CMP DWORD PTR DS:[g_serviceType], 0
-    + " 56"                       // PUSH ESI
-    + " 75 24"                    // JNZ addr -> continue with string loading
-    + " 33 AB"                    // XOR reg32_A, reg32_A
-    + " 33 AB"                    // XOR reg32_B, reg32_B
-    + " 8B FF"                    // MOV EDI, EDI
+    " 83 3D " + LANGTYPE +" 00" // CMP DWORD PTR DS:[g_serviceType], 0
+  + " 56"                       // PUSH ESI
+  + " 75"                       // JNZ SHORT addr -> continue with msgStringTable.txt loading
+  ;
+  var offset = exe.findCode(code, PTYPE_HEX, false);//VC9+ Clients
+  
+  if (offset === -1) {
+    code =
+      " A1" + LANGTYPE //MOV EAX, DWORD PTR DS:[g_serviceType]
+    + " 56"            //PUSH ESI
+    + " 85 C0"         //TEST EAX, EAX
+    + " 75"            //JNZ SHORT addr -> continue with msgStringTable.txt loading
     ;
-
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    offset = exe.findCode(code, PTYPE_HEX, false);//Older Clients
+  }
+  
   if (offset === -1)
-    return "Failed in part 1";
+    return "Failed in Step 1";
   
   //Step 2 - Change JNZ to JMP
-  exe.replace(offset+8, "EB", PTYPE_HEX);
+  exe.replace(offset + code.hexlength() - 1, "EB", PTYPE_HEX);
   
   return true;
 }

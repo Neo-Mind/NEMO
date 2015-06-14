@@ -1,22 +1,25 @@
+//#######################################################################################
+//# Purpose: Change all JZ/JNZ/CMOVNZ after g_readFolderFirst comparison to NOP/JMP/MOV #
+//#          (Also sets g_readFolderFirst to 1 in the process as failsafe).             #
+//#######################################################################################
+
 function ReadDataFolderFirst() {
-  /////////////////////////////////////////////////////
-  // GOAL: Set g_readFolderFirst to 1 always and set //
-  //       conditional jump to regular JMP/NOP       //
-  /////////////////////////////////////////////////////
-  
-  // Step 1 - Find address of "loading" (g_readFolderFirst is assigned just above it)
+
+  //Step 1a - Find address of "loading" (g_readFolderFirst is assigned just above it)
   var offset = exe.findString("loading", RVA);
   if (offset === -1)
-    return "Failed in Part 1";
+    return "Failed in Step 1 - loading not found";
   
-  // Step 2a - Find its reference
+  // Step 1b - Find its reference
   var code = 
-      " 74 07"                    // JZ SHORT addr - skip the below code
-    + " C6 05 AB AB AB AB 01"     // MOV BYTE PTR DS:[g_readFolderFirst], 1
-    + " 68" + offset.packToHex(4) // PUSH offset ; "loading"
+    " 74 07"                    // JZ SHORT addr - skip the below code
+  + " C6 05 AB AB AB AB 01"     // MOV BYTE PTR DS:[g_readFolderFirst], 1
+  + " 68" + offset.packToHex(4) // PUSH offset ; "loading"
+  ;
   
-  var repl = " 90 90";//NOP out JZ
+  var repl = " 90 90";//Change JZ SHORT to NOPs
   var gloc = 4;//relative position from offset2 where g_readFolderFirst is
+  
   var offset2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
   if (offset2 === -1) {
@@ -25,55 +28,58 @@ function ReadDataFolderFirst() {
     + " 88 AB AB AB AB AB"        // MOV BYTE PTR DS:[g_readFolderFirst], reg8_A
     + " 68" + offset.packToHex(4) // PUSH offset ; "loading"
     ;
-    repl = " 90 8B";//change CMOVNZ to MOV
+    
+    repl = " 90 8B";//change CMOVNZ to NOP + MOV
     gloc = 5;
+    
     offset2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");    
   }
   
   if (offset2 === -1)
-    return "Failed in Part 2";
+    return "Failed in Step 1 - loading reference missing";
   
-  //Step 2b - Change conditional instruction to permanent setting (as a safety precaution. we are anyways NOPing out the JZs)
+  //Step 1c - Change conditional instruction to permanent setting - as a failsafe
   exe.replace(offset2, repl, PTYPE_HEX);
   
-  //Client also compares g_readFolderFirst even before reading from folder
-  //so we need to fix that comparison as well.
+  //===================================================================//
+  // Client also compares g_readFolderFirst even before it is assigned //
+  // sometimes hence we also fix up the comparisons.                   //
+  //===================================================================//
   
-  //Step 3a - Extract g_readFolderFirst
+  //Step 2a - Extract g_readFolderFirst
   var gReadFolderFirst = exe.fetchDWord(offset2+gloc, 4);
   
-  //Step 3b - Look for Comparison Pattern 1 - Optional not all clients have it
-  code =
-      " 80 3D" + gReadFolderFirst.packToHex(4) + " 00"  //CMP DWORD PTR DS:[g_readFolderFirst], 0
-    + " AB"                                             //PUSH reg32_A
-    + " B9" + (gReadFolderFirst+4).packToHex(4)         //MOV ECX, addr; g_readFolderFirst+4
-    + " AB"                                             //PUSH reg32_B 
-    + " 74"                                             //JZ SHORT addr2
-    ;
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  //Step 2b - Look for Comparison Pattern 1 - VC9+ Clients
+  var offsets = exe.findCodes(" 80 3D" + gReadFolderFirst.packToHex(4) + " 00"); //CMP DWORD PTR DS:[g_readFolderFirst], 0
   
-  //Step 3c - NOP out the JZ
-  if (offset !== -1)
-    exe.replace(offset + code.hexlength()-1, " 90 90", PTYPE_HEX);
-
-  //Step 3d - Look for Comparison Pattern 2 - This is there in all the clients inside CFile::Open function
-  code =   
-      " 80 3D" + gReadFolderFirst.packToHex(4) + " 00" //CMP DWORD PTR DS:[g_readFolderFirst], 0
-    + " AB"                                            //PUSH reg32_A
-    + " 8B"                                            //MOV reg32_A, DWORD PTR SS:[ARG.1]
-    ;
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  if (offsets !== -1) {
+    for (var i = 0; i < offsets.length; i++) {
+      //Step 2c - Find the JZ SHORT below each Comparison
+      offset = exe.find(" 74 AB E8", PTYPE_HEX, true, "\xAB", offsets[i] + 0x7, offsets[i] + 0x20);//JZ SHORT addr followed by a CALL
+      if (offset === -1)
+        return "Failed in Step 2 - Iteration No." + i;
+      
+      //Step 2d - NOP out the JZ
+      exe.replace(offset, " 90 90", PTYPE_HEX);
+    }
+    
+    return true;
+  }
   
-  if (offset === -1)
-    return "Failed in Part 3 - Comparison not found";
+  //Step 3a - Look for Comparison Pattern 2 - Older clients
+  offsets = exe.findCodes(" A0" + gReadFolderFirst.packToHex(4)); //MOV AL, DWORD PTR DS:[g_readFolderFirst]
+  if (offsets === -1)
+    return "Failed in Step 3 - No Comparisons found";
   
-  //Step 3e - Find the JZ below it - position sometimes changes from client to client 
-  offset = exe.find(" 74 AB E8", PTYPE_HEX, true, "\xAB", offset+0x10, offset+0x20);
-  if (offset === -1)
-    return "Failed in Part 3 - JZ not found";
-  
-  //Step 3f - NOP out the JZ
-  exe.replace(offset, " 90 90", PTYPE_HEX);
+  for (var i = 0; i < offsets.length; i++) {
+    //Step 4b - Find the JZ below each Comparison
+    offset = exe.find(" 0F 84 AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 0x5, offsets[i] + 0x20);//JZ addr
+    if (offset === -1)
+      return "Failed in Step 3 - Iteration No." + i;
+    
+    //Step 4c - Replace with 6 NOPs
+    exe.replace(offset, " 90 90 90 90 90 90", PTYPE_HEX);
+  }
   
   return true;
 }

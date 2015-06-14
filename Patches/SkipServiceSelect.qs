@@ -1,19 +1,20 @@
-function SkipServiceSelect() {
-  /////////////////////////////////////////////
-  // GOAL: Set g_hideAccountList always to 1 //
-  /////////////////////////////////////////////
+//##############################################
+//# Purpose: Set g_hideAccountList always to 1 #
+//##############################################
 
+function SkipServiceSelect() {
+  
   //Step 1 - Find address of "passwordencrypt" (g_hideAccountList is assigned just above it)
   var offset = exe.findString("passwordencrypt", RVA);
   if (offset === -1)
-    return "Failed in Part 1";
+    return "Failed in Step 1";
   
   //Step 2a - Find its reference
   var code = 
-      " 74 07"                    // JZ SHORT addr - skip the below code
-    + " C6 05 AB AB AB AB 01"     // MOV BYTE PTR DS:[g_hideAccountList], 1
-    + " 68" + offset.packToHex(4) // PUSH offset ; "passwordencrypt"
-    ;
+    " 74 07"                    // JZ SHORT addr - skip the below code
+  + " C6 05 AB AB AB AB 01"     // MOV BYTE PTR DS:[g_hideAccountList], 1
+  + " 68" + offset.packToHex(4) // PUSH offset ; "passwordencrypt"
+  ;
   var repl = " 90 90";//NOP out JZ
   var offset2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
@@ -28,7 +29,7 @@ function SkipServiceSelect() {
   }
   
   if (offset2 === -1)
-    return "Failed in Part 2";
+    return "Failed in Step 2";
   
   //Step 2b - Change conditional instruction to permanent setting
   exe.replace(offset2, repl, PTYPE_HEX);

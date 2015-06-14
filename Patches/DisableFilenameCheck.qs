@@ -1,58 +1,32 @@
+//#######################################################################
+//# Purpose: Change the JNZ inside WinMain (or function called from it) #
+//#          to JMP which will skip showing the "Invalid Exe" Message   #
+//#######################################################################
+
 function DisableFilenameCheck() {
-  //////////////////////////////////////////////////////////////////////
-  // GOAL: Find the LangType comparison before Exe name check //
-  //       and change the conditional jump to Regular JMP to skip it. //
-  //////////////////////////////////////////////////////////////////////
   
-  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  // To Do: Old client doesnt have a seperate function for checking.
-  //        its directly there in WinMain. Need to find which client
-  //        date it changed.
-  //;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
-  //Step 1a - Construct the comparison code parts
-  var LANGTYPE = getLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
-  if (LANGTYPE === -1)
-    return "Failed in Part 1 - LangType not Found";
-    
-  var codeA = " E8 AB AB AB FF"; // CALL CSession::Create
-  
-  var codeB1 = " 39 AB" + LANGTYPE; // CMP DWORD PTR DS:[g_ServiceType], reg32
-  
-  var codeB2 = " 83 3D" + LANGTYPE + " 00"; // CMP DWORD PTR DS:[g_ServiceType], 0
-
-  var codeC =
-      " 75 AB"            // JNZ SHORT addr1
-    + " E8 AB AB FF FF"   // CALL addr2 -> exe Name Check
-    + " 84 C0"            // TEST AL, AL
-    ;
-
-  var jmpPos = 11;
-  
-  //Step 1b - Find the comparison - old pattern
-  var offset = exe.findCode(codeA + codeB1 + codeC, PTYPE_HEX, true, "\xAB");
-  
-  //Step 1c - If it fails, Find the comparison - new pattern (1 XOR instruction in between)
-  if (offset === -1) {  
-    offset = exe.findCode(codeA + " AB AB" + codeB1 + codeC, PTYPE_HEX, true, "\xAB");
-    jmpPos += 2;
-  }
+  //Step 1 - Find the Comparison pattern
+  var code = 
+    " 84 C0"          //TEST AL, AL
+  + " 74 07"          //JZ SHORT addr1
+  + " E8 AB AB FF FF" //CALL SearchProcessIn9X
+  + " EB 05"          //JMP SHORT addr2
+  + " E8 AB AB FF FF" //CALL SearchProcessInNT <= addr1
+  + " 84 C0"          //TEST AL, AL <= addr2
+  + " 75"             //JNZ addr3
+  ;
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
   if (offset === -1) {
-    offset = exe.findCode(codeA + codeB2 + codeC, PTYPE_HEX, true, "\xAB");
-    jmpPos = 11;
-  }
-  
-  if (offset === -1) {
-    offset = exe.findCode(codeA + " AB AB" + codeB2 + codeC, PTYPE_HEX, true, "\xAB");
-    jmpPos += 2;
+    code = code.replace("74 07", "74 0C").replace("EB 05", "EB 0A BE 01 00 00 00");//insert MOV ESI, 1 after the JMP and update addr1 & addr2
+    exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   
   if (offset === -1)
-    return "Failed in Part 1 - Pattern not found";
-  
+    return "Failed in Step 1";
+
   //Step 2 - Replace JNZ/JNE to JMP
-  exe.replace(offset + jmpPos, "EB", PTYPE_HEX);
+  exe.replace(offset + code.hexlength() - 1, "EB", PTYPE_HEX);
   
   return true;
 }

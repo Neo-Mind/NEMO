@@ -1,56 +1,60 @@
-function RemoveHourlyAnnounce() {
-  /////////////////////////////////////////////////////
-  // GOAL: Remove Hourly Game Grade and Play Time    //
-  //       Announcements by ignoring the comparisons //
-  //       inside CRenderer::DrawAgeRate function    //
-  /////////////////////////////////////////////////////
+//###################################################################
+//# Purpose: Change the JNE and JLE to JMP after Hourly Comparisons #
+//#          inside CRenderer::DrawAgeRate & PlayTime functions     #
+//###################################################################
 
-  // To do  - Find out which date onwards Play Time announcement started
+function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 clients
   
-  // Step 1a - Find the comparison for Game Grade
-  var code =
-      " 75 AB"       //JNZ SHORT addr1
-    + " 66 8B 45 AB" //MOV AX, WORD PTR SS:[LOCAL.x]
-    + " 66 85 C0"    //TEST AX, AX
-    + " 75"          //JNZ SHORT addr2
-    ;  
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  //Step 1a - Find the comparison for Game Grade
+  var code = 
+    " 75 AB"    //JNE SHORT addr1
+    " MovAx"    //Frame Pointer Specific MOV
+  + " 66 85 C0" //TEST AX, AX
+  + " 75"       //JNE SHORT addr2
+  ;
+  
+  var fpEnb = HasFramePointer();
+  if (fpEnb)
+    code = code.replace(" MovAx", " 66 8B 45 AB"); //MOV AX, WORD PTR SS:[EBP-x]
+  else
+    code = code.replace(" MovAx", " 66 8B 44 24 AB"); //MOV AX, WORD PTR SS:[ESP+x]
+  
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//VC9+ Clients
   
   if (offset === -1) {
-    code = code.replace(" 8B 45", " 8B 44 24");//change EBP-x to ESP+y
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    code = code.replace(" 66", "");//Change MOV AX to MOV EAX and thereby WORD PTR becomes DWORD PTR
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//Older clients and some new clients
   }
   
-  if (offset === -1) {
-    code = code.replace(" 66", "");//change the AX to EAX and WORD PTR to DWORD PTR in the MOV statement
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  }
-  
-  if (offset === -1) 
-    return "Failed in part 1";
+  if (offset === -1)
+    return "Failed in Step 1";
 
-  // Step 2 - Change JNZ to JMP
+  //Step 1b - Change JNE to JMP
   exe.replace(offset, "EB", PTYPE_HEX);
 
-  // Step 3a - Find Time divider before the PlayTime Reminder comparison. Not there in old clients 
+  //Step 2a - Find Time divider before the PlayTime Reminder comparison
   code =  
-      " B8 B1 7C 21 95" // MOV EAX, 95217CB1
-    + " F7 E1"          // MUL ECX
-    ;
+    " B8 B1 7C 21 95" // MOV EAX, 95217CB1
+  + " F7 E1"          // MUL ECX
+  ;
     
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  if (offset === -1)
-    return "Failed in part 3 - Magic Number not found";
-
-  // Step 3b - Find the JLE after it (below the TEST/CMP instruction) 
-  code = " 0F 8E AB AB 00 00" //JLE SHORT addr
+  var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
+  if (offsets.length === 0)
+    return "Failed in Step 2 - Magic Divisor not found";
   
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset+7, offset+30);
-  if (offset === -1)
-    return "Failed in Part 3 - Comparison not found";
+  for (var i = 0; i < offsets.length; i++) {
+    //Step 2b - Find the JLE after each (below the TEST/CMP instruction) 
+    offset = exe.find(" 0F 8E AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 7, offsets[i] + 30);//JLE addr
     
-  // Step 4 - Change JLE to JMP
-  exe.replace(offset, " 90 E9", PTYPE_HEX);
+    if (offset === -1)
+      offset = exe.find(" 0F 85 AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 7, offsets[i] + 30);//JNE addr
+    
+    if (offset === -1)
+      return "Failed in Step 2 - Iteration No." + i;
+    
+    //Step 2c - Change to NOP + JMP
+    exe.replace(offset, " 90 E9", PTYPE_HEX);
+  }
   
   return true;
 }

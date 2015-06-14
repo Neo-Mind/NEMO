@@ -1,13 +1,9 @@
-﻿function GenPktExtractDLL() {
-  ////////////////////////////////////////////////////////////////
-  // GOAL: Generate Packet Length Extract DLL for loaded client //
-  //       using the template DLL - ws2_pe.dll . Also extracts  //
-  //       Packet Keys for new clients.                         //
-  ////////////////////////////////////////////////////////////////
-  
-  //How to use - client in hex editor and replace all occurances of ws2_32 to ws2_pe
-  //             copy the generated dll to Client area and rename it to ws2_pe.dll
-  //             Run the client. It will Extract the packets and auto-close.
+﻿//##########################################################################################
+//# Purpose: Generate Packet Length Extractor DLL for loaded client using the template DLL #
+//#          (ws2_pe.dll). Along with the Packet Keys for new clients                      #
+//##########################################################################################
+
+function GenPktExtractDLL() {//Planning to shift this into PEEK instead of here
   
   //To Do - Really Old clients have some variations in some of the patterns
 
@@ -186,3 +182,9 @@
   
   return "DLL has been generated - Dont forget to rename it.";
 }
+
+//==================================================================================//
+// How to use - client in hex editor and replace all occurances of ws2_32 to ws2_pe //
+//              copy the generated dll to Client area and rename it to ws2_pe.dll   //
+//              Run the client. It will Extract the packets and auto-close.         //
+//==================================================================================//

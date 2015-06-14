@@ -1,40 +1,46 @@
+//##############################################################
+//# Purpose: Create a new import table containing the existing #
+//#          table and the specified DLL + functions.          #
+//##############################################################
+
+delete Import_Info;//Removing any stray values before Patches are selected
+
 function UseCustomDLL() {
-  /////////////////////////////////////////////////////////////
-  // GOAL: Create a new import table containing the existing //
-  //       table and the specified DLL + functions.          //
-  /////////////////////////////////////////////////////////////
   
-  //Step 1a - Check if "Disable HShield" patch is on
+  //Step 1a - Flag for "Disable HShield" patch is ON
   var hasHShield = (exe.getActivePatches().indexOf(15) !== -1);
   
-  //Step 1b - If it is on, find the aossdk import entry
-  if (hasHShield) {
-    var aOffset = exe.findString("aossdk.dll", RAW);
-    if (aOffset !== -1)
-      aOffset = " 00".repeat(8) + (exe.Raw2Rva(aOffset) - exe.getImageBase()).packToHex(4);
-  }
-  
-  //Step 1c - Get the current import table
+  //Step 1b - Get the current import table
   var dir = GetDataDirectory(1);
   
   //Step 1d - Loop through the table and extract to dirData. 
-  //          if HShield patch is enabled then skip aossdk entry when extracting
+  //          if HShield patch is enabled then skip aossdk entry will be skipped then extracting
   var finalValue = " 00".repeat(20);
+  var curValue;
+  var lastDLL = "";
   var dirData = "";
-  
   var offset = dir.offset;
-  var curValue = exe.fetchHex(offset,20);
-  do {
-    offset += 20;
-    if (!hasHShield || curValue.indexOf(aOffset) !== 3*4)
-      dirData = dirData + curValue;
-
-    curValue = exe.fetchHex(offset,20);
-  } while(curValue != finalValue);
   
+  for ( ; (curValue = exe.fetchHex(offset, 20)) !== finalValue; offset += 20) {
+    
+    //Step 1e - Get the DLL Name for the import entry
+    var offset2 = exe.Rva2Raw(exe.fetchDWord(offset + 12) + exe.getImageBase());
+    var offset3 = exe.find("00", PTYPE_HEX, false, "", offset2);
+    var curDLL = exe.fetch(offset2, offset3 - offset2);
+    
+    //Step 1f - Make sure there is no duplicate
+    if (curDLL === lastDLL) continue;
+    
+    //Step 1g - Skip aossdk if HShield is Disabled
+    if (hasHShield && curDLL === "aossdk.dll") continue;
+    
+    dirData += curValue;
+    lastDLL = curDLL;
+  }
+    
   //Step 2a - Get the list file containing the dlls and functions to add
   var fp = new TextFile();
-  if (!getInputFile(fp, "$customDLL", "File Input - Use Custom DLL", "Enter the DLL info file", APP_PATH + "/Input/dlls.txt"))
+  if (!GetInputFile(fp, "$customDLL", "File Input - Use Custom DLL", "Enter the DLL info file", APP_PATH + "/Input/dlls.txt"))
     return "Patch Cancelled";
   
   //Step 2b - Read the file and store the dll names and function names into arrays
@@ -87,6 +93,8 @@ function UseCustomDLL() {
 
   //Step 3b - Allocate space for the above and below
   var free = exe.findZeros(strSize + dirSize);
+  if (free === -1)
+    return "Failed in Step 3 - Not enough free space";
 
   //Step 3c - Construct the new Import table
   var baseAddr = exe.Raw2Rva(free) - exe.getImageBase();
@@ -117,12 +125,25 @@ function UseCustomDLL() {
   exe.replaceDWord(PEoffset + 0x18 + 0x60 + 0xC, dirTableData.hexlength() - 20);
 
   //Step 4 - Hint for HShield Patch to not conflict with this one.
-  Imp_DATA = {"offset":free, 
-              "valuePre":strData + dirEntryData,
-              "valueSuf":dirTableData,
-              "tblAddr":baseAddr + strSize + dirEntryData.hexlength(),
-              "tblSize":dirTableData.hexlength() - 20
-            };
+  Import_Info = {
+    "offset":free, 
+    "valuePre":strData + dirEntryData,
+    "valueSuf":dirTableData,
+    "tblAddr":baseAddr + strSize + dirEntryData.hexlength(),
+    "tblSize":dirTableData.hexlength() - 20
+  };
 
   return true;
+}
+
+//######################################################################
+//# Purpose: Rerun the DisableHShield function if the HShield patch is #
+//#          selected so that it doesnt accomodate for Custom DLL      #
+//######################################################################
+function _UseCustomDLL() {
+  if (exe.getActivePatches().indexOf(15) !== -1) {
+    exe.setCurrentPatch(15);
+    exe.emptyPatch(15);
+    DisableHShield();
+  }
 }

@@ -1,8 +1,8 @@
+//#######################################################################################
+//# Purpose: Dump the Entire Import Table Hierarchy in the loaded client to a text file #
+//#######################################################################################
+
 function DumpImportTable() {
-  ////////////////////////////////////////////////////////////////////////
-  // GOAL: Dump the Import Table (Full Hierarchy) for the loaded client //
-  //       to a text file                                               //
-  ////////////////////////////////////////////////////////////////////////
   
   //Step 1a - Get the Import Data Directory Offset
   var offset = GetDataDirectory(1).offset;
@@ -13,7 +13,7 @@ function DumpImportTable() {
     throw "Error: Unable to create text file in Output folder";
   
   //Step 2a - Write the import address to file
-  fp.writeline("IMPORT TABLE (RAW) = 0x" + convertToBE(offset));
+  fp.writeline("IMPORT TABLE (RAW) = 0x" + offset.toBE());
   
   for ( ;true; offset += 20) {
     //Step 2b - Iterate through each IMAGE_IMPORT_DESCRIPTOR 
@@ -30,11 +30,11 @@ function DumpImportTable() {
     dllName = exe.Rva2Raw(dllName + exe.getImageBase());
     var offset2 = exe.find("00", PTYPE_HEX, false, "", dllName);
     
-    fp.writeline( "Lookup Table = 0x" + convertToBE(ilt)
+    fp.writeline( "Lookup Table = 0x" + ilt.toBE()
                 + ", TimeStamp = " + ts 
                 + ", Forwarder = " + fchain 
                 + ", Name = " + exe.fetch(dllName, offset2 - dllName) 
-                + ", Import Address Table = 0x" + convertToBE(iatRva+exe.getImageBase())
+                + ", Import Address Table = 0x" + (iatRva+exe.getImageBase()).toBE()
                 );
       
     //Step 2e - Get the Raw offset of First Thunk                
@@ -53,16 +53,16 @@ function DumpImportTable() {
         funcData = funcData & 0x7FFFFFFF;//Address pointing to IMAGE_IMPORT_BY_NAME struct (First 2 bytes is Hint, remaining is the Function Name)
         var offset3 = exe.Rva2Raw(funcData + exe.getImageBase());
         var offset4 = exe.find("00", PTYPE_HEX, false, "", offset3+2);
-        fp.writeline( "  Thunk Address (RVA) = 0x" + convertToBE(exe.Raw2Rva(offset2))
-                    + ", Thunk Address(RAW) = 0x" + convertToBE(offset2)
+        fp.writeline( "  Thunk Address (RVA) = 0x" + exe.Raw2Rva(offset2).toBE()
+                    + ", Thunk Address(RAW) = 0x" + offset2.toBE()
                     + ", Function Hint = 0x" + exe.fetchHex(offset3, 2).replace(/ /g, "")
                     + ", Function Name = " + exe.fetch(offset3+2, offset4 - (offset3+2))
                     );            
       }
       else {
         funcData = funcData & 0xFFFF;
-        fp.writeline( "  Thunk Address (RVA) = 0x" + convertToBE(exe.Raw2Rva(offset2))
-                    + ", Thunk Address(RAW) = 0x" + convertToBE(offset2)
+        fp.writeline( "  Thunk Address (RVA) = 0x" + exe.Raw2Rva(offset2).toBE()
+                    + ", Thunk Address(RAW) = 0x" + offset2.toBE()
                     + ", Function Ordinal = " + funcData
                     );
       }

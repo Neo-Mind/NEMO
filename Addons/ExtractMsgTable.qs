@@ -1,8 +1,9 @@
+//######################################################################
+//# Purpose: Extract the Hardcoded Msgstringtable in the loaded client #
+//#          translated using the reference tables                     #
+//######################################################################
+
 function ExtractMsgTable() {
-  //////////////////////////////////////////////////////////////////
-  // GOAL: Extract the Hardcoded Msgstringtable inside the client //
-  //       translated using the reference tables                  //
-  //////////////////////////////////////////////////////////////////
   
   //Step 1a - Find offset of msgStringTable.txt
 	var offset = exe.findString("msgStringTable.txt", RVA);

@@ -1,92 +1,118 @@
-function EnableCustomHomunculus() {
-  ////////////////////////////////////////////////////////////
-  // GOAL: Modify the Hardcoded reading of Homunculus names //
-  //       with ReqJobName lua function call in a loop for  //
-  //       the homunculus id range                          //
-  ////////////////////////////////////////////////////////////
-  var max = 7000;
+//###################################################################
+//# Purpose: Change the Hardcoded table loading of Homunculus names #
+//#          to Lua based loading using 'ReqJobName' function.      #
+//###################################################################
+
+MaxHomun = 7000;
+function EnableCustomHomunculus() {//Work In Progress
     
-  //Step 1a - Find the homunculus reader code.
-  var code =
-      " 47"                // INC EDI
-    + " 83 C4 2C"          // ADD ESP,2C
-    + " 81 FF AB AB 00 00" // CMP EDI, const ; Max Value
-    + " 7C AB"             // JL SHORT addr; loop
-    + " 8B"                // MOV E*X, <expression>
-    ;
- 
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  //Step 1a - Find offset of LIF
+  var offset = exe.findString("LIF", RVA);
   if (offset === -1)
+    return "Failed in Step 1 - LIF not found";
+  
+  //Step 1b - Find its reference - This is where all the homunuculus names are loaded into the table.
+  var code = " C7 AB C4 5D 00 00" + offset.packToHex(4); //MOV DWORD PTR DS:[reg32_A+5DC4], OFFSET addr; ASCII "LIF" 
+  
+  var hookLoc = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  if (hookLoc === -1)
     return "Failed in Step 1 - homun code not found";
   
-  var insLoc = offset + 12;
-    
-  //Step 1b - Find location to jmp to after reading from lua (to skip hardcoded reading)
-  code =
-      " 8B 8E AB AB 00 00" // MOV ECX, DWORD PTR DS:[ESI+const1]
-    + " 8B 96 AB AB 00 00" // MOV EDX, DWORD PTR DS:[ESI+const2]
-    ;
-    
-  var jmpLoc = exe.find(code, PTYPE_HEX, true, "\xAB", insLoc);
-  if (jmpLoc === -1)
-    return "Failed in Step 1 - endpoint not found";
+  //Step 1c - Get the Langtype address
+  var LANGTYPE = GetLangType();
+  if (LANGTYPE.length === 1)
+    return "Failed in Step 1 - " + LANGTYPE[0];
   
-  //Step 1c - Replace with NOP before jmp location
-  exe.replace(jmpLoc-6, " 90 90 90 90 90 90", PTYPE_HEX);
+  //Step 2a - Extract reference Register, reference Offset and current Register from the instruction before hookLoc
+  //          MOV curReg, DWORD PTR DS:[refReg + refOff]
   
-  //Step 2a - Find offset of ReqJobName
+  if (exe.fetchByte(hookLoc - 2) === 0) {//refOff != 0
+    var modrm = exe.fetchByte(hookLoc - 5);
+    var refOff = exe.fetchDWord(hookLoc - 4);
+  }
+  else {//refOff = 0
+    var modrm = exe.fetchByte(hookLoc - 1);
+    var refOff = 0;
+  }
+  var refReg = modrm & 0x7;
+  var curReg = (modrm & 0x38) >> 3;
+  
+  //Step 2b - Find Location after the Table assignments which is the location to jump to after lua based loading
+  //          Also extract all non-table related instuctions in between
+  var details = FetchTillEnd(hookLoc + code.hexlength(), refReg, refOff, LANGTYPE, CheckHomunEoT);
+  
+  //Step 2c - Find offset of ReqJobName
   //Get the current lua caller code for Job Name i.e. ReqJobName calls
   offset = exe.findString("ReqJobName", RVA);
   if (offset === -1)
     return "Failed in Step 2 - ReqJobName not found";
   
-  //Step 2b - Find the last reference - Since offset is moved to ECX here
-  var offsets = exe.findCodes(" 68" + offset.packToHex(4), PTYPE_HEX, false);
-  if (!offsets[0])
-    return "Failed in Step 2 - ReqJobName reference missing";
-  
-  offset = offsets[offsets.length-1];
-  
-  //Step 3a - Get the current JobName code and make modifications to call locations.
-  if(exe.getClientDate() > 20130605) {
-    code = exe.fetchHex(offset - 36, 83);
-    
-    var fn = exe.fetchDWord(offset - 36 + (83 - 38) ) - 88;
-    code =  code.replaceAt(3*(83 - 38), fn.packToHex(4));
-    
-    fn = exe.fetchDWord(offset - 36 + (83 - 16) ) - 88;
-    code =  code.replaceAt(3*(83 - 16), fn.packToHex(4));
-    
-    jmpLoc -= 9;
-  }
-  else {
-    code = exe.fetchHex(offset - 25, 68);
-    
-    var fn = exe.fetchDWord(offset - 25 + (68 - 16) ) - 73;
-    code =  code.replaceAt(3*(68 - 16), fn.packToHex(4));
-  }
-  
-  code = code.replaceAt(-6*3, (max+1).packToHex(4));
-  
-  //Step 3b - Complete lua caller code    
-  code =  " BF 71 17 00 00" + code; //MOV EDI, 1771
-  code += " E9" + (jmpLoc - (insLoc + code.hexlength() + 5)).packToHex(4);
-  
-  //Step 4 - Replace with lua caller
-  exe.replace(insLoc, code, PTYPE_HEX);
-  
-  //Step 5a - Find the homun limiter code for right click menu.
+  //Step 3a - Construct the code to replace with
   code =
-      " 05 8F E8 FF FF" //SUB EAX, 1771
-    + " B9 33 00 00 00" //MOV ECX, 33
-    ;
+    (0x50 + curReg).packToHex(1)  //PUSH curReg
+  + " 60"                         //PUSHAD
+  + " BF 71 17 00 00"             //MOV EDI, 1771
+  + " BB" + MaxHomun.packToHex(4) //MOV EBX, MaxHomun
+  ;
+  var csize = code.hexlength();
+  
+  code += GenLuaCaller(hookLoc + csize, "RegJobName", offset, "d>s", " 57");
+  
+  code += 
+    " 8A 08"          //MOV CL, BYTE PTR DS:[EAX]
+  + " 84 C9"          //TEST CL, CL
+  + " 74 07"          //JE SHORT addr
+  + " 8B 4C 24 20"    //MOV ECX, DWORD PTR SS:[ESP+20]
+  + " 89 04 B9"       //MOV DWORD PTR DS:[EDI*4+ECX], EAX
+  + " 47"             //INC EDI; addr
+  + " 39 DF"          //CMP EDI,EBX
+  + " 7E"             //JLE SHORT addr2; to start of GenLuaCaller code
+  ;
+  
+  code += (csize - (code.hexlength() + 1)).packToHex(1);
+  
+  code += 
+    " 61"       //POPAD
+  + " 83 C4 04" //ADD ESP, 4
+  + details.code
+  ;
+  
+  code += " E9" + (details.endOff - (hookLoc + code.hexlength() + 5)).packToHex(4);
+  
+  //Step 3b - Replace at hookLoc
+  exe.replace(hookLoc, code, PTYPE_HEX);
+  
+  //Step 4a - Find the homun limiter code for right click menu.
+  code =
+    " 05 8F E8 FF FF" //SUB EAX, 1771
+  + " B9 33 00 00 00" //MOV ECX, 33
+  ;
   
   offset = exe.findCode(code, PTYPE_HEX, false);
   if (offset === -1)
-    return "Failed in Step 5";
+    return "Failed in Step 4";
   
   //Step 5b - Replace the 33 with our maximum difference
-  exe.replace(offset+6, (max - 6001).packToHex(4), PTYPE_HEX);
+  exe.replace(offset + 6, (MaxHomun - 6001).packToHex(4), PTYPE_HEX);
   
   return true;
+}
+
+//###############################################################################
+//# Purpose: Check whether End of Homunculus Table assignments has been reached #
+//#          at the supplied offset. Used as argument to FetchTillEnd           #
+//###############################################################################
+
+function CheckHomunEoT(opcode, modrm, offset) {
+  //SUB reg32_A, reg32_B
+  //SAR reg32_A, 2
+  if (opcode === 0x2B && exe.fetchUByte(offset + 2) === 0xC1 && exe.fetchUByte(offset + 4) === 0x02 )
+    return true;
+  
+  //TEST reg32_A, reg32_A
+  //JZ SHORT addr
+  if (opcode === 0x85 && exe.fetchUByte(offset + 2) === 0x74)
+    return true;
+  
+  return false;
 }

@@ -1269,4 +1269,38 @@ M: Navigation Interface
 F: B3 BB BA F1 B0 D4 C0 CC BC C7 20 B5 B5 C5 B7 20 C7 D8 C1 A6
 R: 'Navigation Interface'
 
+----------------------------------
+M: Minimap Show Location
+----------------------------------
+F: C0 A7 C4 A1 C7 A5 BD C3
+R: 'Show Loc'
 
+----------------------------------
+M: Minimap Zoom In
+----------------------------------
+F: C8 AE B4 EB 00
+R: 'Zoom+'
+
+----------------------------------
+M: Minimap Zoom Out
+----------------------------------
+F: C3 E0 BC D2 00
+R: 'Zoom-'
+
+----------------------
+M: Minimap Show Map
+----------------------
+F: B8 CA BA B8 B1 E2
+R: 'Maximz'
+
+----------------------
+M: Minimap World View
+----------------------
+F: BF F9 B5 E5 BA B8 B1 E2 00
+R: 'WorldView'
+
+--------------------------
+M: Total Cash in Cash Shop
+--------------------------
+F: 54 6F 74 61 6C 20 3A 20 25 64 20 C4 B3 BD C3
+R: 'Total : %d Cash'
