@@ -54,7 +54,6 @@ function ReadDataFolderFirst() {
   
   if (offsets.length !== 0) {
     for (var i = 0; i < offsets.length; i++) {
-      debugValue(exe.Raw2Rva(offsets[i]).toBE());
       //Step 2c - Find the JZ SHORT below each Comparison
       offset = exe.find(" 74 AB E8", PTYPE_HEX, true, "\xAB", offsets[i] + 0x7, offsets[i] + 0x20);//JZ SHORT addr followed by a CALL
       if (offset === -1)
@@ -73,7 +72,6 @@ function ReadDataFolderFirst() {
     return "Failed in Step 3 - No Comparisons found";
   
   for (var i = 0; i < offsets.length; i++) {
-    debugValue(exe.Raw2Rva(offsets[i]).toBE());
     //Step 4b - Find the JZ below each Comparison
     offset = exe.find(" 0F 84 AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 0x5, offsets[i] + 0x20);//JZ addr
     if (offset === -1)
