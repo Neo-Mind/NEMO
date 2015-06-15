@@ -16,17 +16,18 @@ function UseOfficialClothPalette() {
   
   //Step 1c - Find its references
   var offsets = exe.findCodes(" C7 AB 0C" + offset.packToHex(4), PTYPE_HEX, true, "\xAB");
-  if (offsets.length < 2 || offsets.length > 3)
-    return "Failed in Step 1 - Prefix reference missing or extra";
   
   if (offsets.length === 2) {//For Pre-VC9 client
-    offset = exe.findCode(" C7 AB" + offset.packToHex(4) + " E8", PTYPE_HEX, true, "\xAB");
+    offset = exe.findCode(" C7 00" + offset.packToHex(4) + " E8", PTYPE_HEX, false);
     if (offset === -1)
       return "Failed in Step 1 - Prefix reference missing";
+    offsets[2] = offset;
   }
-  else {
-    offset = offsets[2];
-  }
+  
+  if (offsets.length !== 3)
+    return "Failed in Step 1 - Prefix reference missing or extra";
+  
+  offset = offsets[2];
   
   //Step 2a - Find the JNE after offset
   offset = exe.find(" 0F 85 AB AB 00 00", PTYPE_HEX, true, "\xAB", offset + 0x7, offset + 0x200);// JNE addr

@@ -421,15 +421,20 @@ function ResourceFile(rsrcAddr, addrOffset, id) {
 //#          Currently used for Custom Jobs and Custom Homunculus Patches            #
 //####################################################################################
 
-function FetchTillEnd(offset, refReg, refOff, langType, endFunc) {
+function FetchTillEnd(offset, refReg, refOff, tgtReg, langType, endFunc, assigner) {
 
   var done = false;
-  var tgtReg = -1;
   var extract = "";
+  var regAssigns = ["", "", "", "", "", "", "", ""];
+  
   //var codes = "";//for debug
   
   if (typeof(langType) === "string") {
     langType = langType.unpackToInt();
+  }
+  
+  if (typeof(assigner) === "undefined") {
+    assigner = -1;
   }
   
   while (!done) {//only exits at the end of initializations
@@ -442,7 +447,7 @@ function FetchTillEnd(offset, refReg, refOff, langType, endFunc) {
     var details = _GetOpDetails(opcode, modrm, offset);//contains length of instruction, distance to next offset, optional destination operand, optional source operand. Usually index 0 and 1 are same
     
     //Step 1c - Now see if any of the end patterns match this opcode.
-    done = endFunc(opcode, modrm, offset);
+    done = endFunc(opcode, modrm, offset, details, assigner);
     if (done) 
       continue;
     
@@ -468,16 +473,36 @@ function FetchTillEnd(offset, refReg, refOff, langType, endFunc) {
       
       case 0xC7:  //MOV DWORD PTR DS:[reg32_A + const], OFFSET addr
       case 0x89: {//MOV DWORD PTR DS:[reg32_A + const], reg32_C
-        if (tgtReg !== -1 && details.rm === tgtReg && (details.mode === 1 || details.mode === 2)) {
+        if (tgtReg !== -1 && details.rm === tgtReg && (details.mode !== 3)) {
           tgtReg = -1;
           skip = true;
         }
         
+        if (skip && regAssigns[details.ro] !== "" && opcode === 0x89) {//Remove unnecessary assignments to registers
+          extract = extract.replace(regAssigns[details.ro], "");
+          regAssigns[details.ro] = "";
+        }
+          
+        break;
+      }
+      
+      case 0xB8:
+      case 0xB9:
+      case 0xBA:
+      case 0xBB:
+      case 0xBC:
+      case 0xBD:
+      case 0xBE:
+      case 0xBF: {//MOV reg32, OFFSET addr; No need to skip but do save for comparison later
+        regAssigns[opcode - 0xB8] = exe.fetchHex(offset, details.codesize);
         break;
       }
       
       case 0x0F: {//Conditional JMP
         skip = (modrm >= 0x80 && modrm <= 0x8F);
+        if (skip)
+          details.nextOff += details.tgtImm;
+
         break;
       }
       
@@ -500,6 +525,7 @@ function FetchTillEnd(offset, refReg, refOff, langType, endFunc) {
       case 0x7E:
       case 0x7F: {//JMP & all SHORT jumps
         skip = true;
+        details.nextOff += details.tgtImm;
         break;
       }
       
@@ -512,6 +538,40 @@ function FetchTillEnd(offset, refReg, refOff, langType, endFunc) {
         skip = (details.mode === 0 && details.rm === 5 && details.tgtImm === langType);
         break;
       }
+      
+      case 0x6A:  //PUSH byte
+      case 0x68: {//PUSH dword
+        if (assigner === -1)
+          break;
+        
+        //skip if its an argument to a CALL assigner
+        //PUSH arg
+        //MOV ECX, ESI
+        //MOV DWORD PTR DS:[EAX], OFFSET; for previous (optional)
+        //CALL assigner
+        var offset2 = details.nextOff + 7;
+        
+        if (exe.fetchUByte(details.nextOff + 2) === 0xC7)
+          offset2 += 6;
+        
+        skip = (exe.fetchUByte(offset2 - 5) === 0xE8 && exe.fetchDWord(offset2 - 4) === (assigner - offset2));
+        if (skip) {
+          details.nextOff = offset2;
+          tgtReg = 0;//EAX
+        }
+        break;
+      }
+      
+      case 0xE8: {//CALL 
+        if (assigner === -1)
+          break;
+        
+        if (details.tgtImm === (assigner - details.nextOff)) {//CALL assigner
+          skip = true;
+          extract += " 83 C4 04";//ADD ESP, 4; Restoring stack
+          tgtReg = 0;//EAX
+        }
+      }
     }
     
     //Step 1e - Extract the code if skip is not enabled
@@ -523,7 +583,8 @@ function FetchTillEnd(offset, refReg, refOff, langType, endFunc) {
     //Step 1f - Update offset
     offset = details.nextOff;
   }
-  return {"endOff":offset, "code":extract};//, "debug":codes};
+  //return {"endOff":offset, "code":extract, "debug":codes};
+  return {"endOff":offset, "code":extract};
 }
 
 //####################################################################################
@@ -538,7 +599,7 @@ function _GetOpDetails(opcode, modrm, offset) {
   //Step 1a - Look through OpcodeSizeMap to see if opcode match any of the opcodes
   for (var i = 0; i < OpcodeSizeMap.length; i += 2) {
     if (OpcodeSizeMap[i].indexOf(opcode) !== -1) {
-      details.codesize = details.nextOff = OpcodeSizeMap[i+1];
+      details.codesize = OpcodeSizeMap[i+1];
       break;
     }
   }
@@ -561,28 +622,28 @@ function _GetOpDetails(opcode, modrm, offset) {
 	  details.rm   = (modrm & 0x07);
     
     //Step 2b - Start with 2 (Opcode + ModrM)
-    details.codesize = details.nextOff = 2;
+    details.codesize = 2;
     
     //Step 2c - Check for Scale Index Base addressing (SIB byte) => R/M = 4 and Mode != 3
     if (details.rm === 0x4 && details.mode !== 0x3) {
-      details.codesize = ++details.nextOff;
+      details.codesize++;
     }
     
     //Step 2d - Check for Immediate 1 byte => Mode = 1
     if (details.mode === 0x1) {
       details.tgtImm = exe.fetchByte(offset + details.codesize);
-      details.codesize = ++details.nextOff;
+      details.codesize++;
     }
     
     //Step 2e - Check for Immediate 4 byte => Mode = 0 and R/M = 5 or Mode = 2
     if (details.mode === 0x2 || (details.mode === 0x0 && details.rm === 0x5)) {
       details.tgtImm = exe.fetchDWord(offset + details.codesize);
-      details.codesize = details.nextOff += 4;
+      details.codesize += 4;
     }
     
     //Step 2f - Check for 2byte opcode
     if (opcode2 !== -1) {
-      details.codesize = ++details.nextOff;
+      details.codesize++;
     }
   }
   
@@ -609,22 +670,23 @@ function _GetOpDetails(opcode, modrm, offset) {
     case 0x7E:
     case 0x7F: {//All SHORT jumps
       details.tgtImm   = exe.fetchByte(offset + 1);
-      details.nextOff += details.tgtImm;
-      details.codesize++;
+      //details.nextOff += details.tgtImm;
+      //details.codesize++;
       break;
     }
     
+    case 0xE8:
     case 0xE9: {//Long Jump
       details.tgtImm    = exe.fetchDWord(offset + 1);
-      details.nextOff  += details.tgtImm;
-      details.codesize += 4;
+      //details.nextOff  += details.tgtImm;
+      //details.codesize += 4;
       break;
     }
     
     case 0x0F: {//Two Byte Opcode
       if (opcode2 >= 0x80 && opcode2 <= 0x8F) {
         details.tgtImm   = exe.fetchDWord(offset + 2);
-        details.nextOff  = 6 + details.tgtImm;
+        //details.nextOff  = 6 + details.tgtImm;
         details.codesize = 6;
       }
       break;
@@ -634,7 +696,7 @@ function _GetOpDetails(opcode, modrm, offset) {
     case 0x81:
     case 0xC7: {//Imm32 Source
       details.srcImm   = exe.fetchDWord(offset + details.codesize);
-      details.codesize = details.nextOff += 4;
+      details.codesize += 4;
       break;
     }
     
@@ -645,13 +707,13 @@ function _GetOpDetails(opcode, modrm, offset) {
     case 0x80:
     case 0x82:
     case 0x83: {//Imm8 Source
-      details.srcImm   = exe.fetchDWord(offset + details.codesize);
-      details.codesize = ++details.nextOff;
+      details.srcImm   = exe.fetchByte(offset + details.codesize);
+      details.codesize++;
       break;
     }
   }
   
-  details.nextOff += offset;
+  details.nextOff = offset + details.codesize;
   
   return details;
 }

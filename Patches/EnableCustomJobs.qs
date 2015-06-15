@@ -22,25 +22,43 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   if (refHand === -1)
     return "Failed in Step 1 - Hand prefix missing";
   
-  var refName = exe.findString("Archer", RVA);
+  var refName = exe.findString("Acolyte", RVA);//We use Acolyte here because Archer has a MOV ECX, OFFSET statement before it in Older clients
   if (refName === -1)
     return "Failed in Step 1 - Name prefix missing";
   
   
   //Step 1b - Find all references of refPath
   var hooks = exe.findCodes("C7 AB 0C" + refPath.packToHex(4), PTYPE_HEX, true, "\xAB");
+  var assigner;//std::vector[] function used in Older clients
+
+  if (hooks.length === 2) {
+    //Step 1c - Look for old style assignment following a call to std::vector[] - For Older clients
+    var offset = exe.findCode(" C7 00" + refPath.packToHex(4) + " E8", PTYPE_HEX, false);
+    if (offset === -1)
+      return "Failed in Step 1 - Palette reference is missing";
+    
+    //Step 1d - Extract the function address (RAW)
+    assigner = (offset + 11) + exe.fetchDWord(offset + 7);
+    
+    //Step 1e - Hook Location will be 4 bytes before at PUSH 4
+    hooks[2] = offset - 4;
+
+    //Step 1f - Little trick to change the PUSH 3 to PUSH 0 so that EAX will point to the first location like we need   
+    offset = exe.find(" 6A 03", PTYPE_HEX, false, "", hooks[2] - 0x12, hooks[2]);
+    exe.replace(offset + 1, "00", PTYPE_HEX);
+  }
   if (hooks.length !== 3)
-    return "Failed in Step 1 - Some Path references missing";
+    return "Failed in Step 1 - Prefix reference missing or extra";
   
-  //Step 1c - Find reference of refHand
+  //Step 1g - Find reference of refHand
   var offset = exe.findCode("C7 AB 0C" + refHand.packToHex(4), PTYPE_HEX, true, "\xAB");
   if (offset === -1)
     return "Failed in Step 1 - Hand reference missing";
   
   hooks[3] = offset;
   
-  //Step 1d - Find reference of refName
-  offset = exe.findCode("C7 AB 0C" + refName.packToHex(4), PTYPE_HEX, true, "\xAB");
+  //Step 1h - Find reference of refName
+  offset = exe.findCode("C7 AB 10" + refName.packToHex(4), PTYPE_HEX, true, "\xAB");
   if (offset === -1)
     return "Failed in Step 1 - Name reference missing";
   
@@ -55,32 +73,34 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   if (LANGTYPE.length === 1)
     return "Failed in Step 2 - " + LANGTYPE[0];
   
-  var refRegs = [];
-  var refOffs = [];
-  var curRegs = [];
   var details = [];
+  var curRegs = [];
   
   for (var i = 0; i < hooks.length; i++) {
     
     //Step 2b - Extract the reference Register (usually ESI), reference Offset and current Register for all hooks from the instruction before each
     //          MOV curReg, DWORD PTR DS:[refReg + refOff]
     //          curReg can also be extracted from code at hook location
-  
+    
     if (exe.fetchByte(hooks[i] - 2) === 0) {//refOff != 0
-      var modrm = exe.fetchByte(hooks[i] - 5);
-      refOffs[i] = exe.fetchDWord(hooks[i] - 4);
+      var modrm  = exe.fetchByte(hooks[i] - 5);
+      var refOff = exe.fetchDWord(hooks[i] - 4);
+    }
+    else if (exe.fetchByte(hooks[i]) === 0x6A) {//Older client
+      var modrm  = 0x6;//so that refReg will be ESI and curReg will be EAX
+      var refOff = 0;
     }
     else {//refOff = 0
-      var modrm = exe.fetchByte(hooks[i] - 1);
-      refOffs[i] = 0;
+      var modrm  = exe.fetchByte(hooks[i] - 1);
+      var refOff = 0;
     }
-    refRegs[i] = modrm & 0x7;
+    var refReg = modrm & 0x7;
     curRegs[i] = (modrm & 0x38) >> 3;
     
     //Step 2c - Find Location after the Table assignments which is the location to jump to after lua based loading
     //          Also extract all non-table related instuctions in between
-    details[i] = FetchTillEnd(hooks[i] + 7, refRegs[i], refOffs[i], LANGTYPE, CheckEoT);
-    
+    details[i] = FetchTillEnd(hooks[i], refReg, refOff, curRegs[i], LANGTYPE, CheckEoT, assigner);
+
     //debugValue(details[i].debug);//debug
   }
 
@@ -176,10 +196,10 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x80, offset2);
   
   if (offset === -1) {
-    code = code.replace(" 83 3D", " A1").replace(" AB AB 00 75", " AB AB 00 85 C0 75");//Change the CMP to MOV EAX, DWORD PTR DS:[g_serviceType] and insert TEST EAX, EAX before JNZ
+    code = code.replace(" 83 3D", " A1").replace(" 00 B9 AB AB AB 00 75", " B9 AB AB AB 00 85 C0 75");//Change the CMP to MOV EAX, DWORD PTR DS:[g_serviceType] and insert TEST EAX, EAX before JNZ
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x80, offset2);
   }
-  
+
   if (offset === -1)
     return "Failed in Step 5 - LangType comparison missing";
   
@@ -320,7 +340,10 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
 //#          supplied offset. Used as argument to FetchTillEnd  #
 //###############################################################
 
-function CheckEoT(opcode, modrm, offset) {
+function CheckEoT(opcode, modrm, offset, details, assigner) {
+  if (typeof(assigner) === "undefined")
+    assigner = -1;
+  
   //SUB reg32_A, reg32_B
   //SAR reg32_A, 2
   if (opcode === 0x2B && exe.fetchUByte(offset + 2) === 0xC1 && exe.fetchUByte(offset + 4) === 0x02 )
@@ -347,6 +370,14 @@ function CheckEoT(opcode, modrm, offset) {
   //if (opcode === 0xBF && exe.fetchDWord(offset + 1) === 0x2D)
   //  return true;
   
+  //CALL func; where func !== assigner
+  if (assigner !== -1 && opcode === 0xE8 && details.tgtImm !== (assigner - (offset + 5)))
+      return true;
+  
+  //MOV EAX, DWORD PTR DS:[EDI+4]
+  if (opcode === 0x8B && modrm === 0x47 && details.tgtImm === 0x4)//Hope this doesnt conflict any point later
+      return true;
+
   return false;
 }
 
