@@ -15,7 +15,7 @@ function UseCustomFont() {
     return "Failed in Step 1 - Gulim reference not found";
   
   // Step 2a - Get the Font name from user
-  var newFont = exe.getUserInput('$newFont', XTYPE_FONT, 'Font input', 'Select the new Font Family', "Arial");
+  var newFont = exe.getUserInput("$newFont", XTYPE_FONT, 'Font input', 'Select the new Font Family', "Arial");
   
   // Step 2b - Get its address if its already existing
   var free = exe.findString(newFont, RAW);

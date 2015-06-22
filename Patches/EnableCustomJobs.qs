@@ -358,26 +358,31 @@ function CheckEoT(opcode, modrm, offset, details, assigner) {
   if (opcode === 0x50 && modrm === 0x6A && (exe.fetchByte(offset + 2) === 0x02 || exe.fetchByte(offset + 2) === 0x05))
     return true;
 
-  //MOV EDI, EDI
-  if (opcode === 0x8B && modrm === 0xFF)
+  
+  //CALL func; where func !== assigner
+  if (opcode === 0xE8 && (assigner === -1 || details.tgtImm !== (assigner - (offset + 5))) )
     return true;
   
+  //MOV EAX, DWORD PTR DS:[EDI+4]
+  if (opcode === 0x8B && modrm === 0x47 && details.tgtImm === 0x4)//Hope this doesnt conflict any point later
+    return true;
+
+  //CALL DWORD PTR DS:[addr]
+  if (opcode === 0xFF && modrm === 0x15)//Hope this doesnt conflict with any other client
+    return true;
+    
   //OR reg32_A, FFFFFFFF
   if (opcode === 0x83 && (modrm & 0xF8) === 0xC8 && exe.fetchUByte(offset + 2) === 0xFF)
+    return true;
+  
+  //MOV EDI, EDI
+  if (opcode === 0x8B && modrm === 0xFF)
     return true;
   
   //MOV EDI, 2D - deprecated since MOV EDI, EDI doesn't leave out any stray assignments
   //if (opcode === 0xBF && exe.fetchDWord(offset + 1) === 0x2D)
   //  return true;
   
-  //CALL func; where func !== assigner
-  if (assigner !== -1 && opcode === 0xE8 && details.tgtImm !== (assigner - (offset + 5)))
-      return true;
-  
-  //MOV EAX, DWORD PTR DS:[EDI+4]
-  if (opcode === 0x8B && modrm === 0x47 && details.tgtImm === 0x4)//Hope this doesnt conflict any point later
-      return true;
-
   return false;
 }
 

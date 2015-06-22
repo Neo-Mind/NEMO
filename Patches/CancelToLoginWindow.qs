@@ -6,7 +6,7 @@
 function CancelToLoginWindow() {
   
   //Step 1a - Sanity Check. Make Sure Restore Login Window is enabled.
-  if (exe.getActivePatches().indexOf(40) === -1)
+  if (getActivePatches().indexOf(40) === -1)
     return "Patch Cancelled - Restore Login Window patch is necessary but not enabled";
   
   //Step 1b - Find the case branch that occurs before the Cancel Button case.

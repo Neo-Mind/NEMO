@@ -12,7 +12,7 @@ function LoadCustomQuestLua() {
   
   //Step 2a - Get the list file
   var f = new TextFile();
-  if (!GetInputFile(f, '$inpQuest', 'File Input - Load Custom Quest Lua', 'Enter the Lua list file', APP_PATH))
+  if (!GetInputFile(f, "$inpQuest", 'File Input - Load Custom Quest Lua', 'Enter the Lua list file', APP_PATH))
     return "Patch Cancelled";
   
   //Step 2b - Get the filenames from the list file

@@ -13,33 +13,35 @@ function DisableAutofollow() {
   + " FF AB"             //CALL reg32_A
   + " 8B AB AB AB 00 00" //MOV reg32_B, DWORD PTR DS:[reg32_C+const]
   + " A3 AB AB AB 00"    //MOV DWORD PTR DS:[CGameMode::m_lastLockOnPcGid], EAX ;in this instance reg32_B = EAX
-  + " 89"
   ;
-  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
   
-  if (offset === -1) {
+  if (offsets.length === 0) {
     code = code.replace(" FF AB", " FF AB AB"); //CALL DWORD PTR DS:[reg32_C + x]
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
   }
   
-  if (offset === -1) {
+  if (offsets.length === 0) {
     code = code.replace(" A3", " 89 AB"); //MOV DWORD PTR DS:[CGameMode::m_lastLockOnPcGid], reg32_B
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-    
-    if (offset !== -1 && exe.fetchByte(offset + code.hexlength() - 5) < 0)//Skip the false match
-      offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + code.hexlength());
+    offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
   }
   
-  if (offset === -1)
+  if (offsets.length === 0)
     return "Failed in Step 1";
   
-  offset += code.hexlength();
-  
-  //Step 2 - NOP out the assignment
-  if (exe.fetchByte(offset - 7) !== 0)
-    exe.replace(offset - 7, "90", PTYPE_HEX);
-  
-  exe.replace(offset - 6, " 90 90 90 90 90", PTYPE_HEX);
+  //Step 2 - NOP out the assignment for the correct match (pattern might match more than one location)
+  for (var i = 0; i < offsets.length; i++) {
+    var offset = offsets[i] + code.hexlength() - 4;
+    var opcode = exe.fetchUByte(offset);
+    if (opcode === 0xA3) {//MOV from EAX
+      exe.replace(offset - 1, " 90 90 90 90 90");
+      break;
+    }
+    else if (opcode & 0xC7 === 0x5) {//MOV from other registers (mode bits should be 0 & r/m bits should be 5)
+      exe.replace(offset - 2, " 90 90 90 90 90 90");
+      break;
+    }
+  }
   
   return true;
 }

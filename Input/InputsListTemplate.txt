@@ -1,0 +1,60 @@
+﻿########################################################################
+# To use a variable simply remove the '//' before it and set the value.#
+# For XTYPE_COLOR the value has 6 Hex characters, similarly            #
+# XTYPE_HEXSTRING has 8 Hex characters. Don't remove the $ signs.      #
+########################################################################
+
+########  Packet Keys  ########
+//$firstkey, XTYPE_HEXSTRING, 56FEEDED
+//$secondkey, XTYPE_HEXSTRING, 98BEEFED
+//$thirdkey, XTYPE_HEXSTRING, 4BADBEEF
+
+########  ItemInfo change  ########
+//$newItemInfo, XTYPE_STRING, System/iteminfo.lua
+
+########  Chat Colors  ########
+//$guildChatColor, XTYPE_COLOR, FEEDED
+//$gmChatColor, XTYPE_COLOR, DEAFED
+//$yourChatColor, XTYPE_COLOR, FADBED
+//$otherChatColor, XTYPE_COLOR, BFADED
+//$yourPartyChatColor, XTYPE_COLOR, BEEFED
+//$otherPartyChatColor, XTYPE_COLOR, 909009
+
+########  Chat Limit  ########
+//$allowChatFlood, XTYPE_BYTE, 10
+
+########  Window Title  ########
+//$customWindowTitle, XTYPE_STRING, Specify New Title Here
+
+########  Enable Flag Emoticon  ########
+//$inpFlag, XTYPE_FILE, /path/to/flag/list/file
+
+########  Enable Multiple GRF v1  ########
+//$dataINI, XTYPE_STRING, DATA.INI
+
+########  Enable Multiple GRF v2  ########
+//$inpMultGRF, XTYPE_FILE, /path/to/INI/file
+
+########  Extended NPC Box  ########
+//$npcBoxLength, XTYPE_DWORD, 3000
+
+########  Screenshot Quality  ########
+//$uQuality, XTYPE_BYTE, 75
+
+########  Increase View ID  ########
+//$newValue, XTYPE_DWORD, 3000
+
+########  Load Quest Lua  ########
+//$inpQuest, XTYPE_FILE, /path/to/quest/list/file
+
+########  Resize Font  ########
+//$newFontHgt, XTYPE_BYTE, 15
+
+########  Custom DLL list file  ########
+//$customDLL, XTYPE_FILE, /path/to/dll/list/file
+
+########  Use Custom Font  ########
+//$newFont, XTYPE_FONT, Arial
+
+########  Icon File  ########
+//$inpIconFile, XTYPE_FILE, path/to/icon/file

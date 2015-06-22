@@ -6,7 +6,7 @@
 function UseOfficialClothPalette() {
   
   //Step 1a - Check if Custom Job patch is being used. Does not work with it
-  if (exe.getActivePatches().indexOf(202) !== -1)
+  if (getActivePatches().indexOf(202) !== -1)
     return "Patch Cancelled - Turn off Custom Job patch first";
   
   //Step 1b - Find offset of palette prefix for Archer - ±Ã¼ö

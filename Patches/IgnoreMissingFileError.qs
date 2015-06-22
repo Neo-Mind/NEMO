@@ -4,13 +4,34 @@
 //###############################################
 
 function IgnoreMissingFileError() {//The patch skips showing error for a lot of things. Either rename or make it specific to missing files
+  /*
+  var offset = exe.findString("Error", RVA);
+  if (offset === -1)
+    return "Failed in Step 1a - Error string missing";
   
-  //Step 1a - Prep code for finding the ErrorMsg(msg) function
+  var func = GetFunction("MessageBoxA");
+  if (func === -1)
+    return "Failed in Step 1b - MessageBoxA not found";
   
+  var code =
+    " 68" + offset.packToHex(4)  //PUSH OFFSET addr; ASCII "Error"
+  + " AB"                        //PUSH reg32_A
+  + " AB"                        //PUSH reg32_B 
+  + " FF 15" + func.packToHex(4) //CALL DWORD PTR DS:[<&USER32.MessageBoxA>]
+  ;
+  */
+  
+  //Change the name and use this technique instead
+  //Find address of 'Error' and MessageBoxA function 
+  //look for PUSH Error followed by two ABs then call to MessageBoxA
+  //otherwise look for PUSH Error followed by FF 75 08 (PUSH DWORD PTR SS:[EBP+8]), (FF 35 AB AB AB 00)PUSH DWORD PTR DS:[g_hMainWnd] and CALL to MessageBoxA
+  //once found look for a  E8 AB AB AB FF (CALL GDIFlip) before it 
+  
+  //Step 1a - Prep code for finding the ErrorMsg(msg) function  
   var code = 
     " E8 AB AB AB FF"    // CALL GDIFlip
   + " MovEax"            // FramePointer Specific MOV
-  + " 8B 0D AB AB AB AB" // MOV ECX, DWORD PTR DS:[g_hMainWnd]
+  + " 8B 0D AB AB AB 00" // MOV ECX, DWORD PTR DS:[g_hMainWnd]
   + " 6A 00"             // PUSH 0
   ;
   

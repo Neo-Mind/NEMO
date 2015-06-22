@@ -6,13 +6,12 @@
 function ReadMsgstringtabledottxt() {
   
   //Step 1 - Find the comparison which is at the start of the function
-  //         Old clients have slightly different pattern <- To Do
   var LANGTYPE = GetLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceTypes
   if (LANGTYPE.length === 1)
     return "Failed in Step 1 - " + LANGTYPE[0];
 
   var code = 
-    " 83 3D " + LANGTYPE +" 00" // CMP DWORD PTR DS:[g_serviceType], 0
+    " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_serviceType], 0
   + " 56"                       // PUSH ESI
   + " 75"                       // JNZ SHORT addr -> continue with msgStringTable.txt loading
   ;

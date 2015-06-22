@@ -26,7 +26,7 @@ delete PEncActive;
 function PacketEncryptionKeys(varname, index) {
 
   //Step 1a - Sanity Check. Check if Packet Encryption is Disabled.
-  if (exe.getActivePatches().indexOf(61) !== -1)
+  if (getActivePatches().indexOf(61) !== -1)
     return "Patch Cancelled - Disable Packet Encryption is ON";
   
   //Step 1b - Get the Packet Info
@@ -56,7 +56,7 @@ function PacketEncryptionKeys(varname, index) {
     
     //Step 2b - Replace the PUSHed argument for the index in all of them
     for ( var i = 0; i < offsets.length; i++) {
-      exe.replace(offsets[i] + code.hexlength() - index * 5, varname, PTYPE_STRING); 
+      exe.replace(offsets[i] + code.hexlength() - (index + 1) * 5, varname, PTYPE_STRING); 
     }
   }
   else {
@@ -145,7 +145,7 @@ function _PacketEncryptionKeys(index) {
   
   //Step 1b - Assign PEncActive to an active Packet Key Patch that is not associated with index
   if (PEncActive === index) {
-    var patches = exe.getActivePatches();
+    var patches = getActivePatches();
     for (var i = 0; i < 3; i++) {    
       if (patches.indexOf(92 + i) !== -1) {
         PEncActive = i;

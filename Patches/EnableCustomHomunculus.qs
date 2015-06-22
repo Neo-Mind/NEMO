@@ -11,14 +11,14 @@ function EnableCustomHomunculus() {//Work In Progress
   if (offset === -1)
     return "Failed in Step 1 - LIF not found";
   
-  //Step 1b - Find its reference - This is where all the homunuculus names are loaded into the table.
+  //Step 1b - Find its reference - This is where all the homunculus names are loaded into the table.
   var code = " C7 AB C4 5D 00 00" + offset.packToHex(4); //MOV DWORD PTR DS:[reg32_A+5DC4], OFFSET addr; ASCII "LIF" 
   
   var hookLoc = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if (hookLoc === -1)
     return "Failed in Step 1 - homun code not found";
   
-  //Step 1c - Get the Langtype address
+  //Step 1c - Get the LangType address
   var LANGTYPE = GetLangType();
   if (LANGTYPE.length === 1)
     return "Failed in Step 1 - " + LANGTYPE[0];
@@ -39,7 +39,7 @@ function EnableCustomHomunculus() {//Work In Progress
   
   //Step 2b - Find Location after the Table assignments which is the location to jump to after lua based loading
   //          Also extract all non-table related instuctions in between
-  var details = FetchTillEnd(hookLoc + code.hexlength(), refReg, refOff, LANGTYPE, CheckHomunEoT);
+  var details = FetchTillEnd(hookLoc + code.hexlength(), refReg, refOff, curReg, LANGTYPE, CheckHomunEoT);
   
   //Step 2c - Find offset of ReqJobName
   //Get the current lua caller code for Job Name i.e. ReqJobName calls

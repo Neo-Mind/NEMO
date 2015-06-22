@@ -8,7 +8,7 @@ delete Import_Info;//Removing any stray values before Patches are selected
 function UseCustomDLL() {
   
   //Step 1a - Flag for "Disable HShield" patch is ON
-  var hasHShield = (exe.getActivePatches().indexOf(15) !== -1);
+  var hasHShield = (getActivePatches().indexOf(15) !== -1);
   
   //Step 1b - Get the current import table
   var dir = GetDataDirectory(1);
@@ -141,7 +141,7 @@ function UseCustomDLL() {
 //#          selected so that it doesnt accomodate for Custom DLL      #
 //######################################################################
 function _UseCustomDLL() {
-  if (exe.getActivePatches().indexOf(15) !== -1) {
+  if (getActivePatches().indexOf(15) !== -1) {
     exe.setCurrentPatch(15);
     exe.emptyPatch(15);
     DisableHShield();

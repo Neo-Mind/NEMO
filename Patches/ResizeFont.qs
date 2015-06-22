@@ -32,7 +32,7 @@ function ResizeFont() {
   var freeRva = exe.Raw2Rva(free);
   
   //Step 2c - Get the new Font height
-  var newHeight = exe.getUserInput('$newFontHgt', XTYPE_BYTE, "Number Input", "Enter the new Font Height(1-127) - snaps to closest valid value", 10, 1, 127);
+  var newHeight = exe.getUserInput("$newFontHgt", XTYPE_BYTE, "Number Input", "Enter the new Font Height(1-127) - snaps to closest valid value", 10, 1, 127);
   
   //Step 2d - Fill in the Blanks
   code = ReplaceVarHex(code, 1, freeRva + 4);

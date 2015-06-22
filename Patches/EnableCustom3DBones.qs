@@ -19,7 +19,7 @@ function EnableCustom3DBones() {
   // MOV <R32>, [ARRAY] <= Find offset of this instruction
   // PUSH <R32>
   // PUSH <R32>
-  // PUSH <$offset>
+  // PUSH <offset>
   
   //Step 2 - Find Limiting CMP instruction within this function before the reference.
   //         we will assume it comes within 0x70h before finish

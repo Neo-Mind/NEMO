@@ -129,7 +129,7 @@ function DisableHShield() {
   aOffset = " 00".repeat(8) + (exe.Raw2Rva(aOffset) - exe.getImageBase()).packToHex(4);
   
   //Step 4c - Check for Use Custom DLL patch - needed since it modifies the import table location
-  var hasCustomDLL = (exe.getActivePatches().indexOf(211) !== -1);
+  var hasCustomDLL = (getActivePatches().indexOf(211) !== -1);
   
   if (hasCustomDLL && typeof(Import_Info) !== "undefined") {
     //Step 4d - If it is used, it means the table has been shifted and all related data is available in Import_Info.
