@@ -62,8 +62,8 @@ function DisableNagleAlgorithm() {
   code = ReplaceVarHex(code, 0, freeRva + 4);//Actual Function address
   code = ReplaceVarHex(code, 1, sockFunc);
   code = ReplaceVarHex(code, 2, exe.findString("ws2_32.dll", RVA));
-  code = ReplaceVarHex(code, 3, GetFunction("GetModuleHandleA"));
-  code = ReplaceVarHex(code, 4, GetFunction("GetProcAddress"));
+  code = ReplaceVarHex(code, 3, GetFunction("GetModuleHandleA", "KERNEL32.dll"));
+  code = ReplaceVarHex(code, 4, GetFunction("GetProcAddress", "KERNEL32.dll"));
   
   //Step 2d - Insert the code to allocated area
   exe.insert(free, size, code, PTYPE_HEX);

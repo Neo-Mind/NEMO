@@ -62,7 +62,7 @@ function EnableDNSSupport() {
   + " 51"                   //PUSH ECX
   + " 68" + GenVarHex(4)    //PUSH OFFSET addr1 ; ASCII "%d.%d.%d.%d"
   + " 68" + GenVarHex(5)    //PUSH OFFSET addr2 ; location is at the end of the code with Initial value "127.0.0.1"
-  + " FF 15" + GenVarHex(6) //CALL DWORD PTR DS:[<&MSVCR90.sprintf>]
+  + " FF 15" + GenVarHex(6) //CALL DWORD PTR DS:[<&USER32.wsprintfA>]
   + " 83 C4 18"             //ADD ESP,18
   + " C7 05" + GenVarHex(7) + GenVarHex(8) // MOV DWORD PTR DS:[g_accountAddr], addr2 ; Replace g_accountAddr current value with its ip address
   + " 61"                   //POPAD
@@ -83,7 +83,7 @@ function EnableDNSSupport() {
   exe.replace(offset+1, (exe.Raw2Rva(free) - exe.Raw2Rva(offset+5)).packToHex(4), PTYPE_HEX);
   
   //Step 4b - Find gethostbyname function address (#52 when imported by ordinal)
-  var uGethostbyname = GetFunction("gethostbyname", "WS2_32.DLL", 52);//By Ordinal
+  var uGethostbyname = GetFunction("gethostbyname", "ws2_32.dll", 52);//By Ordinal
   if (uGethostbyname === -1)
     return "Failed in Step 4 - gethostbyname not found";
   
@@ -98,13 +98,13 @@ function EnableDNSSupport() {
   //Step 4e - addr2 value
   offset = exe.Raw2Rva(free + size - "127.0.0.1\x00".length);
   
-  //Step 4f - Replace all the variables
+  //Step 4g - Replace all the variables
   dnscode = ReplaceVarHex(dnscode, 1, gResMgr);
   dnscode = ReplaceVarHex(dnscode, 2, gAccountAddr);
   dnscode = ReplaceVarHex(dnscode, 3, uGethostbyname);
   dnscode = ReplaceVarHex(dnscode, 4, ipFormat);
   dnscode = ReplaceVarHex(dnscode, 5, offset);
-  dnscode = ReplaceVarHex(dnscode, 6, GetFunction("sprintf"));
+  dnscode = ReplaceVarHex(dnscode, 6, GetFunction("wsprintfA", "USER32.dll"));
   dnscode = ReplaceVarHex(dnscode, 7, gAccountAddr);
   dnscode = ReplaceVarHex(dnscode, 8, offset);
   

@@ -73,7 +73,7 @@ function DisableHShield() {
     return "Failed in Step 3 - ERROR string missing";
   
   //Step 3b - Find address of MessageBoxA function
-  var offset2 = GetFunction("MessageBoxA");
+  var offset2 = GetFunction("MessageBoxA", "USER32.dll");
   if (offset2 === -1)
     return "Failed in Step 3 - MessageBoxA not found";
   

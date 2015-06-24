@@ -5,7 +5,7 @@
 function EnableTitleBarMenu() {
   
   //Step 1a - Find the function's address
-  var offset = GetFunction("CreateWindowExA");
+  var offset = GetFunction("CreateWindowExA", "USER32.dll");
   if (offset === -1)
     return "Failed in Step 1 - CreateWindowExA not found";
   
