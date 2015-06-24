@@ -188,7 +188,7 @@ registerPatch( 69, "ExtendNpcBox", 'Extend Npc Dialog Box', 'UI', 0, "Ai4rei/AN"
 
 //70 is Unused - to be filled
 
-registerPatch( 71, "IgnoreMissingFileError", 'Ignore Missing File Error', 'Fix', 0, "Shinryo", 'Prevents the client from displaying error messages about missing files. - it does not guarantee client will not crash if files are missing', false);
+registerPatch( 71, "IgnoreResourceErrors", 'Ignore Resource Errors', 'Fix', 0, "Shinryo", 'Prevents the client from displaying a variety of Error messages (but not all of them) including missing files. This does not guarantee the client will work inspite of missing files', false);
 
 registerPatch( 72, "IgnoreMissingPaletteError", 'Ignore Missing Palette Error', 'Fix', 0, "Shinryo", 'Prevents the client from displaying error messages about missing palettes. - it does not guarantee client will not crash if files are missing', false);
 
