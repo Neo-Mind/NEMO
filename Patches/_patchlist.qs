@@ -131,7 +131,7 @@ registerPatch( 41, "DisableNagleAlgorithm", 'Disable Nagle Algorithm', 'Packet',
 
 registerPatch( 42, "SkipResurrectionButtons", 'Skip Resurrection Buttons', 'UI', 0, "Shinryo", 'Skip resurrection button when you die or use Token of Ziegfried.', false);
 
-//43 is Unused - to be filled
+registerPatch( 43, "DeleteCharWithEmail", 'Always Use Email for Char Deletion', 'Fix', 0, "Neo", 'Makes the Client use Email as Deletion Password for all Langtypes', false);
 
 registerPatch( 44, "TranslateClient", 'Translate Client', 'UI', 0, "Ai4rei/AN, Neo", 'This will translate some of the hardcoded Korean phrases with strings stored in TranslateClient.txt. It also fixes the Korean Job name issue with langtype', true);
 
@@ -168,7 +168,7 @@ registerPatch( 59, "ChatColorPartySelf", 'Chat Color - Your Party', 'Color', 0, 
 
 registerPatch( 60, "ChatColorPlayerSelf", 'Chat Color - Self', 'Color', 0, "Ai4rei/AN, Shakto", 'Changes your character\'s Chat color and sets it to the specified value. Default value is 00ff00 (a green color)', false);
 
-registerPatch( 61, "DisablePacketEncryption", 'Disable Packet Encryption', 'UI', 0, "Ai4rei/AN", 'Disable kRO Packet_ID Encryption. Also known as Skip Packet Obfuscation', true);
+registerPatch( 61, "DisablePacketEncryption", 'Disable Packet Encryption', 'UI', 0, "Ai4rei/AN", 'Disable kRO Packet_ID Encryption. Also known as Skip Packet Obfuscation', false);
 
 //62 is Unused - to be filled
 
