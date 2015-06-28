@@ -126,7 +126,7 @@ function IncreaseAtkDisplay() {
   offset = exe.find(" E8 AB AB AB FF", PTYPE_HEX, true, "\xAB", offset + 5);//CALL CModeMgr::GetGameMode
   if (offset === -1)
     return "Failed in Step 2 - GetGameMode call missing";
-  
+
   //Step 3a - Adjust the extracted stack offsets based on FPO
   if (fpEnb) {
     if (typeof(offByte) === "number" && offByte < offByte2) //Location is above digit set in stack (offByte and offByte2 are negative)
@@ -208,12 +208,14 @@ function IncreaseAtkDisplay() {
   //Step 4b - Iterate through each and update the stack offset if needed
   for (var i = 0; i < offsets.length; i++) {
     if (fpEnb) {
-      if (exe.fetchByte(offsets[i] + 2) < (offByte2 + 16))//i.e existing offset points to location above the previous starting digit in stack
-        offsetStack(offsets[i] + 2);
+      if (exe.fetchByte(offsets[i] + 2) <= (offByte2 + 16)) {//i.e existing offset points to location above the previous starting digit in stack
+         offsetStack(offsets[i] + 2);
+      }
     }
     else {
-      if (exe.fetchByte(offsets[i] + 3) >= (offByte2 + 4*6))//i.e. existing offset points to location below the previous ending digit in stack
+      if (exe.fetchByte(offsets[i] + 3) >= (offByte2 + 4*6)) {//i.e. existing offset points to location below the previous ending digit in stack
         offsetStack(offsets[i] + 3, 1);
+      }
     }
   }
   
