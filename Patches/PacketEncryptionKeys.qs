@@ -139,7 +139,7 @@ function PacketEncryptionKeys(varname, index) {
     //Step 4c - Insert it
     exe.insert(free, csize, code, PTYPE_HEX);
     
-    //Step 4d - Hijack info[4] to jmp to PEncInsert
+    //Step 4d - Hijack info.ovrAddr to jmp to PEncInsert
     code = " E9" + (PEncInsert - exe.Raw2Rva(info.ovrAddr + 5)).packToHex(4);//JMP PEncInsert
     exe.replace(info.ovrAddr, code, PTYPE_HEX);
 
@@ -203,7 +203,7 @@ function _PacketEncryptionKeys(index) {
   var info = FetchPacketinfo();
   
   //Step 2b - Change the Packet Key referred by index to the original one.
-  PEncKeys[index] = info[index + 1];
+  PEncKeys[index] = info.keys[index];
   
   //Step 2c - Prep Code to insert
   var code = 
@@ -223,8 +223,8 @@ function _PacketEncryptionKeys(index) {
   //Srep 2d - Insert the code
   exe.insert(exe.Rva2Raw(PEncInsert), csize, code, PTYPE_HEX);
   
-  //Step 2e - Hijack info[4] to jmp to PEncInsert
-  code = " E9" + (PEncInsert - exe.Raw2Rva(info[4] + 5)).packToHex(4);//JMP PEncInsert
-  exe.replace(info[4], code, PTYPE_HEX);
+  //Step 2e - Hijack info.ovrAddr to jmp to PEncInsert
+  code = " E9" + (PEncInsert - exe.Raw2Rva(info.ovrAddr + 5)).packToHex(4);//JMP PEncInsert
+  exe.replace(info.ovrAddr, code, PTYPE_HEX);
   return true;
 }
