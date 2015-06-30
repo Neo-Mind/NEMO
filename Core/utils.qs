@@ -107,6 +107,14 @@ function GetInputFile(f, varname, title, prompt, fpath) {
 //====================================================================//
 
 function FetchPacketKeyInfo() {
+  var retVal = 
+  {
+    "type": -1,        //Type of Function (0 = Packet Keys are PUSHED as arguments, 1 = Mode is PUSHed as argument, 2 = same as Type 1 but Function is virtualized)
+    "funcRva": -1,     //Virtual Address of the Function which assigns the packetKeys to ECX+4, ECX+8, ECX+12 (encrypted key in new clients)
+    "keys": [0, 0, 0], //Extracted / Mapped Keys
+    "refMov" : "",     //The MOV ECX code before the Function is called
+    "ovrAddr": -1,     //Physical Address to overwrite with a JMP when patching packetKeys - not needed for Type 0
+  };
   
   //Step 1a - Find address of string 'PACKET_CZ_ENTER' . 
   //          If its not present then its probably new client and chances are packet keys will need a map
@@ -116,7 +124,7 @@ function FetchPacketKeyInfo() {
   if (offset !== -1)
     offset = exe.findCode(" 68" + offset.packToHex(4), PTYPE_HEX, false);
   
-  //Step 1c - In case its not there look for the Pattern present usually after PACKET_CZ_ENTER
+  //Step 1c - In case its not there look for the Reference Pattern present usually after PACKET_CZ_ENTER
   if (offset === -1) {
     
     var code =
@@ -145,7 +153,7 @@ function FetchPacketKeyInfo() {
   if (offset === -1)
     return "PKI: Failed to find any reference locations";
   
-  //Step 2a - Find Pattern 1 - Keys pushed to the Key assigner function.
+  //Step 2a - Find Pattern 1 - Keys pushed to the Key assigner function (Type 0)
   var code =
     " 8B 0D AB AB AB 00" //MOV ECX, DWORD PTR DS:[refAddr]
   + " 68 AB AB AB AB"    //PUSH key3
@@ -156,19 +164,20 @@ function FetchPacketKeyInfo() {
   
   var offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x100, offset);
   if (offset2 !== -1) {
-    var refMov = exe.fetchHex(offset2, 6);
+    //Step 2b - In case it succeeded Get the ECX assignment, RVA of the Obfuscate function & the packetKeys.
+    retVal.type = 0;
+    retVal.refMov = exe.fetchHex(offset2, 6);
     
     offset2 += code.hexlength();
+    retVal.funcAddr = exe.Raw2Rva(offset2 + 4) + exe.fetchDWord(offset2);
+    retVal.keys = [exe.fetchDWord(offset2 - 5), exe.fetchDWord(offset2 - 10), exe.fetchDWord(offset2 - 15)];
     
-    //Step 2b - In case it succeeded Get the RVA of the Obfuscate function.
-    offset = exe.Raw2Rva(offset2 + 4) + exe.fetchDWord(offset2);
-    
-    //Step 2c - Return the address along with the keys
-    return [offset, exe.fetchDWord(offset2 - 5), exe.fetchDWord(offset2 - 10), exe.fetchDWord(offset2 - 15), 0, refMov];//0 indicates it is function with keys pushed
+    //Step 2c - Return the hash array
+    return retVal;
   }
   
   //Step 3a - Find Pattern 2 - Encryption + Key assignment fused into one function with mode argument. 
-  //          0 = Encrypt & Assign Keys, 1 = Assign Base Keys, 2 = Assign 0s
+  //          0 = Encrypt & Assign Keys, 1 = Assign Base Keys, 2 = Assign 0s = No Encryption
   code =
     " 8B 0D AB AB AB 00" //MOV ECX, DWORD PTR DS:[refAddr]
   + " 6A 01"             //PUSH 1
@@ -179,14 +188,15 @@ function FetchPacketKeyInfo() {
   if (offset2 == -1)
     return "PKI: Failed to find Encryption call";
   
-  var refMov = exe.fetchHex(offset2, 6);
+  //Step 3b - Get the ECX assignment & Function RVA
+  retVal.refMov = exe.fetchHex(offset2, 6);
   
   offset2 += code.hexlength();
   offset = offset2 + 4 + exe.fetchDWord(offset2);
-
-  var retVal = [exe.Raw2Rva(offset), 0, 0, 0, 1, refMov];//0s and 1 will be replaced later
   
-  //Step 3b - Go Inside and look for Base Key assignment (No Shared Key format)
+  retVal.funcAddr = exe.Raw2Rva(offset);
+
+  //Step 3c - Go Inside and look for Base Key assignment (No Shared Key format)
   var prefix =
     " 83 F8 01" //CMP EAX,1
   + " 75 AB"    //JNE short
@@ -199,16 +209,20 @@ function FetchPacketKeyInfo() {
   ;
   
   offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x50);
+  
   if (offset2 !== -1) {
-    offset2 += prefix.hexlength();
-    
     //Step 3c - Since it matched we can finally extract the keys.
-    retVal[exe.fetchByte(offset2 + 2)/4]  = exe.fetchDWord(offset2 + 3);
-    retVal[exe.fetchByte(offset2 + 9)/4]  = exe.fetchDWord(offset2 + 10);
-    retVal[exe.fetchByte(offset2 + 16)/4] = exe.fetchDWord(offset2 + 17);
-    retVal[4] = offset2;//Offset where the assignment occurs
+    retVal.type = 1;
+    offset2 += prefix.hexlength();    
     
-    //Step 3d - Return addr and keys
+    retVal.keys[exe.fetchByte(offset2 + 2)/4]  = exe.fetchDWord(offset2 + 3);
+    retVal.keys[exe.fetchByte(offset2 + 9)/4]  = exe.fetchDWord(offset2 + 10);
+    retVal.keys[exe.fetchByte(offset2 + 16)/4] = exe.fetchDWord(offset2 + 17);
+    retVal.keys.shift();//Shift all elements left
+    
+    retVal.ovrAddr = offset2;//Offset where the assignment occurs
+    
+    //Step 3d - Return the hash array
     return retVal;
   }
   
@@ -222,16 +236,20 @@ function FetchPacketKeyInfo() {
   ;
   
   offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x50);
+    
   if (offset2 != -1) {
+    //Step 4b - Extract all the keys. For Shared Set, extract from the MOV EAX statement
+    retVal.type = 1;
     offset2 += prefix.hexlength();
     
-    //Step 4b - Extract all the keys. For Shared Set, extract from the MOV EAX statement
-    retVal[exe.fetchByte(offset2 + 7)/4]   = exe.fetchDWord(offset2 + 1);
-    retVal[exe.fetchByte(offset2 + 10)/4]  = exe.fetchDWord(offset2 + 1);
-    retVal[exe.fetchByte(offset2 + 13)/4]  = exe.fetchDWord(offset2 + 14);
-    retVal[4] = offset2;//Offset where the assignment occurs
+    retVal.keys[exe.fetchByte(offset2 + 7)/4]   = exe.fetchDWord(offset2 + 1);
+    retVal.keys[exe.fetchByte(offset2 + 10)/4]  = exe.fetchDWord(offset2 + 1);
+    retVal.keys[exe.fetchByte(offset2 + 13)/4]  = exe.fetchDWord(offset2 + 14);
+    retVal.keys.shift();//Shift all elements left
     
-    //Step 4c - Return addr and keys
+    retVal.ovrAddr = offset2;//Offset where the assignment occurs
+    
+    //Step 4c - Return the hash array
     return retVal;
   }
   
@@ -255,19 +273,20 @@ function FetchPacketKeyInfo() {
   }
   
   if (typeof(keys) !== "undefined") {
-    //Step 5c - Return the Keys and addresses
-    retVal[1] = parseInt(keys[0], 16);
-    retVal[2] = parseInt(keys[1], 16);
-    retVal[3] = parseInt(keys[2], 16);
-    retVal[4] = exe.Rva2Raw(retVal[0]);
+    //Step 5c - Assign the values to hash array
+    retVal.type = 2;
+    retVal.keys = [parseInt(keys[0], 16), parseInt(keys[1], 16), parseInt(keys[2], 16)];
+    retVal.ovrAddr = exe.Rva2Raw(retVal.funcAddr);
+    
     if (HasFramePointer())//Account for PUSH EBP and MOV EBP, ESP
-      retVal[4] += 3;
-      
+      retVal.ovrAddr += 3;
+     
+    //Step 5c - Return the hash array
     return retVal;
   }
   
-  //Step 6 - All known options exhausted
-  return retVal;//Keys will be all zero
+  //Step 6 - All known options exhausted - return the default hash array (with all keys as 0 & type = -1)
+  return retVal;
 }
 
 //######################################################################################
