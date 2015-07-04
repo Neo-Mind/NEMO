@@ -463,7 +463,7 @@ function FetchTillEnd(offset, refReg, refOff, tgtReg, langType, endFunc, assigne
     var modrm  = exe.fetchUByte(offset + 1);
     
     //Step 1b - Get the instruction details
-    var details = _GetOpDetails(opcode, modrm, offset);//contains length of instruction, distance to next offset, optional destination operand, optional source operand. Usually index 0 and 1 are same
+    var details = GetOpDetails(opcode, modrm, offset);//contains length of instruction, distance to next offset, optional destination operand, optional source operand. Usually index 0 and 1 are same
     
     //Step 1c - Now see if any of the end patterns match this opcode.
     done = endFunc(opcode, modrm, offset, details, assigner);
@@ -608,9 +608,10 @@ function FetchTillEnd(offset, refReg, refOff, tgtReg, langType, endFunc, assigne
 
 //####################################################################################
 //# Purpose: Support Function for 'FetchTillEnd' to get the Opcode details at offset #
+//#          Also used in Increase Attack Display patch                              #
 //####################################################################################
 
-function _GetOpDetails(opcode, modrm, offset) {
+function GetOpDetails(opcode, modrm, offset) {
   
   var details = {};
   var opcode2 = -1;//will hold 2nd Opcode byte in case opcode is 0x0F
@@ -640,7 +641,7 @@ function _GetOpDetails(opcode, modrm, offset) {
     details.ro   = (modrm & 0x38) >> 3;
 	  details.rm   = (modrm & 0x07);
     
-    //Step 2b - Start with 2 (Opcode + ModrM)
+    //Step 2b - Start with 2 (Opcode + ModRM)
     details.codesize = 2;
     
     //Step 2c - Check for Scale Index Base addressing (SIB byte) => R/M = 4 and Mode != 3
@@ -655,7 +656,7 @@ function _GetOpDetails(opcode, modrm, offset) {
     }
     
     //Step 2e - Check for Immediate 4 byte => Mode = 0 and R/M = 5 or Mode = 2
-    if (details.mode === 0x2 || (details.mode === 0x0 && details.rm === 0x5)) {
+    if (details.mode === 0x2 || (details.mode === 0x0 && (details.rm === 0x5 || details.rm === 0x4))) {
       details.tgtImm = exe.fetchDWord(offset + details.codesize);
       details.codesize += 4;
     }

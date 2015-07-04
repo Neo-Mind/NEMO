@@ -66,11 +66,9 @@ function IncreaseAtkDisplay() {
   if (offset === -1)
     return "Failed in Step 2 - Digit Counter missing";
   
-  offset += code.hexlength();
-
   //Step 2b.1 - Extract the stack offset from the instruction if it is a stack assignment
   if (exe.fetchUByte(offset) === 0xC7) {
-    var offByte = exe.fetchByte(offset - 5);
+    var offByte = exe.fetchByte(offset + code.hexlength() - 5);
   }
   else {
     //Step 2b.2 - If its a register assignment extract the register and see if it assigns to stack later
@@ -160,7 +158,7 @@ function IncreaseAtkDisplay() {
   +  movECX              //MOV ECX, g_modeMgr
   + " E9" + GenVarHex(1) //JMP offset
   ;
-  
+
   //Step 3c - Fill in the blanks
   if (fpEnb) {
     code = code.replace(" MovDigit", " 89 4C 35 00"); //MOV DWORD PTR SS:[ESI+EBP],ECX
@@ -187,63 +185,76 @@ function IncreaseAtkDisplay() {
   
   code += "C2 10 00";//RETN 10
   
-  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x200);
-  if (offset2 === -1)
+  var offset3 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x200);
+  if (offset3 === -1)
     return "Failed in Step 4 - Function end missing";
   
-  //Step 4b - Find all instructions using stack (relative to ESP for FPO and EBP for non FPO)
-  var offsets = [];
-  var opcodes = [" 89", " 8B", " 8D", " C7", " 3B", " 83"];
-  for (var i = 0; i < 8; i++) {
-    for (var j = 0; j < opcodes.length; j++) {
-      if (fpEnb)
-        code = opcodes[j] + (0x45 | (i << 3)).packToHex(1);
-      else
-        code = opcodes[j] + (0x44 | (i << 3)).packToHex(1) + " 24";
-      
-      offsets = offsets.concat(exe.findAll(code, PTYPE_HEX, false, "", offset, offset2));    
-    }
-  }
+  offset2 = offset + 5;
+  if (fpEnb)
+    var soff = 16;
+  else
+    var soff = 4*6;
   
-  //Step 4b - Iterate through each and update the stack offset if needed
-  for (var i = 0; i < offsets.length; i++) {
-    if (fpEnb) {
-      if (exe.fetchByte(offsets[i] + 2) <= (offByte2 + 16)) {//i.e existing offset points to location above the previous starting digit in stack
-         offsetStack(offsets[i] + 2);
+  while (offset2 < offset3) {
+    //Step 4b - Get current opcode and modrm
+    var opcode = exe.fetchUByte(offset2);
+    var modrm = exe.fetchUByte(offset2 + 1);
+     
+    //Step 4c - Get the instruction details
+    var details = GetOpDetails(opcode, modrm, offset2);//contains length of instruction, distance to next offset, optional destination operand, optional source operand. Usually index 0 and 1 are same
+    
+    //Step 4d - Change stack offsets for relevant locations
+    switch(opcode) {
+      case 0x89:
+      case 0x8B:
+      case 0x8D:
+      case 0xC7:
+      case 0x3B:
+      case 0xFF:
+      case 0x83: {
+        if (opcode === 0xFF && !fpEnb && details.ro === 2)
+          soff = 6*4;
+        
+        if (fpEnb && details.mode === 1) {
+          if (details.rm === 5 && exe.fetchByte(offset2 + 2) <= (offByte2 + soff) ) {
+            offsetStack(offset2 + 2);
+          }
+          else if (details.rm === 4 && (exe.fetchByte(offset2 + 2) & 0x7) === 5 &&  exe.fetchByte(offset2 + 3) <= (offByte2 + soff)) {
+            offsetStack(offset2 + 3);
+          }
+        }
+        else if (!fpEnb && details.mode === 1 && details.rm === 4 && (exe.fetchByte(offset2 + 2) & 0x7) === 4 && exe.fetchByte(offset2 + 3) >= (offByte2 + soff) ) {
+          offsetStack(offset2 + 3, 1);
+        }
+        
+        break;
       }
-    }
-    else {
-      if (exe.fetchByte(offsets[i] + 3) >= (offByte2 + 4*6)) {//i.e. existing offset points to location below the previous ending digit in stack
-        offsetStack(offsets[i] + 3, 1);
+      
+      case 0x68:
+      case 0x6A: {
+        if (!fpEnb)
+          soff += 4;
+        
+        break;
       }
+      
+      case 0xE8: {
+        if (!fpEnb)
+          soff = 6*4;
+        
+        break;
+      }
+      
     }
+    
+    //Step 4e - Update offset2
+    offset2 = details.nextOff;
   }
   
   if (fpEnb) {
     if (typeof(offByte) === "number")//Only saw it in VC10+ clients
     {
-      //Step 5a - Look for pattern that got missed after digit extraction (because it doesnt have the pattern as above)
-      code = 
-        " 8B AB AB" + (offByte2 + 16).packToHex(1) //MOV reg32_A, DWORD PTR SS:[reg32_B*8 + EBP - offByte2]; //original offByte2
-      + " 8B"                                      //MOV DWORD PTR reg32_C, DS:[ESI]
-      ;
-      var offset3 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset2);
-      
-      if (offset3 === -1) {//For VC11
-        code =
-          " FF AB AB" + (offByte2 + 16).packToHex(1) //PUSH DWORD PTR SS:[reg32_B*8 + EBP - offByte2]; //original offByte2
-        + " FF"                                      //PUSH DWORD PTR SS:[EBP-x]
-        ;
-        offset3 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset2);
-      }
-      
-      if (offset3 === -1)
-        return "Failed in Step 5 - Digit access missing";
-      
-      //Step 5b - Update the stack offset
-      offsetStack(offset3 + 3);
-      
-      //Step 5c - Look for MOV instruction to stack that occurs before refOffset
+      //Step 5a - Look for MOV instruction to stack that occurs before refOffset
       offset = exe.find("89 AB AB 81", PTYPE_HEX, true, "\xAB", refOffset - 6, refOffset);//MOV DWORD PTR SS:[EBP-x], reg32_A followed by the comparson
     
       if (offset === -1)
@@ -252,28 +263,28 @@ function IncreaseAtkDisplay() {
       if (offset === -1)
         return "Failed in Step 2 - MOV missing";
     
-      //Step 5d - Update the stack offset
+      //Step 5b - Update the stack offset
       offsetStack(offset + 2);
     }
   }
   else {
-    //Step 5e - Update the stack offset at offset2 + 2
-    offsetStack(offset2 + 2, 1);
+    //Step 5c - Update the stack offset at offset3 + 2 (change x in ADD ESP, x)
+    offsetStack(offset3 + 2, 1);
     
-    //Step 5g - Look for LEA instruction before refOffset (FPO client). ESP+x will be before the space allocated for digits
+    //Step 5d - Look for LEA instruction before refOffset (FPO client). ESP+x will be before the space allocated for digits
     offset = exe.find("8D AB 24", PTYPE_HEX, true, "\xAB", refOffset - 0x28, refOffset);//LEA EAX, [ESP+x]
     if (offset === -1)
       return "Failed in Step 2 - LEA missing";
     
-    //Step 5h - Update the stack offset
+    //Step 5e - Update the stack offset
     offsetStack(offset + 3, 1);
     
-    //Step 5i - Look for MOV ECX, DWORD PTR SS:[ARG.2] before refOffset. ARG.2 is now 0x10 bytes farther
+    //Step 5f - Look for MOV ECX, DWORD PTR SS:[ARG.2] before refOffset. ARG.2 is now 0x10 bytes farther
     offset = exe.find("8B AB 24", PTYPE_HEX, true, "\xAB", refOffset - 8, refOffset);
     if (offset === -1)
       return "Failed in Step 2 - ARG.2 assignment missing";
     
-    //Step 5j - Update the stack offset
+    //Step 5g - Update the stack offset
     offsetStack(offset + 3, 1);
   }
   
