@@ -189,7 +189,8 @@ function DisableHShield() {
 //============================//
 // Disable Unsupported client //
 //============================//
-if (exe.findString("aossdk.dll", PTYPE_STRING, false) === -1)
-  DisableHShield = null;
+function DisableHShield_() {
+  return (exe.findString("aossdk.dll", PTYPE_STRING, false) !== -1);
+}
 
 //To Do: Accomodate for Disable HShield removal in Custom DLL patch when import removal is being used

@@ -21,18 +21,31 @@ function ExtractMsgTable() {
     + " 8B AB AB"             //MOV reg32_A, DWORD PTR DS:[reg32_B*4 + reg32_C]
     + " EB AB"                //JMP SHORT addr2
     + " 8B AB AB AB AB AB 00" //MOV reg32_D, DWORD PTR DS:[reg32_B*8 + tblAddr]
-    ;
-    
+    ;  
 	var offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10, offset+80);
-	if (offset2 === -1) {
+  
+	if (offset2 === -1) {//Newest Clients
     code = code.replace(" AB 8B AB", " AB FF AB");//Change MOV reg32_D with PUSH 
 	  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10, offset+80);
   }
-	if (offset2 === -1) 
+
+	if (offset2 === -1) {//Old clients
+    code =
+      " 33 F6"          //XOR ESI, ESI
+    + " AB AB AB AB 00" //MOV reg32_A, tblAddr
+    ;
+    
+    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10, offset+30);
+    if (offset2 != -1 && (exe.fetchByte(offset2 + 2) & 0xB8) != 0xB8) {//Checking the opcode is within 0xB8-0xBF
+      offset2 = -1;
+    }
+  }
+
+	if (offset2 === -1)
 		throw "Error: msgString LUT missing";
 	
   //Step 1d - Extract the tblAddr
-	offset = exe.Rva2Raw(exe.fetchDWord(offset2 + code.hexlength()-4)) - 4;
+	offset = exe.Rva2Raw(exe.fetchDWord(offset2 + code.hexlength() - 4)) - 4;
   
   //Step 2a - Read the reference file to an array - Korean in Hex
 	var fp = new TextFile();

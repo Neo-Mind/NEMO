@@ -76,5 +76,6 @@ function EnableMailBox() {
 //================================================//
 // Disable Patch for Unsupported/Unneeded clients //
 //================================================//
-if (exe.getClientDate() < 20130320 || exe.getClientDate() > 20140800)
-  EnableMailBox = null;
+function EnableMailBox_() {
+  return (exe.getClientDate() >= 20130320 || exe.getClientDate() <= 20140800);
+}

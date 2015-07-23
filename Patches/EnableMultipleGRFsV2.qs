@@ -116,6 +116,11 @@ function EnableMultipleGRFsV2() {//The initial steps are same as EnableMultipleG
   
   //Step 5 - Insert everything.
   exe.insert(free, size, code, PTYPE_HEX);
+ 
+  //Step 6 - Find offset of rdata.grf (if present zero it out)
+  offset = exe.findString("rdata.grf", RAW);
+  if (offset !== -1)  
+    exe.replace(offset, "00", PTYPE_HEX);
   
   return true;
 }

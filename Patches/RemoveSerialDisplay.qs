@@ -36,5 +36,6 @@ function RemoveSerialDisplay() {
 //=================================//
 // Disable for Unsupported Clients //
 //=================================//
-if (exe.getClientDate() <= 20101116)
-  RemoveSerialDisplay = null;
+function RemoveSerialDisplay_() {
+  return (exe.getClientDate() > 20101116);
+}

@@ -58,5 +58,6 @@ function DisableHallucinationWavyScreen() {//Missing Comparison in pre-2010 clie
 //==============================//
 // Disable for Unsupported date //
 //==============================//
-if (exe.getClientDate() > 20120516)
-  DisableHallucinationWavyScreen = null; //New client uses Inverted Screen effect. Havent figured out where it is
+function DisableHallucinationWavyScreen_() {
+  return (exe.getClientDate() <= 20120516);//New client uses Inverted Screen effect. Havent figured out where it is
+}

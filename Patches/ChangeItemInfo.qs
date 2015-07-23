@@ -35,5 +35,6 @@ function ChangeItemInfo() {
 //=================================//
 // Disable for Unsupported clients //
 //=================================//
-if (exe.findString("System/iteminfo.lub", RAW) === -1)
-  ChangeItemInfo = null;
+function ChangeItemInfo_() {
+  return (exe.findString("System/iteminfo.lub", RAW) !== -1);
+}

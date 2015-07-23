@@ -46,5 +46,6 @@ function IncreaseViewID() {
 //=============================//
 // Disable Unsupported Clients //
 //=============================//
-if (exe.findString("ReqAccName", RAW) === -1)
-  IncreaseViewID = null;
+function IncreaseViewID_() {
+  return(exe.findString("ReqAccName", RAW) !== -1);
+}

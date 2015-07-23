@@ -74,5 +74,6 @@ function RestoreRoulette() {
 //=====================================================//
 // Disable for Unsupported Clients - Check for Icon bmp//
 //=====================================================//
-if ( exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\basic_interface\\roullette\\RoulletteIcon.bmp", RAW) === -1)
-  RestoreRoulette = null;
+function RestoreRoulette_() {
+  return (exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\basic_interface\\roullette\\RoulletteIcon.bmp", RAW) !== -1);
+}

@@ -56,5 +56,6 @@ function AllowSpaceInGuildName() {
 //==============================//
 // Disable for Unsupported date //
 //==============================//
-if (exe.getClientDate() < 20120207)
-  AllowSpaceInGuildName = null;
+function AllowSpaceInGuildName_() {
+  return (exe.getClientDate() >= 20120207);
+}

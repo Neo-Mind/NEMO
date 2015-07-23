@@ -38,7 +38,7 @@ function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 
   + " F7 E1"          // MUL ECX
   ;
     
-  var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
+  var offsets = exe.findCodes(code, PTYPE_HEX, false);
   if (offsets.length === 0)
     return "Failed in Step 2 - Magic Divisor not found";
   
@@ -46,14 +46,15 @@ function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 
     //Step 2b - Find the JLE after each (below the TEST/CMP instruction) 
     offset = exe.find(" 0F 8E AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 7, offsets[i] + 30);//JLE addr
     
-    if (offset === -1)
-      offset = exe.find(" 0F 85 AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 7, offsets[i] + 30);//JNE addr
+    //Step 2c - Change to NOP + JMP
+    if (offset !== -1)
+      exe.replace(offset, " 90 E9", PTYPE_HEX);
     
+    /*
+    offset = exe.find(" 0F 85 AB AB 00 00", PTYPE_HEX, true, "\xAB", offsets[i] + 7, offsets[i] + 30);//JNE addr
     if (offset === -1)
       return "Failed in Step 2 - Iteration No." + i;
-    
-    //Step 2c - Change to NOP + JMP
-    exe.replace(offset, " 90 E9", PTYPE_HEX);
+    */
   }
   
   return true;

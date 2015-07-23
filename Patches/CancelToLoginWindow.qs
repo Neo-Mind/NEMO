@@ -143,8 +143,9 @@ function CancelToLoginWindow() {
   return true;
 }
 
-//===============================================================//
-// Disable for Unneeded Clients - Only VC9+ Client tries to quit //
-//===============================================================//
-if (exe.getClientDate() <= 20100616)
-  CancelToLoginWindow = null;
+//==========================================================================//
+// Disable for Unneeded Clients - Only Certain Client onwards tries to quit //
+//==========================================================================//
+function CancelToLoginWindow_() {
+  return (exe.getClientDate() > 20100616);
+}

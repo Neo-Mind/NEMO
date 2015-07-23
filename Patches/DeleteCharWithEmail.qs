@@ -1,4 +1,4 @@
-﻿//###################################################################
+//###################################################################
 //# Purpose: Change the JE/JNE to JMP after LangType Comparisons in #
 //#          Char Deletion function and the one which shows MsgBox  #
 //###################################################################
@@ -16,7 +16,7 @@ function DeleteCharWithEmail()
   + " 83 F8 0A"      //CMP EAX,0A
   + " 74"            //JE SHORT addr -> do the one for Email
   ;
-  
+
   var offset = exe.findCode(code, PTYPE_HEX, false);
   if (offset === -1)
     return "Failed in Step 1 - Comparison missing";
@@ -26,16 +26,18 @@ function DeleteCharWithEmail()
   
   //Step 2a - Find the LangType comparison for MsgBox String
   code =
-    " 75 07"          //JNE SHORT addr -> PUSH 12B
-  + " 68 17 07 00 00" //PUSH 717
+    " 6A 00"          //PUSH 0
+  + " 75 07"          //JNE SHORT addr -> PUSH 12B
+  + " 68 AB AB 00 00" //PUSH 717 or 718 or 12E - the MsgString ID changes between clients
+  + " EB 05"          //JMP SHORT addr2 -> CALL MsgStr
   ;
-   
-  offset = exe.findCode(code, PTYPE_HEX, false);
+  
+  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if (offset === -1)
     return "Failed in Step 2 - Comparison missing";
   
   //Step 2b - Change JNE to JMP
-  exe.replace(offset, "EB", PTYPE_HEX);
+  exe.replace(offset + 2, "EB", PTYPE_HEX);
   
   return true;
 }

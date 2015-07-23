@@ -40,5 +40,6 @@ function LoadCustomQuestLua() {
 //================================================================//
 // Disable for Unsupported client - Quest_function not even there //
 //================================================================//
-if (exe.findString("lua files\\quest\\Quest_function", RAW) === -1)
-  LoadCustomQuestLua = null;
+function LoadCustomQuestLua_() {
+  return (exe.findString("lua files\\quest\\Quest_function", RAW) !== -1);
+}

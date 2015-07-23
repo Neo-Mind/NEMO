@@ -82,7 +82,8 @@ function GetInputFile(f, varname, title, prompt, fpath) {
   while (inp === "") {
     //Step 1 - Get the filename
     inp = exe.getUserInput(varname, XTYPE_FILE, title, prompt, fpath);
-    if (inp === "") return false;
+    if (inp === "") 
+      return false;
     
     //Step 2 - Check if file is there.
     f.open(inp);

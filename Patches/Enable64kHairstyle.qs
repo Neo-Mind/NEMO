@@ -167,9 +167,9 @@ function Enable64kHairstyle() {
 //=================================//
 // Disable for Unsupported Clients //
 //=================================//
-if (exe.getClientDate() <= 20111102)
-  Enable64kHairstyle = null;
-
+function Enable64kHairstyle_() {
+  return (exe.getClientDate() > 20111102);
+}
 
 /*  Not Done - not sure if its needed
   // Step 3a - Void Table lookup.
