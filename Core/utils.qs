@@ -128,7 +128,7 @@ function FetchPacketKeyInfo() {
   //Step 1c - In case its not there look for the Reference Pattern present usually after PACKET_CZ_ENTER
   if (offset === -1) {
     
-    var code =
+    var code =          //template call format
       " E8 AB AB AB AB" //CALL CRagConnection::instanceR
     + " 8B C8"          //MOV ECX, EAX
     + " E8 AB AB AB AB" //CALL func
