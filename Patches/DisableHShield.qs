@@ -111,10 +111,9 @@ function DisableHShield() {
     if (offset2 !== -1)
       exe.replace(offset2 + code.hexlength() - 1, "EB", PTYPE_HEX);//change JNE to JMP
   }
-  return true;
   
-  /*
-  //The import removal is currently commented out since the patch seems to work fine without it.
+  if (exe.getClientDate() > 20140700)
+    return true;
   
   //======================================//
   // Now we will remove aossdk.dll Import //
@@ -183,7 +182,6 @@ function DisableHShield() {
   }
   
   return true;
-  */
 }
 
 //============================//
@@ -193,4 +191,16 @@ function DisableHShield_() {
   return (exe.findString("aossdk.dll", RAW) !== -1);
 }
 
-//To Do: Accomodate for Disable HShield removal in Custom DLL patch when import removal is being used
+//#######################################################################
+//# Purpose: Rerun the UseCustomDLL function if the Custom DLL patch is #
+//#          selected so that it doesnt accomodate for HShield patch    #
+//#######################################################################
+
+function _DisableHShield() {
+  if (getActivePatches().indexOf(211) !== -1)
+  {
+    exe.setCurrentPatch(211);
+    exe.emptyPatch(211);
+    UseCustomDLL();
+  }
+}

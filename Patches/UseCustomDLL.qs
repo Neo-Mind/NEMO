@@ -4,6 +4,7 @@
 //##############################################################
 
 delete Import_Info;//Removing any stray values before Patches are selected
+var dllFile = false;
 
 function UseCustomDLL() {
   
@@ -40,7 +41,10 @@ function UseCustomDLL() {
     
   //Step 2a - Get the list file containing the dlls and functions to add
   var fp = new TextFile();
-  if (!GetInputFile(fp, "$customDLL", "File Input - Use Custom DLL", "Enter the DLL info file", APP_PATH + "/Input/dlls.txt"))
+  if (!dllFile)
+      dllFile = GetInputFile(fp, "$customDLL", "File Input - Use Custom DLL", "Enter the DLL info file", APP_PATH + "/Input/dlls.txt");
+ 
+  if (!dllFile)
     return "Patch Cancelled";
   
   //Step 2b - Read the file and store the dll names and function names into arrays
@@ -146,4 +150,5 @@ function _UseCustomDLL() {
     exe.emptyPatch(15);
     DisableHShield();
   }
+  dllFile = false;
 }

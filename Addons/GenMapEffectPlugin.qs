@@ -247,22 +247,22 @@ function GenMapEffectPlugin() {
 	fp2.writeline("#include <WTypes.h>");
 	fp2.writeline("\n// Client Date : " + exe.getClientDate());
 	fp2.writeline("\n// Client offsets - some are #define because they were appearing in multiple locations unnecessarily");
-	fp2.writeline("#define G_WEATHER 0x" + convertToBE(gWeather) + ";");
-	fp2.writeline("#define G_RENDERER 0x" + convertToBE(gRenderer) + ";");
-	fp2.writeline("#define G_USEEFFECT 0x" + convertToBE(gUseEffect) + ";");
+	fp2.writeline("#define G_WEATHER 0x" + gWeather.toBE() + ";");
+	fp2.writeline("#define G_RENDERER 0x" + gRenderer.toBE() + ";");
+	fp2.writeline("#define G_USEEFFECT 0x" + gUseEffect.toBE() + ";");
 	fp2.writeline("\nDWORD CWeather_EffectId2LaunchFuncAddr[] = {\n\tNULL, //CEFFECT_NONE");
-	fp2.writeline("\t0x" + convertToBE(CW_LCloud) + ", // CEFFECT_SKY -> void CWeather::LaunchCloud(CWeather this<ecx>, char param)");
-	fp2.writeline("\t0x" + convertToBE(CW_LSnow) + ", // CEFFECT_SNOW -> void CWeather::LaunchSnow(CWeather this<ecx>)");
-	fp2.writeline("\t0x" + convertToBE(CW_LMaple) + ", // CEFFECT_MAPLE -> void CWeather::LaunchMaple(CWeather this<ecx>)");
-	fp2.writeline("\t0x" + convertToBE(CW_LSakura) + ", // CEFFECT_SAKURA -> void CWeather::LaunchSakura(CWeather this<ecx>)");
-	fp2.writeline("\t0x" + convertToBE(CW_LPokJuk) + ", // CEFFECT_POKJUK -> void CWeather::LaunchPokJuk(CWeather this<ecx>)");
-	fp2.writeline("\t0x" + convertToBE(CW_LNight) + ", // CEFFECT_NIGHT -> void CWeather::LaunchNight(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + CW_LCloud.toBE() + ", // CEFFECT_SKY -> void CWeather::LaunchCloud(CWeather this<ecx>, char param)");
+	fp2.writeline("\t0x" + CW_LSnow.toBE() + ", // CEFFECT_SNOW -> void CWeather::LaunchSnow(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + CW_LMaple.toBE() + ", // CEFFECT_MAPLE -> void CWeather::LaunchMaple(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + CW_LSakura.toBE() + ", // CEFFECT_SAKURA -> void CWeather::LaunchSakura(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + CW_LPokJuk.toBE() + ", // CEFFECT_POKJUK -> void CWeather::LaunchPokJuk(CWeather this<ecx>)");
+	fp2.writeline("\t0x" + CW_LNight.toBE() + ", // CEFFECT_NIGHT -> void CWeather::LaunchNight(CWeather this<ecx>)");
 	fp2.writeline("};\n");
 	
-	fp2.writeline("#define CGameMode_Initialize_EntryPtr (void*)0x" + convertToBE(exe.Raw2Rva(CI_Entry) ) + ";");
-	fp2.writeline("#define CGameMode_OnInit_EntryPtr (void*)0x"     + convertToBE(exe.Raw2Rva(CO_Entry) ) + ";");
-	fp2.writeline("void* CGameMode_Initialize_RetPtr = (void*)0x"   + convertToBE(exe.Raw2Rva(CI_Return)) + ";");
-	fp2.writeline("void* CGameMode_OnInit_RetPtr = (void*)0x"       + convertToBE(exe.Raw2Rva(CO_Return)) + ";");
+	fp2.writeline("#define CGameMode_Initialize_EntryPtr (void*)0x" + exe.Raw2Rva(CI_Entry ).toBE(4) + ";");
+	fp2.writeline("#define CGameMode_OnInit_EntryPtr (void*)0x"     + exe.Raw2Rva(CO_Entry ).toBE(4) + ";");
+	fp2.writeline("void* CGameMode_Initialize_RetPtr = (void*)0x"   + exe.Raw2Rva(CI_Return).toBE(4) + ";");
+	fp2.writeline("void* CGameMode_OnInit_RetPtr = (void*)0x"       + exe.Raw2Rva(CO_Return).toBE(4) + ";");
 
   fp2.writeline("\r\n#define GR_CLEAR " + (parseInt(gR_clrColor, 16)/4) + ";");
 	fp2.close();
