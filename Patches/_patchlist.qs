@@ -179,7 +179,7 @@ registerPatch( 64, "FixChatAt", "@ Bug Fix", "UI", 0, "Shinryo", "Correct the bu
 
 registerPatch( 65, "ChangeItemInfo", "Load Custom lua file instead of iteminfo.lub", "UI", 0, "Neo", "Makes the client load your own lua file instead of iteminfo.lub . If you directly use ItemInfo.lub for your translated items, it may become lost during the next kRO update", false);
 
-//66 is Unused - to be filled
+registerPatch( 66, "LoadItemInfoPerServer", "Load iteminfo with char server (Experimental)", "Data", 0, "Neo", "Load ItemInfo file and call main function with selected char server name as argument", false);
 
 registerPatch( 67, "DisableQuakeEffect", "Disable Quake skill effect", "UI", 0, "Ai4rei/AN", " Disables the Earthquake skill effect", false);
 

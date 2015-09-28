@@ -36,7 +36,7 @@ function ResizeFont() {
   
   //Step 2d - Fill in the Blanks
   code = ReplaceVarHex(code, 1, freeRva + 4);
-  code = ReplaceVarHex(code, 2, newHeight);
+  code = ReplaceVarHex(code, 2, -newHeight);
   code = ReplaceVarHex(code, 3, offset);
   
   //Step 3a - Insert it
