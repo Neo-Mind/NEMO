@@ -33,6 +33,8 @@ function ResizeFont() {
   
   //Step 2c - Get the new Font height
   var newHeight = exe.getUserInput("$newFontHgt", XTYPE_BYTE, "Number Input", "Enter the new Font Height(1-127) - snaps to closest valid value", 10, 1, 127);
+  if (newHeight === 10)
+    return "Patch Cancelled - New value is same as old";
   
   //Step 2d - Fill in the Blanks
   code = ReplaceVarHex(code, 1, freeRva + 4);

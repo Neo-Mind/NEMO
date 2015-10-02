@@ -37,6 +37,8 @@ function IncreaseScreenshotQuality() {
   
   //Step 2a - Get new quality value from user
   var newvalue = exe.getUserInput("$uQuality", XTYPE_BYTE, "Number Input", "Enter the new quality factor (0-100)", 50, 0, 100);
+  if (newvalue === 50)
+    return "Patch Cancelled - New value is same as old";
   
   //Step 2b - Get the jquality offset = DIBChannels + 60
   if (fpEnb)

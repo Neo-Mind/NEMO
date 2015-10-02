@@ -18,7 +18,7 @@ function ChangeItemInfo() {
   //Step 2a - Get the new filename from user
   var myfile = exe.getUserInput("$newItemInfo", XTYPE_STRING, "String input - maximum 28 characters including folder name/", "Enter the new ItemInfo path (should be relative to RO folder)", "System/iteminfo.lub", 1, 28);
   if (myfile === "System/iteminfo.lub")
-    return "Patch Cancelled";
+    return "Patch Cancelled - New value is same as old";
   
   //Step 2b - Allocate space for the new name
   var free = exe.findZeros(myfile.length);

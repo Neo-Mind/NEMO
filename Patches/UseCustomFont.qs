@@ -16,7 +16,7 @@ function UseCustomFont() {
   
   // Step 2a - Get the Font name from user
   var newFont = exe.getUserInput("$newFont", XTYPE_FONT, 'Font input', 'Select the new Font Family', "Arial");
-  
+
   // Step 2b - Get its address if its already existing
   var free = exe.findString(newFont, RAW);
   

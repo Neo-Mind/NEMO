@@ -24,7 +24,7 @@ function IncreaseViewID() {
   //Step 2a - Get the new limit from user
   var newValue = exe.getUserInput("$newValue", XTYPE_DWORD, "Number input", "Enter the new Max Headgear View ID", oldValue, oldValue, 32000);//32000 could prove fatal.
   if (newValue === oldValue)
-    return false;
+    return "Patch Cancelled - New value is same as old";
   
   //Step 2b - Find all occurrences of the old limit with the user specified value
   var offsets = exe.findAll(oldValue.packToHex(4), PTYPE_HEX, false, "", offset - 0xA0, offset + 0x50);

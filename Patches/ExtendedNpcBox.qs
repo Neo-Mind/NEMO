@@ -51,7 +51,7 @@ function ExtendNpcBox() {
   //Step 2a - Get new value from user
   var value = exe.getUserInput("$npcBoxLength", XTYPE_DWORD, "Number Input", "Enter new NPC Dialog box length (2052 - 4096)", 0x804, 0x804, 0x1000);
   if (value === 0x804)
-    return false;
+    return "Patch Cancelled - New value is same as old";
   
   //Step 2b - Change the Stack Allocation with new values
   exe.replaceDWord(offset + 2, value + stackSub - 0x804);//Change x in SUB ESP, x
