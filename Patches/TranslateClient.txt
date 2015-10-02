@@ -28,18 +28,22 @@ F: C4 C9 B8 AF C5 CD 20 B8 B8 B5 E9 B1 E2 00
 R: 'Make Character'
 
 -----------------------
+H: Skill Timer Hour
+-----------------------
+F: 25 64 20 BD C3 B0 A3 20
+R: '%d hour '
+
+-----------------------
 M: Skill Timer Minutes
 -----------------------
-
 F: 25 64 20 BA D0 20
-R: '%d m '
+R: '%d min '
 
 -----------------------
 M: Skill Timer Seconds
 -----------------------
-
 F: 25 64 20 C3 CA
-R: '%d s'
+R: '%d sec'
 
 ---------------------------------
 M: Translate Delete Time - Part 1
