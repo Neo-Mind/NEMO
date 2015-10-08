@@ -57,6 +57,7 @@ registerPatch(  2, "AllowChatFlood", "Chat Flood Allow", "UI", 1, "Shinryo", "Di
 registerPatch(  3, "RemoveChatLimit", "Chat Flood Remove Limit", "UI", 1, "Neo", "Remove the clientside limitation which checks for maximum repeated lines", false);
 
 //registerPatch(  4, "EnableAuraOver", "Enable Aura Over Level 99 And Level 150", "UI", 0, "Shinryo", "Allows the client to display standard auras over level 99 and 3rd class auras over level 150", false);
+registerPatch(  4, "CustomAuraLevels", "Use Custom Aura Levels", "UI", 0, "Neo", "Allows the client to display standard auras after user specified levels for various classes", false);
 
 registerPatch(  5, "EnableProxySupport", "Enable Proxy Support (Experimental)", "Fix", 0, "Ai4rei/AN", "Ignores server-provided IP addresses when changing servers", false);
 
@@ -277,7 +278,7 @@ registerPatch(206, "LoadCustomQuestLua", "Load Custom Quest Lua/Lub files", "Cus
 
 registerPatch(207, "ResizeFont", "Resize Font", "Custom", 0, "Yommy, Neo", "Resizes the height of the font used to the value specified", false);
 
-//208 is Unused - to be filled.
+registerPatch(208, "RestoreCashShop", "Restore Cash Shop Icon", "Special", 0, "Neo", "Restores the Cash Shop Icon in RE clients that can have them", false);
 
 registerPatch(209, "EnableMailBox", "Enable Mail Box for All LangTypes", "Custom", 0, "Neo", "Enables the full use of Mail Boxes and @mail commands (write is disabled for few LangTypes by default in 2013 Clients)", false);
 
