@@ -19,6 +19,16 @@ function MoveCashShopIcon() {
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   
+  if (offset === -1) {
+    code = code.replace("50", "6A 10 50");//PUSH 10 before PUSH EAX
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    
+    if (offset !== -1) {//put the PUSH 10 before the CALL
+      exe.replace(offset, " 6A 10", PTYPE_HEX);
+      offset += 2;
+    }
+  }
+  
   if (offset === -1)
     return "Failed in Step 1 - Coord calculation missing";
   
