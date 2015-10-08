@@ -47,27 +47,50 @@ function ExtractMsgTable() {
   //Step 1d - Extract the tblAddr
 	offset = exe.Rva2Raw(exe.fetchDWord(offset2 + code.hexlength() - 4)) - 4;
   
-  //Step 2a - Read the reference file to an array - Korean in Hex
 	var fp = new TextFile();
-	var hArr = new Object();
-
+  var refArr = {};
+  var engArr = [];
+  var str = "";
+  
+  //Step 2a - Read the reference file to an array - Korean ASCII
 	var index = 0;
-	fp.open(APP_PATH + "/Input/msgStringHex.txt", "r");
-	while(!fp.eof()) {
-		var line = fp.readline().trim();
-		hArr[line] = index;
-		index++;
-	}
+  var debug, i;
+	fp.open(APP_PATH + "/Input/msgStringRef.txt", "r");
+	while (!fp.eof()) {
+		var line = fp.readline();
+    str += line.toHex();
+    
+    if (line.indexOf('#', line.length - 1) !== -1) {
+      refArr[str] = index;
+      str = "";
+      index++;
+    }
+    else {
+      str += " 0d 0a";
+      debug = str;
+      i = index;
+    }
+  }
 	fp.close();
-	
-  //Step 2b - Read the reference file to an array - English translations
-	var engArr = [];
+  
+  str = "";
 	fp.open(APP_PATH + "/Input/msgStringEng.txt", "r");
-	while(!fp.eof()) {
-		engArr.push(fp.readline());
-	}
-	fp.close();
-	
+	while (!fp.eof()) {
+		var line = fp.readline();
+    str += line;
+    
+    if (line.indexOf('#', line.length - 1) !== -1) {
+      engArr.push(str);
+      str = "";
+    }
+    else {
+      str += "\n";
+    }
+  }
+  fp.close();
+  
+  //return i + ":" + debug + " " + engArr[i];
+  
   //Step 3 - Loop through the table inside the client - Each Entry
 	var done = false;
 	var id = 0;
@@ -79,14 +102,13 @@ function ExtractMsgTable() {
 			var start_offset = exe.Rva2Raw(exe.fetchDWord(offset+4));
 			var end_offset   = exe.find("00", PTYPE_HEX, false, "", start_offset);
       
-      var msgstr = exe.fetchHex(start_offset, end_offset - start_offset);
-			msgstr = msgstr.replace(/ 0d 0a/g, " 5c 6e").trim();
-			
+      var msgstr = exe.fetchHex(start_offset, end_offset - start_offset) + " 23";
+      
       //Step 3b - Map the Korean string to English
-      if (typeof(hArr[msgstr]) !== "undefined" && typeof(engArr[hArr[msgstr]]) !== "undefined")
-				fp.writeline(engArr[hArr[msgstr]]);
-			else
-				fp.writeline(msgstr.toAscii() + "#");
+			if (typeof(refArr[msgstr]) !== "undefined" && typeof(engArr[refArr[msgstr]]) !== "undefined")
+				fp.writeline(engArr[refArr[msgstr]]);
+			else  
+      	fp.writeline(msgstr.toAscii() + "#");
       
 			offset += 8;
 			id++;

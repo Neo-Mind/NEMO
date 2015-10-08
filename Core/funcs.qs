@@ -89,3 +89,11 @@ Number.prototype.packToHex = function(size) {
 Number.prototype.toBE = function(size) {
   return this.packToHex(size).toBE();
 }
+
+Array.prototype.toRvaBE = function() {
+  var result = [];
+  for (var i = 0; i < this.length; i++) {
+    result.push(exe.Raw2Rva(this[i]).toBE());
+  }
+  return result;
+}
