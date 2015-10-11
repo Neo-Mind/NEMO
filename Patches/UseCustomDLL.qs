@@ -55,7 +55,7 @@ function UseCustomDLL() {
   while (!fp.eof()) {
     line = fp.readline().trim();
     if (line === "" || line.indexOf("//") == 0) continue;
-    if ((line.indexOf(".dll") - line.length) == -4) {
+    if (line.length > 4 && (line.indexOf(".dll") - line.length) == -4) {
       dptr++;
       dllNames.push({"offset":0, "value":line});
       fnNames[dptr] = [];
@@ -71,22 +71,27 @@ function UseCustomDLL() {
   var strSize = 0;//Holds the size of dll names and function names
   
   for (var i = 0; i < dllNames.length; i++) {
-    if (fnNames[i].length == 0) continue;    
     var name = dllNames[i].value;
     dllNames[i].offset = strSize;
     strData = strData + name.toHex() + " 00";    
     strSize = strSize + name.length + 1;//Space for name
     dirSize = dirSize + 20 ;//IDIR Entry Size
-  
+
     for (var j = 0; j < fnNames[i].length; j++) {
       var name = fnNames[i][j].value;
-      fnNames[i][j].offset = strSize;
-      strData = strData + j.packToHex(2) + name.toHex() + " 00";
-      strSize = strSize + 2 + name.length + 1;//Space for name
+
+      if (name.charAt(0) === ':') {//By Ordinal
+        fnNames[i][j].offset = 0x80000000 | parseInt(name.substr(1));
+      }
+      else {//By Name
+        fnNames[i][j].offset = strSize;
+        strData = strData + j.packToHex(2) + name.toHex() + " 00";
+        strSize = strSize + 2 + name.length + 1;//Space for name
       
-      if (name.length % 2 != 0) {//Even the Odds xD
-        strData = strData + " 00";
-        strSize++;
+        if (name.length % 2 != 0) {//Even the Odds xD
+          strData = strData + " 00";
+          strSize++;
+        }
       }
       
       dirSize += 4; //Thunk Value RVAs & Ordinals
@@ -112,7 +117,11 @@ function UseCustomDLL() {
     dirTableData = dirTableData + prefix + (baseAddr + dllNames[i].offset).packToHex(4) + (baseAddr + strSize + dptr).packToHex(4);
     
     for (var j = 0; j < fnNames[i].length; j++) {
-      dirEntryData = dirEntryData + (baseAddr + fnNames[i][j].offset).packToHex(4);
+      if (fnNames[i][j].offset & 0x80000000 === 0)
+        dirEntryData = dirEntryData + (baseAddr + fnNames[i][j].offset).packToHex(4);
+      else
+        dirEntryData = dirEntryData + fnNames[i][j].offset.packToHex(4);
+      
       dptr += 4;
     }
     dirEntryData = dirEntryData + " 00 00 00 00";
