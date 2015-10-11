@@ -3,7 +3,7 @@
 //#          CSession::IsOnlyEnglish to NOP                  #
 //############################################################
 
-function UseAsciiOnAllLangtypes() {
+function UseAsciiOnAllLangTypes() {
   
   // Step 1 - Find the comparison. JNZ is the very next instruction
   //          TEST BYTE PTR DS:[reg32_A + reg32_B], 80 
