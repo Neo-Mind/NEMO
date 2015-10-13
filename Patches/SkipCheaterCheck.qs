@@ -20,7 +20,7 @@ function SkipCheaterCheck(msgNum) {
   //Step 1 - Find the TEST after CSession::IsCheatName/IsGuildCheatName Call (testing its result)
   var code = 
     " 85 C0"          //TEST EAX, EAX
-  + " 74 10"          //JZ SHORT addr
+  + " 74 AB"          //JZ SHORT addr
   + " 6A 00"          //PUSH 0
   + " 6A 00"          //PUSH 0
   + " 68 FF FF 00 00" //PUSH 0FFFF
@@ -30,14 +30,14 @@ function SkipCheaterCheck(msgNum) {
   
   if (offset === -1) {
     code = code.replace(/6A 00/g, "AB");//Change PUSH 0 with PUSH reg32
-	offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   
   if (offset === -1)
     return "Failed in Step 1";
   
-  //Steo 2 - Change the JZ to JMP
-  exe,replace(offset + 2, "AB", PTYPE_HEX);
+  //Step 2 - Change the JZ to JMP
+  exe.replace(offset + 2, "EB", PTYPE_HEX);
   
   return true;
 }
