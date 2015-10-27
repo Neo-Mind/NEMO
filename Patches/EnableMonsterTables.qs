@@ -14,7 +14,7 @@ function EnableMonsterTables() {//Comparison is different for pre-2010 clients.
     LANGTYPE             //MOV reg32_A, DWORD PTR DS:[g_serviceType]
   + " 83 C4 04"          //ADD ESP, 4
   + " 83 AB 13"          //CMP reg32_A, 13
-  + " 0F 85 AB 00 00 00" //JNE addr
+  + " 0F 85 AB AB 00 00" //JNE addr
   ;
   
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");

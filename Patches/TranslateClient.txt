@@ -1328,15 +1328,15 @@ M: Total Cash in Cash Shop
 F: 54 6F 74 61 6C 20 3A 20 25 64 20 C4 B3 BD C3
 R: 'Total : %d Cash'
 
---------------------------
+----------------------------
 M: 2015-10-01 Char Creation
---------------------------
+----------------------------
 
 F: B9 CC B5 E5 B0 A1 B8 A3 B5 E5 20 B4 EB B7 FA C0 C7 20 B4 EB C7 A5 20 C1 BE C1 B7 2E 20 B9 AB C7 D1 C7 D1 20 C0 E1 C0 E7 B7 C2 B0 FA 20 B6 D9 BE EE B3 AD 20 C0 FB C0 C0 B7 C2 C0 B8 B7 CE 20 B9 AE C1 A6 20 C7 D8 B0 E1 BF A1 20 C5 B9 BF F9 C7 D1 20 B0 CD C0 CC 20 C6 AF C2 A1 C0 CC B4 D9 2E
 R: 'Race of Midgard continent. Unlimited potential. Excellent adaptability to solve problems.'
 
 F: C6 C4 2D BD BA C5 B8 20 B4 EB B7 FA C0 C7 20 B4 EB C7 A5 C0 FB C0 CE 20 C1 BE C1 B7 20 C1 DF 20 C7 CF B3 AA B7 CE 2C 20 BC B1 C3 B5 C0 FB C0 B8 B7 CE 20 C8 A3 B1 E2 BD C9 C0 CC 20 B0 AD C7 CF B0 ED 20 B9 DF B6 F6 C7 D1 20 BC BA B0 DD C0 BB 20 C1 F6 B3 E6 B4 D9 2E
-R: 'one of the leading tribes of the continent star, naturally curious and has a sporty personality.'
+R: 'One of the leading tribes of the continent star, naturally curious and has a sporty personality.'
 
 F: B5 B5 B6 F7
 R: 'Dorma'
@@ -1349,3 +1349,10 @@ R: 'Merch,Sword,Magi,Thief,Archer,Acolyte'
 
 F: C0 CE B0 A3
 R: 'Human'
+
+------------------------------
+M: Translate Message Box 2015
+------------------------------
+
+F: B8 DE BC BC C1 F6
+R: 'Message'
