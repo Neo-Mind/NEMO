@@ -290,3 +290,5 @@ registerPatch(211, "UseCustomDLL", "Use Custom DLL", "Custom", 0, "Neo", "Makes 
 registerPatch(212, "RestoreRoulette", "Restore Roulette", "Custom", 0, "Neo", "Brings back the Roulette Icon that was removed in new clients", false);
 
 registerPatch(213, "DisableHelpMsg", "Disable Help Message on Login", "Custom", 0, "Neo", "Prevents the Help Message being shown on Login for all LangTypes", true);
+
+registerPatch(214, "RestoreModelCulling", "Restore Model Culling", "Custom", 0, "curio", "Culls models in front of player by turning them transparent", false);
