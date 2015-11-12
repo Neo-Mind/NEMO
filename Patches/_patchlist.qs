@@ -290,4 +290,6 @@ registerPatch(212, "RestoreRoulette", "Restore Roulette", "Custom", 0, "Neo", "B
 
 registerPatch(213, "DisableHelpMsg", "Disable Help Message on Login", "Custom", 0, "Neo", "Prevents the Help Message being shown on Login for all LangTypes", true);
 
-registerPatch(214, "RestoreModelCulling", "Restore Model Culling", "Custom", 0, "curio", "Culls models in front of player by turning them transparent", false);
+registerPatch(214, "RestoreModelCulling", "Restore Model Culling", "Custom", 0, "Curiosity", "Culls models in front of player by turning them transparent", false);
+
+registerPatch(215, "IncreaseMapQuality", "Increase Map Quality", "Custom", 0, "Curiosity", "Makes client use 32 bit color maps for Map Textures", false);

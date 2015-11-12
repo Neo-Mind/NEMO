@@ -279,7 +279,7 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
     //Step 7b - Build the replacement code using GetHalter Lua function
     code = 
       " 52" //PUSH EDX
-    + GenLuaCaller(offset + 1, "GetHalter", Funcs[12], "d>d", " 50");
+    + GenLuaCaller(offset + 1, "GetHalter", Funcs[12], "d>d", " 50")
     + " 5A" //POP EDX
     ;
     
