@@ -5,6 +5,6 @@
 // For better clarity put spaces in front of either types of function imports
 
 Splash.dll
-// _DllMain@12
+ _DllMain@12
 // :41
  

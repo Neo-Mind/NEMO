@@ -37,9 +37,9 @@ function IgnoreResourceErrors() {
   
   //Step 2 - Replace with XOR EAX, EAX followed by RETN . If Frame Pointer is present then a POP EBP comes before RETN
   if (fpEnb)
-    exe.replace(offset + 5, " 31 C0 5D C3", PTYPE_HEX);
+    exe.replace(offset + 5, " 33 C0 5D C3", PTYPE_HEX);
   else
-    exe.replace(offset + 5, " 31 C0 C3 90", PTYPE_HEX);
+    exe.replace(offset + 5, " 33 C0 C3 90", PTYPE_HEX);
 
   return true;
 }

@@ -105,6 +105,7 @@ function UseCustomDLL() {
   if (free === -1)
     return "Failed in Step 3 - Not enough free space";
 
+  debugValue(free.toBE());
   //Step 3c - Construct the new Import table
   var baseAddr = exe.Raw2Rva(free) - exe.getImageBase();
   var prefix = " 00".repeat(12);  
@@ -117,7 +118,7 @@ function UseCustomDLL() {
     dirTableData = dirTableData + prefix + (baseAddr + dllNames[i].offset).packToHex(4) + (baseAddr + strSize + dptr).packToHex(4);
     
     for (var j = 0; j < fnNames[i].length; j++) {
-      if (fnNames[i][j].offset & 0x80000000 === 0)
+      if ((fnNames[i][j].offset & 0x80000000) === 0)        
         dirEntryData = dirEntryData + (baseAddr + fnNames[i][j].offset).packToHex(4);
       else
         dirEntryData = dirEntryData + fnNames[i][j].offset.packToHex(4);
