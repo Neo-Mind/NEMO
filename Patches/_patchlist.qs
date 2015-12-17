@@ -34,6 +34,8 @@ registerGroup(10, "LoginMode", true);
 
 registerGroup(11, "CashShop", true);
 
+registerGroup(12, "HideButton", false);
+
 //#########################################################################################################################################################
 //#                                                                                                                                                       #
 //# FORMAT for registering patch : registerPatch(patch id, functionName, patch Name, category, group id, author, description, recommended [true/false] ); #
@@ -256,11 +258,26 @@ registerPatch(102, "SkipCheaterGuildCheck", "Skip Guild Member Cheat Check", "UI
 
 registerPatch(103, "DisableAutofollow", "Disable Auto follow", "UI", 0, "Functor, Neo", "Disables player auto-follow on Shift+Right click", false);
 
+registerPatch(104, "IncreaseHairLimits", "Increase Hair Style & Color Limits", "UI", 0, "Neo", "Modify the limits used in Make Character Window for Hair Style and Color to user specified values");
+
+registerPatch(105, "HideNavButton", "Hide Nav Button", "UI", 12, "Neo", "Hide Navigation Button", false);
+
+registerPatch(106, "HideBgButton", "Hide BG Button", "UI", 12, "Neo", "Hide Battleground Button", false);
+
+registerPatch(107, "HideBankButton", "Hide Bank Button", "UI", 12, "Neo", "Hide Bank Button", false);
+
+registerPatch(108, "HideBooking", "Hide Booking Button", "UI", 12, "Neo", "Hide Booking Button", false);
+
+registerPatch(109, "HideRodex", "Hide Rodex Button", "UI", 12, "Neo", "Hide Rodex Button", false);
+
+registerPatch(110, "HideAchieve", "Hide Achievements Button", "UI", 12, "Neo", "Hide Achievements Button", false);
+
+
 //FixTetraVortex patch is removed since the black screen animation issue is fixed Server Side
 
-//=======================//
-// Custom Patches by Neo //
-//=======================//
+//======================================//
+// Special Patches by Neo and Curiosity //
+//======================================//
 
 registerPatch(200, "EnableMultipleGRFsV2", "Enable Multiple GRFs - Embedded", "UI", 5, "Neo", "Enables the use of multiple grf files without needing INI file in client folder. Instead you specify the INI file as input to the patch", false);
 
@@ -293,3 +310,7 @@ registerPatch(213, "DisableHelpMsg", "Disable Help Message on Login", "Custom", 
 registerPatch(214, "RestoreModelCulling", "Restore Model Culling", "Custom", 0, "Curiosity", "Culls models in front of player by turning them transparent", false);
 
 registerPatch(215, "IncreaseMapQuality", "Increase Map Quality", "Custom", 0, "Curiosity", "Makes client use 32 bit color maps for Map Textures", false);
+
+registerPatch(216, "HideCashShop", "Hide Cash Shop", "Custom", 0, "Neo", "Hide Cash Shop Icon", false);
+
+registerPatch(217, "HideRoulette", "Hide Roulette", "Custom", 0, "Neo", "Hide Roulette Icon", false);

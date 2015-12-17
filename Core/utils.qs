@@ -60,6 +60,35 @@ function GetLangType() {
   
 }
 
+//#####################################################################
+//# Purpose: Extract g_windowMgr assignment & UIWindowMgr::MakeWindow #
+//#          address. Returned value is a hash array or error string  #
+//#####################################################################
+
+function GetWinMgrInfo() {
+  
+  //Step 1a - Find offset of NUMACCOUNT
+  var offset = exe.findString("NUMACCOUNT", RVA);
+  if (offset === -1)
+    return "NUMACCOUNT missing";
+  
+  //Step 1b - Find its reference which comes after a Window Manager call
+  var code =
+    " 6A 00"                    //PUSH 0
+  + " 6A 00"                    //PUSH 0
+  + " 68" + offset.packToHex(4) //PUSH addr; ASCII "NUMACCOUNT"
+  ;
+  
+  offset = exe.findCode(code, PTYPE_HEX, false);
+  if (offset === -1)
+    return "NUMACCOUNT reference missing";
+  
+  return {
+    "gWinMgr": exe.fetchHex(offset-10, 5),
+    "makeWin": exe.fetchDWord(offset - 4) + exe.Raw2Rva(offset)
+  };
+}
+
 //###############################################################
 //# Purpose: Return true if Frame Pointer is used in Functions. #
 //#          i.e. Stack is referenced w.r.t. EBP instead of ESP #
@@ -100,12 +129,6 @@ function GetInputFile(f, varname, title, prompt, fpath) {
 //#          address of the function that assigns them into ECX+4, ECX+8, ECX+0C  #
 //#          In case the keys are unobtainable then we use clientdate - keys map. #
 //#################################################################################
-
-//====================================================================//
-// Return Value is [func, key1, key2, key3, assignOff, refMov]        //
-// assignOff is the RAW address where keys are assigned in Obfuscate2 //
-// refMov is the MOV ECX statement before the func is called          //
-//====================================================================//
 
 function FetchPacketKeyInfo() {
   var retVal = 

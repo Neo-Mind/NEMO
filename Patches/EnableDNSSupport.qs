@@ -68,7 +68,7 @@ function EnableDNSSupport() {
   + " 61"                   //POPAD
   + " C3"                   //RETN
   + " 00"                   //Just a gap in between
-  + "127.0.0.1\x00".toHex() //addr2
+  + "127.0.0.1".toHex() + " 00".repeat(7) //addr2 ; Putting enough space for 4*3 digits
   ;
   
   //Step 3b - Calculate free space that the code will need.
@@ -96,7 +96,7 @@ function EnableDNSSupport() {
   gResMgr = gResMgr - exe.Raw2Rva(free + 5);
   
   //Step 4e - addr2 value
-  offset = exe.Raw2Rva(free + size - "127.0.0.1\x00".length);
+  offset = exe.Raw2Rva(free + size - (3*1 + 4*3 + 1));//3 Dots, 4 3digits, NULL
   
   //Step 4g - Replace all the variables
   dnscode = ReplaceVarHex(dnscode, 1, gResMgr);

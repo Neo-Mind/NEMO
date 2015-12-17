@@ -1,26 +1,17 @@
-﻿function RestoreCashShop() {
+﻿//#####################################################################
+//# Purpose: Restore the Cash Shop Icon UIWindow creation (ID = 0xBE) #
+//#####################################################################
 
-  //Step 1a - Find offset of NUMACCOUNT
-  var offset = exe.findString("NUMACCOUNT", RVA);
-  if (offset === -1)
-    return "Failed in Step 1 - NUMACCOUNT not found";
-  
-  //Step 1b - Find its reference
-  var code = 
-    " 6A 00"                    //PUSH 0
-  + " 6A 00"                    //PUSH 0
-  + " 68" + offset.packToHex(4) //PUSH addr; ASCII "NUMACCOUNT"
-  ;
-  offset = exe.findCode(code, PTYPE_HEX, false);
-  
-  if (offset === -1)
-    return "Failed in Step 1 - NUMACCOUNT reference missing";
-  
-  //Step 1c - The above code is preceded by MOV ECX, g_windowMgr and CALL UIWindowMgr::MakeWindow
-  //          Extract both
-  var movEcx = exe.fetchHex(offset - 10, 5);
-  var makeWin = exe.fetchDWord(offset - 4) + exe.Raw2Rva(offset);
+function RestoreCashShop() {
 
+  //Step 1 - Get the Window Manager Info we need
+  var mgrInfo = GetWinMgrInfo();
+  if (typeof(mgrInfo) === "string")
+    return "Failed in Step 1 - " + mgrInfo;
+  
+  var movEcx  = mgrInfo['gWinMgr'];
+  var makeWin = mgrInfo['makeWin'];
+  
   //Step 2a - Find the location where the cash shop icon was supposed to be created
   code = 
     " 75 0F"           //JNE addr; skips to location after the call for creating another icon
@@ -66,9 +57,9 @@
   return true;
 }
 
-//=====================================================//
-// Disable for Unsupported Clients - Check for Icon bmp//
-//=====================================================//
+//======================================================//
+// Disable for Unsupported Clients - Check for Icon bmp //
+//======================================================//
 function RestoreCashShop_() {
   return (exe.findString("NC_CashShop", RAW) !== -1);
 }

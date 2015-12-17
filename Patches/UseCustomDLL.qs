@@ -53,7 +53,7 @@ function UseCustomDLL() {
   var dptr = -1;
   
   while (!fp.eof()) {
-    line = fp.readline().trim();
+    var line = fp.readline().trim();
     if (line === "" || line.indexOf("//") == 0) continue;
     if (line.length > 4 && (line.indexOf(".dll") - line.length) == -4) {
       dptr++;

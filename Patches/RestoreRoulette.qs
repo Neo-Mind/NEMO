@@ -4,26 +4,13 @@
 
 function RestoreRoulette() {
   
-  //Step 1a - Find offset of NUMACCOUNT
-  var offset = exe.findString("NUMACCOUNT", RVA);
-  if (offset === -1)
-    return "Failed in Step 1 - NUMACCOUNT not found";
+  //Step 1 - Get the Window Manager Info we need
+  var mgrInfo = GetWinMgrInfo();
+  if (typeof(mgrInfo) === "string")
+    return "Failed in Step 1 - " + mgrInfo;
   
-  //Step 1b - Find its reference
-  var code = 
-    " 6A 00"                    //PUSH 0
-  + " 6A 00"                    //PUSH 0
-  + " 68" + offset.packToHex(4) //PUSH addr; ASCII "NUMACCOUNT"
-  ;
-  offset = exe.findCode(code, PTYPE_HEX, false);
-  
-  if (offset === -1)
-    return "Failed in Step 1 - NUMACCOUNT reference missing";
-  
-  //Step 1c - The above code is preceded by MOV ECX, g_windowMgr and CALL UIWindowMgr::MakeWindow
-  //          Extract both
-  var movEcx = exe.fetchHex(offset - 10, 5);
-  var makeWin = exe.fetchDWord(offset - 4) + exe.Raw2Rva(offset);
+  var movEcx  = mgrInfo['gWinMgr'];
+  var makeWin = mgrInfo['makeWin'];
   
   //Step 2a - Find the location where the roulette icon was supposed to be created
   code = 
@@ -71,9 +58,9 @@ function RestoreRoulette() {
   return true;
 }
 
-//=====================================================//
-// Disable for Unsupported Clients - Check for Icon bmp//
-//=====================================================//
+//======================================================//
+// Disable for Unsupported Clients - Check for Icon bmp //
+//======================================================//
 function RestoreRoulette_() {
   return (exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\basic_interface\\roullette\\RoulletteIcon.bmp", RAW) !== -1);
 }
