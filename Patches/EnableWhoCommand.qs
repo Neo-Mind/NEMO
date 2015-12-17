@@ -20,9 +20,14 @@ function EnableWhoCommand() {
   + " 83 F8 09"          //CMP EAX,9
   + " 0F 84 AB AB 00 00" //JE addr
   + " 8D"                //LEA ECX,[ESP+x]
-  ;
-  
+  ;  
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offset === -1) {
+    code = code.replace("AB 00 00 8D", "AB 00 00 B8");//Change LEA to MOV EAX
+    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1)
     return "Failed in Step 1 - LangType comparison missing";
   
@@ -32,10 +37,11 @@ function EnableWhoCommand() {
   //Step 2a - Find PUSH 0B2 followed by CALL MsgStr - Common pattern inside Zc_User_Count
   code =
     " 68 B2 00 00 00" //PUSH 0B2
-  + " E8"             //CALL MsgStr
+  + " E8 AB AB AB AB" //CALL MsgStr
+  + " 83 C4 04"       //ADD ESP, 4
   ;
   
-  offset = exe.findCode(code, PTYPE_HEX, false);
+  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if (offset === -1)
     return "Failed in Step 2 - MsgStr call missing";
   
@@ -49,13 +55,18 @@ function EnableWhoCommand() {
   + " 84 C0"          //TEST AL, AL
   + " 75"             //JNE SHORT addr
   ;
+  var offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x60, offset);
   
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x60, offset);
-  if (offset === -1)
+  if (offset2 === -1) {
+    code = code.replace(" A1 AB AB AB 00 50", " FF 35 AB AB AB 00"); //Change MOV EAX to PUSH DWORD PTR DS:[refAddr]
+    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x60, offset);
+  }
+  
+  if (offset2 === -1)
     return "Failed in Step 2 - LangType comparison missing";
   
   //Step 2c - Replace First JNE with JMP
-  exe.replace(offset, "EB", PTYPE_HEX);
+  exe.replace(offset2, "EB", PTYPE_HEX);
  
   return true;
 }
