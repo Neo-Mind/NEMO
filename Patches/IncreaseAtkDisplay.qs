@@ -73,7 +73,7 @@ function IncreaseAtkDisplay() {
   else {
     //Step 2b.2 - If its a register assignment extract the register and see if it assigns to stack later
     var offByte = exe.fetchUByte(offset + 2) - 0xB8;
-    
+  
     code = (offByte << 3) | 0x44;//modrm for MOV
     if (fpEnb)
       code = " 89" + (code+1).packToHex(1) + " AB 8D";//MOV DWORD PTR SS:[EBP-x], reg32_B . followed by LEA
@@ -85,7 +85,7 @@ function IncreaseAtkDisplay() {
     if (offset2 === -1)
       offByte = " 89" + (0xF0 | offByte).packToHex(1);//MOV reg32_B, ESI ; because ESI will be holding the digit count finally
     else
-      offByte = exe.fetchByte(offset + code.hexlength() - 2);
+      offByte = exe.fetchByte(offset2 + code.hexlength() - 2);
   }
   
   //Step 2c - Find Location where the digit extraction starts
@@ -139,7 +139,7 @@ function IncreaseAtkDisplay() {
 
   //Step 3b - Prep code to replace at refOffset - new digit splitter and counter combined
   code =
-    " 89" + (0xC1 + (exe.fetchByte(refOffset + 1) & 0x7) << 3).packToHex(1) //MOV ECX, reg32_A
+    " 89" + (0xC1 + ((exe.fetchByte(refOffset + 1) & 0x7) << 3)).packToHex(1) //MOV ECX, reg32_A
   + " BE" + offByte2.packToHex(4) //MOV ESI, offByte2
   + " B8 67 66 66 66"    //MOV EAX,66666667
   + " F7 E9"             //IMUL ECX
