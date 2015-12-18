@@ -100,8 +100,6 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
     //Step 2c - Find Location after the Table assignments which is the location to jump to after lua based loading
     //          Also extract all non-table related instuctions in between
     details[i] = FetchTillEnd(hooks[i], refReg, refOff, curRegs[i], LANGTYPE, CheckEoT, assigner);
-
-    //debugValue(details[i].debug);//debug
   }
 
   //====================================//
@@ -208,14 +206,31 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   
   offset = offset2;
   
-  //Step 5f - Find the LangType comparison with 6 after offset => endpoint to jmp to once Table is loaded
-  //          If it is not found then this is a seperate function so we can RETN
-  code = 
-    " A1" + LANGTYPE //MOV EAX, DWORD PTR DS:[g_serviceType] 
-  + " 83 C4 10"      //ADD ESP, 10
-  + " 83 F8 06"      //CMP EAX, 6
+  //Step 5f - Find the LangType comparison with 0C, 5 & 6 after offset 
+  code =
+    " 83 F8 0C" //CMP EAX, 0C
+  + " 74 0E"    //JE SHORT addr
+  + " 83 F8 05" //CMP EAX, 5
+  + " 74 09"    //JE SHORT addr
+  + " 83 F8 06" //CMP EAX, 6
+  + " 0F 85"    //JNE addr2
   ;
-  offset2 = exe.find(code, PTYPE_HEX, false, " ", offset + 0x10, offset + 0x1000);
+  
+  offset2 = exe.find(code, PTYPE_HEX, false, " ", offset + 0x10, offset + 0x100);
+  if (offset2 === -1)
+    return "Failed in Step 5 - 2nd LangType comparison missing";
+  
+  offset2 += code.hexlength();
+  offset2 += 4 + exe.fetchDWord(offset2);
+  
+  //Step 5g - Change the CMP to NOP and JNE to JMP as shown below at The JNE address
+  //A1 <LANGTYPE>
+  //83 F8 0A    => 90 90 90
+  //0F 85 addr  => 90 E9 addr
+  exe.replace(offset2, " 90 90 90 90 E9", PTYPE_HEX);
+
+  //Step 5h - Point offset2 to the MOV EAX before the CMP
+  offset2 -= 5;
   
   //======================//
   // Add Job Name Loaders //
@@ -437,6 +452,8 @@ function WriteLoader(hookLoc, curReg, suffix, reqAddr, mapAddr, jmpLoc, extraDat
   templates[0] = 
     " PrepVars"
   + " GenCaller"
+  + " 85 C0"          //TEST EAX, EAX
+  + " 74 12"          //JE SHORT addr2
   + " 8A 08"          //MOV CL, BYTE PTR DS:[EAX]
   + " 84 C9"          //TEST CL, CL
   + " 74 07"          //JE SHORT addr

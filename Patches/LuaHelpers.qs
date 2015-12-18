@@ -140,26 +140,27 @@ function GenLuaCaller(addr, name, nameAddr, format, inReg) {
   + " 8B CC"                         //MOV ECX, ESP
   + " StrAllocPrep"                   
   + " 68" + nameAddr                 //PUSH nameAddr; ASCII name
-  + " ExtraPush"                     
   + " FF 15" + StrAlloc              //CALL DWORD PTR DS:[StrAlloc]              
   + " FF 35" + LuaState              //PUSH DWORD PTR DS:[LuaState]
   + " E8" + GenVarHex(1)             //CALL LuaFnCaller
   ;
   
-  //Step 2b - Fill PrePush and ExtraPush ( Older clients ) 
+  //Step 2b - Fill PrePush ( Older clients ) 
   if (AllocType === 1) {
     code = code.replace(" PrePush", " 6A" + name.length.packToHex(1)); //PUSH length
-    code = code.replace(" ExtraPush",
-      " 8D 44 24" + (EspAlloc + 24).packToHex(1) //LEA EAX, [ESP + const2]; const2 = const + 0x18
+  }
+  else {
+    code = code.replace(" PrePush", "");
+  }
+  
+  //Step 2c - Fill StrAllocPrep (Older & VC10+ Clients )
+  if (AllocType === 1) {
+    code = code.replace(" StrAllocPrep",
+      " 8D 44 24" + (EspAlloc + 16).packToHex(1) //LEA EAX, [ESP + const2]; const2 = const + 0x18
     + " 50"                                      //PUSH EAX
     );
   }
-  else {
-    code = code.replace(/ \w+Push/g, "");
-  }
-  
-  //Step 2c - Fill StrAllocPrep ( VC10+ Clients )
-  if (AllocType === 2) {
+  else if (AllocType === 2) {
     code = code.replace(" StrAllocPrep",
       " C7 41 14 0F 00 00 00" //MOV DWORD PTR DS:[ECX+14], 0F
     + " C7 41 10 00 00 00 00" //MOV DWORD PTR DS:[ECX+10], 0
@@ -183,6 +184,10 @@ function GenLuaCaller(addr, name, nameAddr, format, inReg) {
     " 83 C4" + (EspAlloc + 16).packToHex(1) //ADD ESP, const3; const3 = const + 16
   + " 58"                                   //POP EAX
   ;
+
+  if (AllocType === 1) {//For Older clients
+    code += " 83 C4 04"; //ADD ESP, 4
+  }
   
   return code;
 }

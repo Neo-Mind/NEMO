@@ -8,7 +8,7 @@ function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 
   //Step 1a - Find the comparison for Game Grade
   var code = 
     " 75 AB"    //JNE SHORT addr1
-    " MovAx"    //Frame Pointer Specific MOV
+  + " MovAx"    //Frame Pointer Specific MOV
   + " 66 85 C0" //TEST AX, AX
   + " 75"       //JNE SHORT addr2
   ;
@@ -25,7 +25,7 @@ function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 
     code = code.replace(" 66", "");//Change MOV AX to MOV EAX and thereby WORD PTR becomes DWORD PTR
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//Older clients and some new clients
   }
-  
+
   if (offset === -1)
     return "Failed in Step 1";
 

@@ -23,7 +23,7 @@ function DisableLoginEncryption() {
   //Step 2b - Change the LEA to LEA reg32_B, [reg32_A]
   offset += code.hexlength();
   code = 
-    ((exe.fetchByte(offset) & 0x3F) | regPush).packToHex(1) //LEA reg32_B, [reg32_A]
+    ((exe.fetchUByte(offset) & 0x38) | regPush).packToHex(1) //LEA reg32_B, [reg32_A]
   + " 90 90 90 90" //NOPs
   ;
   

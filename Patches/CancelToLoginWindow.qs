@@ -147,5 +147,5 @@ function CancelToLoginWindow() {
 // Disable for Unneeded Clients - Only Certain Client onwards tries to quit //
 //==========================================================================//
 function CancelToLoginWindow_() {
-  return (exe.getClientDate() > 20100616);
+  return (exe.getClientDate() > 20100803);
 }

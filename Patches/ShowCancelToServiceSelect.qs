@@ -24,11 +24,21 @@ function ShowCancelToServiceSelect() {
   else
     code = " C7 44 24 AB BD 00 00 00"; //MOV DWORD PTR SS:[ESP+x], 0BD
   
-  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x40);
-  if (offset === -1)
+  var offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x40);
+  
+  if (offset2 === -1) {//x > 0x7F
+    if (HasFramePointer())
+      code = " C7 85 AB FF FF FF  BD 00 00 00"; //MOV DWORD PTR SS:[EBP-x], 0BD 
+    else
+      code = " C7 84 24 AB FF FF FF BD 00 00 00"; //MOV DWORD PTR SS:[ESP+x], 0BD
+    
+    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x40);
+  }
+  
+  if (offset2 === -1)
     return "Failed in Step 2 - login coordinate missing";
   
-  offset += code.hexlength();
+  offset = offset2 + code.hexlength();
   
   //Step 2b - Change 0xBD to 0x90 (its not a NOP xD)
   exe.replace(offset - 4, " 90", PTYPE_HEX);
@@ -44,4 +54,13 @@ function ShowCancelToServiceSelect() {
   
   //Step 2d - Change 0x1B2 to 0xBD
   exe.replace(offset - 4, " BD 00", PTYPE_HEX);
+  
+  return true;
+}
+
+//==============================================================================//
+// Disable for Unneeded Clients - Only Certain Client onwards shows Exit button //
+//==============================================================================//
+function ShowCancelToServiceSelect_() {
+  return (exe.getClientDate() > 20100803);
 }
