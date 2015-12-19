@@ -36,6 +36,8 @@ registerGroup(11, "CashShop", true);
 
 registerGroup(12, "HideButton", false);
 
+registerGroup(14, "LicenseScreen", true);
+
 //#########################################################################################################################################################
 //#                                                                                                                                                       #
 //# FORMAT for registering patch : registerPatch(patch id, functionName, patch Name, category, group id, author, description, recommended [true/false] ); #
@@ -151,9 +153,9 @@ registerPatch( 48, "UsePlainTextDescriptions", "Use Plain Text Descriptions", "D
 
 registerPatch( 49, "EnableMultipleGRFs", "Enable Multiple GRFs", "UI", 5, "Shinryo", "Enables the use of multiple grf files by putting them in a data.ini file in your client folder.You can only load up to 10 total grf files with this option (0-9)", true);
 
-registerPatch( 50, "SkipLicenseScreen", "Skip License Screen", "UI", 0, "Shinryo, MS", "Skip the warning screen and goes directly to the main window with the Service Select", false);
+registerPatch( 50, "SkipLicenseScreen", "Skip License Screen", "UI", 14, "Shinryo, MS", "Skip the warning screen and goes directly to the main window with the Service Select", false);
 
-//registerPatch( 51, "UseArialOnAllLangTypes", "Use Arial on All LangTypes", "UI", 0, "Ai4rei/AN, Shakto", "Makes Arial the default font on all LangTypes (it's enable ascii by default)", true);
+registerPatch( 51, "ShowLicenseScreen", "Always Show License Screen", "UI", 14, "Neo", "Makes the client always show the License for all LangTypes", false);
 
 registerPatch( 52, "UseCustomFont", "Use Custom Font", "UI", 0, "Ai4rei/AN", "Allows the use of user-defined font for all LangTypes. The LangType-specific charset is still being enforced, so if the selected font does not support it, the system falls back to a font that does", false);
 
@@ -214,7 +216,7 @@ registerPatch( 79, "SharedBodyPalettesV2", "Shared Body Palettes Type2", "UI", 6
 
 registerPatch( 80, "SharedBodyPalettesV1", "Shared Body Palettes Type1", "UI", 6, "Ai4rei/AN, Neo", "Makes the client use a single cloth palette set (body_%s_%d.pal) for all job classes but separate for both genders", false);
 
-//81 is Unused - to be filled
+registerPatch( 81, "RenameLicenseTxt", "Rename License File", "Data", 0, "Neo", "Rename the filename used for EULA from '..\\licence.txt' to user specified name (Path is relative to Data folder)", false);
 
 registerPatch( 82, "SharedHeadPalettesV1", "Shared Head Palettes Type1", "UI", 7, "Ai4rei/AN, Neo", "Makes the client use a single hair palette set (head_%s_%d.pal) for all job classes but separate for both genders", false);
 
@@ -272,6 +274,7 @@ registerPatch(109, "HideRodex", "Hide Rodex Button", "UI", 12, "Neo", "Hide Rode
 
 registerPatch(110, "HideAchieve", "Hide Achievements Button", "UI", 12, "Neo", "Hide Achievements Button", false);
 
+//registerPatch( 151, "UseArialOnAllLangTypes", "Use Arial on All LangTypes", "UI", 0, "Ai4rei/AN, Shakto", "Makes Arial the default font on all LangTypes (it's enable ascii by default)", true);
 
 //FixTetraVortex patch is removed since the black screen animation issue is fixed Server Side
 
