@@ -317,3 +317,5 @@ registerPatch(215, "IncreaseMapQuality", "Increase Map Quality", "Custom", 0, "C
 registerPatch(216, "HideCashShop", "Hide Cash Shop", "Custom", 0, "Neo", "Hide Cash Shop Icon", false);
 
 registerPatch(217, "HideRoulette", "Hide Roulette", "Custom", 0, "Neo", "Hide Roulette Icon", false);
+
+registerPatch(218, "ShowExpNumbers", "Show Exp Numbers", "Custom", 0, "Neo", "Show Base and Job Exp numbers in Basic Info Window", false);
