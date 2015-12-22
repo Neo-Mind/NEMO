@@ -52,10 +52,14 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   var curExpJob = exe.fetchDWord(offset2 - 9);
   var totExpJob = exe.fetchDWord(offset2 - 14);
   
-  //Step 3a - Find the pattern inside OnDraw function after which we need to inject
+  //Step 3a - Find address of "SP"
+  offset = exe.findString("SP", RVA);
+  
+  //Step 3b - Find the pattern using the string inside OnDraw function  after which we need to inject
   code =
-    " 6A 41"          //PUSH 41
-  + " 68 AD 00 00 00" //PUSH 0AD
+    " 68" + offset.packToHex(4) //PUSH addr; ASCII "SP"
+  + " 6A 41" //PUSH 41
+  + " 6A 11" //PUSH 11
   ;
   
   offset = exe.findCode(code, PTYPE_HEX, false);
@@ -64,7 +68,7 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   
   offset += code.hexlength();
 
-  //Step 3b - If the UIWindow::TextOutA function call comes immediately after the pattern, ECX is loaded from ESI
+  //Step 3c - If the UIWindow::TextOutA function call comes immediately after the pattern, ECX is loaded from ESI
   //          else extract reg code from the MOV ECX, reg32 and update offset
   var rcode = " CE";//for MOV ECX, ESI
   
@@ -76,9 +80,14 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   if (exe.fetchUByte(offset) !== 0xE8)
     return "Failed in Step 3 - Call missing";
   
-  //Step 3c - Extract UIWindow::TextOutA address and address where the CALL is made 
+  //Step 3d - Extract UIWindow::TextOutA address and address where the CALL is made 
   var uiTextOut = exe.Raw2Rva(offset+5) + exe.fetchDWord(offset+1);
   var injectAddr = offset;
+  
+  //Step 3e - Check if Extra PUSH 0 is there (only for clients > 20140116)
+  var extraPush = "";
+  if (exe.getClientDate() > 20140116)
+    extraPush = " 6A 00";
   
   //Step 4a - Prep the template code that we use for both type of exp
   var template = 
@@ -92,6 +101,7 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   + " FF 15" + GenVarHex(4)//CALL DWORD PTR DS:[<&MSVCR#.sprintf>]
   + " 83 C4 10"            //ADD ESP, 10
   + " 89 E0"               //MOV EAX, ESP
+  + extraPush              //PUSH 0   ; Arg8 = Only for new clients
   + " 6A 00"               //PUSH 0   ; Arg7 = Color
   + " 6A 0D"               //PUSH 0D  ; Arg6 = Font Height
   + " 6A 01"               //PUSH 1   ; Arg5 = Font Index
