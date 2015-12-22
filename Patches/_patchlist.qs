@@ -38,6 +38,8 @@ registerGroup(12, "HideButton", false);
 
 registerGroup(14, "LicenseScreen", true);
 
+registerGroup(15, "Resurrection", true);
+
 //#########################################################################################################################################################
 //#                                                                                                                                                       #
 //# FORMAT for registering patch : registerPatch(patch id, functionName, patch Name, category, group id, author, description, recommended [true/false] ); #
@@ -63,9 +65,9 @@ registerPatch(  3, "RemoveChatLimit", "Chat Flood Remove Limit", "UI", 1, "Neo",
 //registerPatch(  4, "EnableAuraOver", "Enable Aura Over Level 99 And Level 150", "UI", 0, "Shinryo", "Allows the client to display standard auras over level 99 and 3rd class auras over level 150", false);
 registerPatch(  4, "CustomAuraLevels", "Use Custom Aura Levels", "UI", 0, "Neo", "Allows the client to display standard auras after user specified levels for various classes", false);
 
-registerPatch(  5, "EnableProxySupport", "Enable Proxy Support (Experimental)", "Fix", 0, "Ai4rei/AN", "Ignores server-provided IP addresses when changing servers", false);
+registerPatch(  5, "EnableProxySupport", "Enable Proxy Support", "Fix", 0, "Ai4rei/AN", "Ignores server-provided IP addresses when changing servers", false);
 
-registerPatch(  6, "ForceSendClientHash", "Force Send Client Hash Packet (Experimental)", "Packet", 0, "GreenBox, Neo", "Forces the client to send a packet with it's MD5 hash for all LangTypes. Only use if you have enabled it in your server", false);
+registerPatch(  6, "ForceSendClientHash", "Force Send Client Hash Packet", "Packet", 0, "GreenBox, Neo", "Forces the client to send a packet with it's MD5 hash for all LangTypes. Only use if you have enabled it in your server", false);
 
 //registerPatch(  7, "ChangeGravityErrorHandler", "Change Gravity Error Handler", "Fix", 0, " ", "It changes the Gravity Error Handler Mesage for a Custom One Pre-Defined by Diff Team", false);
 
@@ -111,7 +113,7 @@ registerPatch( 27, "HKLMtoHKCU", "HKLM To HKCU", "Fix", 0, "Shinryo", "This make
 
 registerPatch( 28, "IncreaseViewID", "Increase Headgear ViewID", "Data", 0, "Shinryo", "Increases the limit for the headgear ViewIDs from 2000 to User Defined value (max 32000)", false);
 
-registerPatch( 29, "DisableGameGuard", "Disable Game Guard (Experimental)", "Fix", 0, "Neo", "Disables Game Guard from new clients", false);
+registerPatch( 29, "DisableGameGuard", "Disable Game Guard", "Fix", 0, "Neo", "Disables Game Guard from new clients", false);
 
 registerPatch( 30, "IncreaseZoomOut50Per", "Increase Zoom Out 50%", "UI", 3, "Shinryo", "Increases the zoom-out range by 50 percent", false);
 
@@ -137,7 +139,7 @@ registerPatch( 40, "RestoreLoginWindow", "Restore Login Window", "Fix", 10, "Shi
 
 registerPatch( 41, "DisableNagleAlgorithm", "Disable Nagle Algorithm", "Packet", 0, "Shinryo", "Disables the Nagle Algorithm. The Nagle Algorithm queues packets before they are sent in order to minimize protocol overhead. Disabling the algorithm will slightly increase network traffic, but it will decrease latency as well", true);
 
-registerPatch( 42, "SkipResurrectionButtons", "Skip Resurrection Buttons", "UI", 0, "Shinryo", "Skip resurrection button when you die or use Token of Ziegfried", false);
+registerPatch( 42, "SkipResurrectionButton", "Skip Resurrection Button", "UI", 15, "Shinryo", "Skip showing resurrection button when you die with Token of Ziegfried in inventory", false);
 
 registerPatch( 43, "DeleteCharWithEmail", "Always Use Email for Char Deletion", "Fix", 0, "Neo", "Makes the Client use Email as Deletion Password for all LangTypes", false);
 
@@ -186,7 +188,7 @@ registerPatch( 64, "FixChatAt", "@ Bug Fix", "UI", 0, "Shinryo", "Correct the bu
 
 registerPatch( 65, "ChangeItemInfo", "Load Custom lua file instead of iteminfo.lub", "UI", 0, "Neo", "Makes the client load your own lua file instead of iteminfo.lub . If you directly use ItemInfo.lub for your translated items, it may become lost during the next kRO update", false);
 
-registerPatch( 66, "LoadItemInfoPerServer", "Load iteminfo with char server (Experimental)", "Data", 0, "Neo", "Load ItemInfo file and call main function with selected char server name as argument", false);
+registerPatch( 66, "LoadItemInfoPerServer", "Load iteminfo with char server", "Data", 0, "Neo", "Load ItemInfo file and call main function with selected char server name as argument", false);
 
 registerPatch( 67, "DisableQuakeEffect", "Disable Quake skill effect", "UI", 0, "Ai4rei/AN", " Disables the Earthquake skill effect", false);
 
@@ -282,7 +284,7 @@ registerPatch(110, "HideAchieve", "Hide Achievements Button", "UI", 12, "Neo", "
 // Special Patches by Neo and Curiosity //
 //======================================//
 
-registerPatch(200, "EnableMultipleGRFsV2", "Enable Multiple GRFs - Embedded", "UI", 5, "Neo", "Enables the use of multiple grf files without needing INI file in client folder. Instead you specify the INI file as input to the patch", false);
+registerPatch(200, "EnableMultipleGRFsV2", "Enable Multiple GRFs - Embedded", "Custom", 5, "Neo", "Enables the use of multiple grf files without needing INI file in client folder. Instead you specify the INI file as input to the patch", false);
 
 registerPatch(201, "EnableCustomHomunculus", "Enable Custom Homunculus", "Custom", 0, "Neo", "Enables the addition of Custom Homunculus using Lua Files", false);
 
@@ -319,3 +321,5 @@ registerPatch(216, "HideCashShop", "Hide Cash Shop", "Custom", 0, "Neo", "Hide C
 registerPatch(217, "HideRoulette", "Hide Roulette", "Custom", 0, "Neo", "Hide Roulette Icon", false);
 
 registerPatch(218, "ShowExpNumbers", "Show Exp Numbers", "Custom", 0, "Neo", "Show Base and Job Exp numbers in Basic Info Window", false);
+
+registerPatch(219, "ShowResurrectionButton", "Always Show Resurrection Button [Experimental]", "Custom", 15, "Neo", "Make the client always show Resurrection button with Token of Ziegfried in inventory irrespective of map type", false);
