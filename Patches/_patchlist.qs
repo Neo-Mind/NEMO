@@ -56,7 +56,8 @@ registerGroup(15, "Resurrection", true);
 // It would be safer to not use those IDs for your own Patches to avoid any future conflict.                                //
 //==========================================================================================================================//
 
-//0 and 1 are Unused - to be filled
+//0 Unused - to be filled
+registerPatch(  1, "UseTildeForMatk", "Use Tilde for Matk", "UI", 0, "Neo", "Make the client use tilde (~) symbol for Matk in Stats Window instead of Plus (+)", false);
 
 registerPatch(  2, "AllowChatFlood", "Chat Flood Allow", "UI", 1, "Shinryo", "Disable the clientside repeat limit of 3, and sets it to the specified value", false);
 
