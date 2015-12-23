@@ -323,4 +323,6 @@ registerPatch(217, "HideRoulette", "Hide Roulette", "Custom", 0, "Neo", "Hide Ro
 
 registerPatch(218, "ShowExpNumbers", "Show Exp Numbers", "Custom", 0, "Neo", "Show Base and Job Exp numbers in Basic Info Window", false);
 
-registerPatch(219, "ShowResurrectionButton", "Always Show Resurrection Button [Experimental]", "Custom", 15, "Neo", "Make the client always show Resurrection button with Token of Ziegfried in inventory irrespective of map type", false);
+registerPatch(219, "ShowResurrectionButton", "Always Show Resurrection Button", "Custom", 15, "Neo", "Make the client always show Resurrection button with Token of Ziegfried in inventory irrespective of map type", false);
+
+registerPatch(220, "DisableMapInterface", "Disable Map Interface", "Custom", 0, "Neo", "Disable the World View (Full Map) Interface", false);
