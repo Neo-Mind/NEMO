@@ -1,0 +1,16 @@
+﻿# This file should contain the set of MsgString Line numbers corresponding to Job Names
+# that needs to be skipped while loading the Party Booking Window.
+# Msg String Line Numbers 1630-1688 are the Job Names.
+# As an example we have skipped over the entire Archer branch
+
+1632 //Archer 
+1640 //Hunter
+1647 //Bard
+1648 //Dancer
+1651 //Ranger
+1657 //Minstrel
+1658 //Wanderer
+1664 //High Archer
+1672 //Sniper
+1679 //Clown
+1680 //Gypsy
