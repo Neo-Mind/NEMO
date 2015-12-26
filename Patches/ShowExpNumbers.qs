@@ -114,8 +114,16 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   ;
 
   //Step 4b - Fill in common values
+  var printFunc = GetFunction("sprintf");
+  
+  if (printFunc === -1)
+    printFunc = GetFunction("wsprintfA");
+  
+  if (printFunc === -1)
+    return "Failed in Step 4 - No print functions found";
+  
   template = ReplaceVarHex(template, 3, exe.findString("%d / %d", RVA, false));
-  template = ReplaceVarHex(template, 4, GetFunction("sprintf"));
+  template = ReplaceVarHex(template, 4, printFunc);
   template = template.replace("XC", "56");//Common X Coordinate
 
   //Step 4c - Prep code we are going to insert  

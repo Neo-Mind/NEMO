@@ -63,8 +63,7 @@ registerPatch(  2, "AllowChatFlood", "Chat Flood Allow", "UI", 1, "Shinryo", "Di
 
 registerPatch(  3, "RemoveChatLimit", "Chat Flood Remove Limit", "UI", 1, "Neo", "Remove the clientside limitation which checks for maximum repeated lines", false);
 
-//registerPatch(  4, "EnableAuraOver", "Enable Aura Over Level 99 And Level 150", "UI", 0, "Shinryo", "Allows the client to display standard auras over level 99 and 3rd class auras over level 150", false);
-registerPatch(  4, "CustomAuraLevels", "Use Custom Aura Levels", "UI", 0, "Neo", "Allows the client to display standard auras after user specified levels for various classes", false);
+registerPatch(  4, "CustomAuraLimits", "Use Custom Aura Limits", "UI", 0, "Neo", "Allows the client to display standard auras within user specified limits for Classes and Levels", false);
 
 registerPatch(  5, "EnableProxySupport", "Enable Proxy Support", "Fix", 0, "Ai4rei/AN", "Ignores server-provided IP addresses when changing servers", false);
 
@@ -114,7 +113,7 @@ registerPatch( 27, "HKLMtoHKCU", "HKLM To HKCU", "Fix", 0, "Shinryo", "This make
 
 registerPatch( 28, "IncreaseViewID", "Increase Headgear ViewID", "Data", 0, "Shinryo", "Increases the limit for the headgear ViewIDs from 2000 to User Defined value (max 32000)", false);
 
-registerPatch( 29, "DisableGameGuard", "Disable Game Guard", "Fix", 0, "Neo", "Disables Game Guard from new clients", false);
+registerPatch( 29, "DisableGameGuard", "Disable Game Guard", "Fix", 0, "Neo", "Disables Game Guard from new clients", true);
 
 registerPatch( 30, "IncreaseZoomOut50Per", "Increase Zoom Out 50%", "UI", 3, "Shinryo", "Increases the zoom-out range by 50 percent", false);
 

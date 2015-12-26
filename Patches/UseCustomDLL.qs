@@ -30,7 +30,7 @@ function UseCustomDLL() {
     var curDLL = exe.fetch(offset2, offset3 - offset2);
     
     //Step 1f - Make sure there is no duplicate
-    if (curDLL === lastDLL) continue;
+    //if (curDLL === lastDLL) continue;
     
     //Step 1g - Skip aossdk if HShield is Disabled
     if (hasHShield && curDLL === "aossdk.dll") continue;
@@ -105,7 +105,6 @@ function UseCustomDLL() {
   if (free === -1)
     return "Failed in Step 3 - Not enough free space";
 
-  debugValue(free.toBE());
   //Step 3c - Construct the new Import table
   var baseAddr = exe.Raw2Rva(free) - exe.getImageBase();
   var prefix = " 00".repeat(12);  
