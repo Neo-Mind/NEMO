@@ -1,4 +1,4 @@
-﻿//######################################################################################
+//######################################################################################
 //# Purpose : Modify the Aura setting code inside CPlayer::ReLaunchBlurEffects to CALL #
 //#           custom function which sets up aura based on user specified limits        #
 //######################################################################################
@@ -168,7 +168,7 @@ function CustomAuraLimits() {
   
   //Step 5a - Get the input file
   var fp = new TextFile();
-  var inpFile = GetInputFile(fp, "$auraSpec", "File Input - Custom Aura Levels", "Enter the Aura Spec file", APP_PATH + "/Input/auraSpec.txt");
+  var inpFile = GetInputFile(fp, "$auraSpec", "File Input - Custom Aura Limits", "Enter the Aura Spec file", APP_PATH + "/Input/auraSpec.txt");
   if (!inpFile)
     return "Patch Cancelled";
   
@@ -179,7 +179,7 @@ function CustomAuraLimits() {
   
   while (!fp.eof()) {
     var line = fp.readline().trim();
-    if (line === "" || line.indexOf("//") == 0) continue;
+    if (line === "") continue;
     
     if (matches = line.match(/^([\d\-,\s]+):$/)) {
       index++;
@@ -207,7 +207,7 @@ function CustomAuraLimits() {
       idLvlTable[index].idTable += " FF FF";
       tblSize += 2; 
     }
-    else if (matches = line.match(/^([\d\-\s]+)\s*=>\s*(\d),$/)) {
+    else if (matches = line.match(/^([\d\-\s]+)\s*=>\s*(\d)\s*,/)) {
       var limits = matches[1].split("-");
       
       idLvlTable[index].lvlTable += parseInt(limits[0]).packToHex(2);
@@ -288,7 +288,7 @@ function CustomAuraLimits() {
   ;
   
   //Step 6b - Allocate space for it
-  var size = code.hexlength() + 8 * idLvlTable.length + tblSize;
+  var size = code.hexlength() + 8 * idLvlTable.length + 4 + tblSize;
   var free = exe.findZeros(size);
   if (free === -1)
     return "Failed in Step 6 - Not enough free space";
@@ -315,7 +315,7 @@ function CustomAuraLimits() {
   }
 
   //Step 7a - Insert the function and table data
-  exe.insert(free, size, code + tblAddrData + tblData, PTYPE_HEX);
+  exe.insert(free, size, code + tblAddrData + " 00 00 00 00" + tblData, PTYPE_HEX);
   
   if (directComparison) {
 
