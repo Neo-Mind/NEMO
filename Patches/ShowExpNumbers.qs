@@ -92,13 +92,16 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   //Step 4a - Prep the template code that we use for both type of exp
   var template = 
     " A1" + GenVarHex(1)   //MOV EAX, DWORD PTR DS:[totExp*]
+  + " 8B 0D" + GenVarHex(2)//MOV ECX, DWORD PTR DS:[curExp*]
+  + " 09 C1"               //OR ECX, EAX
+  + " 74 JJ"               //JE SHORT addr
   + " 50"                  //PUSH EAX
-  + " A1" + GenVarHex(2)   //MOV EAX, DWORD PTR DS:[curExp*]
+  + " A1" + GenVarHex(3)   //MOV EAX, DWORD PTR DS:[curExp*]
   + " 50"                  //PUSH EAX
-  + " 68" + GenVarHex(3)   //PUSH addr; ASCII "%d / %d"
+  + " 68" + GenVarHex(4)   //PUSH addr; ASCII "%d / %d"
   + " 8D 44 24 0C"         //LEA EAX, [ESP + 0C]
   + " 50"                  //PUSH EAX
-  + " FF 15" + GenVarHex(4)//CALL DWORD PTR DS:[<&MSVCR#.sprintf>]
+  + " FF 15" + GenVarHex(5)//CALL DWORD PTR DS:[<&MSVCR#.sprintf>]
   + " 83 C4 10"            //ADD ESP, 10
   + " 89 E0"               //MOV EAX, ESP
   + extraPush              //PUSH 0   ; Arg8 = Only for new clients
@@ -110,7 +113,7 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   + " 6A YC"               //PUSH y   ; Arg2 = y Coord
   + " 6A XC"               //PUSH x   ; Arg1 = x Coord
   + " 8B" + rcode          //MOV ECX, reg32_A
-  + " E8" + GenVarHex(5)   //CALL UIWindow::TextOutA ; stdcall => No Stack restore required
+  + " E8" + GenVarHex(6)   //CALL UIWindow::TextOutA ; stdcall => No Stack restore required
   ;
 
   //Step 4b - Fill in common values
@@ -122,9 +125,10 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   if (printFunc === -1)
     return "Failed in Step 4 - No print functions found";
   
-  template = ReplaceVarHex(template, 3, exe.findString("%d / %d", RVA, false));
-  template = ReplaceVarHex(template, 4, printFunc);
-  template = template.replace("XC", "56");//Common X Coordinate
+  template = ReplaceVarHex(template, 4, exe.findString("%d / %d", RVA, false));
+  template = ReplaceVarHex(template, 5, printFunc);
+  template = template.replace(" XC", " 56");//Common X Coordinate
+  template = template.replace(" JJ", (template.hexlength() - 15).packToHex(1));
 
   //Step 4c - Prep code we are going to insert  
   code = 
@@ -135,7 +139,7 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   + template               //for Job Exp
   + " 83 C4 20"            //ADD ESP, 20
   + " 58"                  //POP EAX
-  + " E9" + GenVarHex(6)   //JMP retAddr = injectAddr + 5
+  + " E9" + GenVarHex(7)   //JMP retAddr = injectAddr + 5
   ;
   
   //Step 4d - Allocate space for it
@@ -147,16 +151,16 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   var freeRva = exe.Raw2Rva(free);
 
   //Step 4e - Fill in the remaining blanks 
-  code = ReplaceVarHex(code, [1, 2], [totExpBase,curExpBase]);
-  code = ReplaceVarHex(code, 5, uiTextOut - (freeRva + 9 + template.hexlength()));//5 for call, 1 for PUSH EAX and 3 for SUB ESP
+  code = ReplaceVarHex(code, [1, 2, 3], [totExpBase, curExpBase, curExpBase]);
+  code = ReplaceVarHex(code, 6, uiTextOut - (freeRva + 9 + template.hexlength()));//5 for call, 1 for PUSH EAX and 3 for SUB ESP
   code = code.replace("YC", "4E");
   
-  code = ReplaceVarHex(code, [1, 2], [totExpJob,curExpJob]);
-  code = ReplaceVarHex(code, 5, uiTextOut - (freeRva + 9 + template.hexlength() * 2));//5 for call, 1 for PUSH EAX and 3 for SUB ESP
+  code = ReplaceVarHex(code, [1, 2, 3], [totExpJob,  curExpJob,  curExpJob]);
+  code = ReplaceVarHex(code, 6, uiTextOut - (freeRva + 9 + template.hexlength() * 2));//5 for call, 1 for PUSH EAX and 3 for SUB ESP
   code = code.replace("YC", "68");
   
   code = ReplaceVarHex(code, 0, uiTextOut - (freeRva + 5));
-  code = ReplaceVarHex(code, 6, exe.Raw2Rva(injectAddr + 5) - (freeRva + size));
+  code = ReplaceVarHex(code, 7, exe.Raw2Rva(injectAddr + 5) - (freeRva + size));
   
   //Step 5a - Insert the new code into the allocated area
   exe.insert(free, size, code, PTYPE_HEX);

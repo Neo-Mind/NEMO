@@ -43,8 +43,8 @@ function CustomExpBarLimits() {
   
   if (offset === -1) {
     suffix = suffix.replace(" 8B 8E AB 00 00 00", "");
-    offset = exe.find(code + suffix, PTYPE_HEX, true, "\xAB", refOffsets[0] - 0x120, refOffsets[0]);
     type = 3;//VC9 style 2
+    offset = exe.find(code + suffix, PTYPE_HEX, true, "\xAB", refOffsets[0] - 0x120, refOffsets[0]);
   }
 
   if (offset === -1)
