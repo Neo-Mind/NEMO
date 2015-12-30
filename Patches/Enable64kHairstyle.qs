@@ -21,7 +21,7 @@ function Enable64kHairstyle() {
     return "Failed in Step 1 - String not found";
   
   //Step 1b - Change the 2nd %s to %u
-  exe.replace(offset + code.length - 6, "75", PTYPE_HEX);
+  exe.replace(offset + code.length - 7, "75", PTYPE_HEX);
   
   //Step 1c - Find the string reference
   offset = exe.findCode("68" + exe.Raw2Rva(offset).packToHex(4), PTYPE_HEX, false);
