@@ -51,7 +51,7 @@ function GetLangType() {
     return ["'america' reference missing"];
 
   //Step 2a - Look for the g_serviceType assignment to 1 after it.   
-  offset = exe.find("C7 05 AB AB AB AB 01 00 00 00", PTYPE_HEX, true, "\xAB", offset + 5);
+  offset = exe.find(" C7 05 AB AB AB AB 01 00 00 00", PTYPE_HEX, true, "\xAB", offset + 5);
   if (offset === -1)
     return ["g_serviceType assignment missing"];
 
