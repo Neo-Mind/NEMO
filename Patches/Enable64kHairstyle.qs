@@ -36,7 +36,7 @@ function Enable64kHairstyle() {
   else 
     offset = offset - 3;
   
-  if (exe.fetchUByte(offset) !== 0x8D);// x > 0x7F => accomodating for the extra 3 bytes of x
+  if (exe.fetchUByte(offset) !== 0x8D)// x > 0x7F => accomodating for the extra 3 bytes of x
     offset = offset - 3;
   
   if (exe.fetchUByte(offset) !== 0x8D)
