@@ -26,17 +26,23 @@ function RestoreRoulette() {
 
   var offset2 = offset + code.hexlength() + 4;
   
-  //Step 2b - Check if the roulette icon is already created (check for PUSH 11D after the CALL)
-  if (exe.fetchDWord(offset2 + 1) === 0x11D)
+  //Step 2b - Get mode constant based on client date.
+  if (exe.getClientDate() > 20150800)
+    var mode = 0x10C;
+  else
+    var mode = 0x11D;
+  
+  //Step 2c - Check if the roulette icon is already created (check for PUSH mode after the CALL)
+  if (exe.fetchDWord(offset2 + 1) === mode)
     return "Patch Cancelled - Roulette is already enabled";
   
   //Step 3a - Prep insert code (starting portion is same as above hence we dont repeat it)
   code +=
     GenVarHex(1)         //CALL UIWindowMgr::MakeWindow ; E8 opcode is already there
-  + " 68 1D 01 00 00"    //PUSH 11D
+  + " 68" + GenVarHex(2) //PUSH mode
   + movEcx               //MOV ECX, OFFSET g_windowMgr
-  + " E8" + GenVarHex(2) //CALL UIWindowMgr::MakeWindow
-  + " E9" + GenVarHex(3) //JMP offset2; jump back to offset2
+  + " E8" + GenVarHex(3) //CALL UIWindowMgr::MakeWindow
+  + " E9" + GenVarHex(4) //JMP offset2; jump back to offset2
   ;
   
   //Step 3b - Allocate space for it
@@ -48,8 +54,9 @@ function RestoreRoulette() {
   
   //Step 3c - Fill in the blanks.
   code = ReplaceVarHex(code, 1, makeWin - (refAddr));
-  code = ReplaceVarHex(code, 2, makeWin - (refAddr + 15));// (PUSH + MOV + CALL)
-  code = ReplaceVarHex(code, 3, exe.Raw2Rva(offset2) - (refAddr + 20));// (PUSH + MOV + CALL + JMP)
+  code = ReplaceVarHex(code, 2, mode);
+  code = ReplaceVarHex(code, 3, makeWin - (refAddr + 15));// (PUSH + MOV + CALL)
+  code = ReplaceVarHex(code, 4, exe.Raw2Rva(offset2) - (refAddr + 20));// (PUSH + MOV + CALL + JMP)
   
   //Step 4 - Insert the code and create the JMP to it.
   exe.insert(free, code.hexlength(), code, PTYPE_HEX);
