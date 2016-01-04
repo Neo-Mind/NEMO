@@ -327,3 +327,5 @@ registerPatch(219, "ShowResurrectionButton", "Always Show Resurrection Button", 
 registerPatch(220, "DisableMapInterface", "Disable Map Interface", "Custom", 0, "Neo", "Disable the World View (Full Map) Interface", false);
 
 registerPatch(221, "RemoveJobsFromBooking", "Remove Jobs from Booking", "Custom", 0, "Neo", "Removes user specified set of Job Names from Party Booking Window.", false);
+
+registerPatch(222, "ShowReplayButton", "Show Replay Button", "Custom", 0, "Neo", "Makes the client show Replay button on Service Select screen that opens the Replay File List window");

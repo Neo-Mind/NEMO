@@ -4,16 +4,14 @@
 //####################################################
 
 function Enable64kHairstyle() {
-  
   //Step 1a - Find address of Format String 
-  var doramOn = false;
   var code = "\xC0\xCE\xB0\xA3\xC1\xB7\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s";// "인간족\머리통\%s\%s_%s.%s"
+  var doramOn = false;
   var offset = exe.findString(code, RAW);
   
-  
   if (offset === -1) {//Doram Client 
-    doramOn = true;
     code = "\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s";// "\머리통\%s\%s_%s.%s"
+    doramOn = true;
     offset = exe.findString(code, RAW);
   }
   
@@ -30,7 +28,6 @@ function Enable64kHairstyle() {
   
   //Step 2a - Move offset to previous instruction which should be an LEA reg, [ESP+x] or LEA reg, [EBP-x]
   var fpEnb = HasFramePointer();
-
   if (!fpEnb)
     offset = offset - 4;
   else 
@@ -42,48 +39,48 @@ function Enable64kHairstyle() {
   if (exe.fetchUByte(offset) !== 0x8D)
     return "Failed in Step 2 - Unknown instruction before reference";
   
-  //Step 2b - Extract the register code used in the second last PUSH reg32 before LEA instruction (0x8D) above.
-  var tgtReg = exe.fetchUByte(offset - 2) - 0x50;
-  if (tgtReg < 0 || tgtReg > 7)
+  //Step 2b - Extract the register code used in the second last PUSH reg32 before the LEA instruction (0x8D)
+  var regNum = exe.fetchUByte(offset - 2) - 0x50;
+  if (regNum < 0 || regNum > 7)
     return "Failed in Step 2 - Missing Reg PUSH";
   
   if (fpEnb)
-    var regc = (0x45 | (tgtReg << 3)).packToHex(1);
+    regc = (0x45 | (regNum << 3)).packToHex(1);
   else
-    var regc = (0x44 | (tgtReg << 3)).packToHex(1);
-    
+    regc = (0x44 | (regNum << 3)).packToHex(1);
+  
   //Step 2c - Now look for the location where it is assigned. Dont remove the AB at the end, the code size is used later.
-  if (fpEnb) {
+  if (fpEnb) {//VC9-VC10
     code =
-      " 83 7D AB 10"       //CMP DWORD PTR SS:[LOCAL.y], 10 ; y is unknown
-    + " 8B" + regc + " AB" //MOV reg32, DWORD PTR SS:[LOCAL.z]; z = y+5
-    + " 73 03"             //JAE SHORT ;after LEA below
-    + " 8D" + regc + " AB" //LEA reg32, [LOCAL.z]; z = y+5
+      " 83 7D AB 10"       //CMP DWORD PTR SS:[EBP-y], 10 ; y is unknown
+    + " 8B" + regc + " AB" //MOV reg32, DWORD PTR SS:[EBP-z] ; z = y+5*4
+    + " 73 03"             //JAE SHORT addr ; after LEA below
+    + " 8D" + regc + " AB" //LEA reg32, [EBP-z]
     ;
   }
   else {
     code =
-      " 83 7C 24 AB 10"       //CMP DWORD PTR SS:[LOCAL.y], 10 ; y is unknown
-    + " 8B" + regc + " 24 AB" //MOV reg32, DWORD PTR SS:[LOCAL.z]; z = y+5
-    + " 73 04"                //JAE SHORT ;after LEA below
-    + " 8D" + regc + " 24 AB" //LEA reg32, [LOCAL.z]; z = y+5
+      " 83 7C 24 AB 10"       //CMP DWORD PTR SS:[ESP+y], 10 ; y is unknown
+    + " 8B" + regc + " 24 AB" //MOV reg32, DWORD PTR SS:[ESP+z] ; z = y+5*4
+    + " 73 04"                //JAE SHORT addr ; after LEA below
+    + " 8D" + regc + " 24 AB" //LEA reg32, [ESP+z]
     ;
   }
-
   var offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x50, offset);
-  if (offset2 === -1) {
+  
+  if (offset2 === -1) {//VC11
     if (fpEnb) {
       code = 
-        " 83 7D AB 10"          //CMP DWORD PTR SS:[LOCAL.y], 10 ; y is unknown
-      + " 8D" + regc + " AB"    //LEA reg32, [LOCAL.z]; z = y+5
-      + " 0F 43" + regc + " AB" //CMOVAE reg32, DWORD PTR SS:[LOCAL.z]; z = y+5 
+        " 83 7D AB 10"          //CMP DWORD PTR SS:[EBP-y], 10 ; y is unknown
+      + " 8D" + regc + " AB"    //LEA reg32, [EBP-z] ; z = y+5*4
+      + " 0F 43" + regc + " AB" //CMOVAE reg32, DWORD PTR SS:[EBP-z]
       ;
     }
     else {
       code = 
-        " 83 7C 24 AB 10"          //CMP DWORD PTR SS:[LOCAL.y], 10 ; y is unknown
-      + " 8D" + regc + " 24 AB"    //LEA reg32, [LOCAL.z]; z = y+5
-      + " 0F 43" + regc + " 24 AB" //CMOVAE reg32, DWORD PTR SS:[LOCAL.z]; z = y+5
+        " 83 7C 24 AB 10"          //CMP DWORD PTR SS:[ESP+y], 10 ; y is unknown
+      + " 8D" + regc + " 24 AB"    //LEA reg32, [ESP+z] ; z = y+5*4
+      + " 0F 43" + regc + " 24 AB" //CMOVAE reg32, DWORD PTR SS:[ESP+z]
       ;
     }
     
@@ -93,10 +90,11 @@ function Enable64kHairstyle() {
   if (offset2 === -1)
     return "Failed in Step 2 - Register assignment missing";
   
-  //Step 2d - Save the length of code that we need to replace. 
-  var repLen = code.hexlength();
+  //Step 2d - Save the offset2 and code size (We need to NOP out the excess)
+  var assignOffset = offset2;
+  var csize = code.hexlength();
   
-  //Step 3a - Find the start of the function - uses a common signature like many others.
+  //Step 3a - Find the start of the function (has a common signature like many others)
   code =
     " 6A FF"             //PUSH -1
   + " 68 AB AB AB 00"    //PUSH value
@@ -104,75 +102,104 @@ function Enable64kHairstyle() {
   + " 50"                //PUSH EAX
   + " 83 EC"             //SUB ESP, const
   ;
-  
   offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x1B0, offset2);
-  
-  if (offset === -1) {
-    code = code.replace(" 83", " 81");//const is > 0x7F
+
+  if (offset === -1) {//const is > 0x7F
+    code = code.replace(" 83", " 81");
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x280, offset2);
   }
+  
+  offset += code.hexlength();
   
   if (offset === -1)
     return "Failed in Step 3 - Function start missing";
   
-  offset += code.hexlength();
-  
-  //Step 3b - Calculate the ESP/EBP offset to reach Arg.5
-  var arg5Off = 5*4;//5 PUSHes
+  //Step 3b - Get the Stack offset w.r.t. ESP/EBP for Arg.5
+  var arg5Dist = 5*4; //for the 5 PUSHes of the arguments
   
   if (fpEnb) {
-    arg5Off += 4;//PUSH EBP at the beginning
+    arg5Dist += 4; //Account for the PUSH EBP in the beginning
   }
   else {
-    arg5Off += 4 + 4 + 4 + 4*4;//PUSH -1 -> PUSH value -> PUSH EAX -> PUSH reg32 x 4
+    arg5Dist += 7*4;//Account for PUSH -1, PUSH addr and 5 reg32 PUSHes
     
-    if (fetchUByte(offset) > 0x7F)//-> SUB ESP, const 
-      arg5Off += exe.fetchDWord(offset);
+    if (exe.fetchUByte(offset - 2) === 0x81) // Add the const from SUB ESP, const
+      arg5Dist += exe.fetchDWord(offset);
     else
-      arg5Off += exe.fetchByte(offset);
-  
-    //Step 3c - Check for an additional PUSH instruction that is there in 2012 & some 2013 clients
-    code = 
-      " A1 AB AB AB 00" //MOV EAX, DWORD PTR DS:[addr]; __security_cookie
+      arg5Dist += exe.fetchByte(offset);
+    
+    //Step 3c - Account for an extra PUSH instruction (security related) in VC9 clients
+    code =
+      " A1 AB AB AB 00" //MOV EAX, DWORD PTR DS:[__security_cookie]; 
     + " 33 C4"          //XOR EAX, ESP
     + " 50"             //PUSH EAX
     ;
-    
     if (exe.find(code, PTYPE_HEX, true, "\xAB", offset + 0x4, offset + 0x20) !== -1)
-      arg5Off += 4;
+      arg5Dist += 4;
   }
-  
-  //Step 4 - Replace with register assignment to hairstyle index (not as a string)
-  if (fpEnb) { 
-    code = " 8B" + regc + arg5Off.packToHex(1); //MOV reg32, DWORD PTR SS:[ARG.5]
+  //Step 3d - Prep code to change assignment (hairstyle index instead of the string)
+  if (fpEnb) {
+    code = " 8B" + regc + arg5Dist.packToHex(1); //MOV reg32_A, DWORD PTR SS:[EBP + arg5Dist]; ARG.5
+  }
+  else if (arg5Dist > 0x7F) {
+    code = " 8B" + (0x84 | (regNum << 3)).packToHex(1) + " 24" + arg5Dist.packToHex(4); //MOV reg32_A, DWORD PTR SS:[ESP + arg5Dist]; ARG.5
   }
   else {
-    if (arg5Off > 0x7F)
-      code = " 8B" + (0x84 | (tgtReg << 3)).packToHex(1) + " 24" + arg5Off.packToHex(4); //MOV reg32, DWORD PTR SS:[ARG.5]
-    else
-      code = " 8B" + regc + " 24" + arg5Off.packToHex(1); //MOV reg32, DWORD PTR SS:[ARG.5]
+    code = " 8B" + regc + " 24" + arg5Dist.packToHex(1); //MOV reg32_A, DWORD PTR SS:[ESP + arg5Dist]; ARG.5
   }
   
-  code += " 8B" + ((tgtReg << 3) | tgtReg).packToHex(1); //MOV reg32, DWORD PTR DS:[reg32]
+  code += " 8B" + ((regNum << 3) | regNum).packToHex(1); //MOV reg32_A, DWORD PTR DS:[reg32_A]
+  code += " 90".repeat(csize - code.hexlength());//Fill rest with NOPs
   
-  code += " 90".repeat(repLen - code.hexlength());//Fill rest with NOPs
+  //Step 3e - Replace the original at assignOffset
+  exe.replace(assignOffset, code, PTYPE_HEX);
   
-  exe.replace(offset2, code, PTYPE_HEX);
+  //Step 4a - Find the string table fetchers
+  code =
+    " 8B AB AB AB AB 00" //MOV reg32_A, DWORD PTR DS:[addr]
+  + " 8B AB 00"          //MOV reg32_B, DWORD PTR DS:[EBP]
+  + " 8B 14"             //MOV EDX, DWORD PTR DS:[reg32_B * 4 + reg32_A]
+  ;
+  var offsets = exe.findAll(code, PTYPE_HEX, true, "\xAB", offset, assignOffset);
   
-  //Step 5a - Find the Hairstyle limiter within the function
+  if (offsets.length === 0) {
+    code =
+      " 8B AB"             //MOV reg32_B, DWORD PTR DS:[reg32_C]
+    + " 8B AB AB AB AB 00" //MOV reg32_A, DWORD PTR DS:[addr]
+    + " 8B 14"             //MOV EDX, DWORD PTR DS:[reg32_B * 4 + reg32_A]
+    ;
+    offsets = exe.findAll(code, PTYPE_HEX, true, "\xAB", offset, assignOffset);
+  }
+  
+  if (offsets.length === 0) {
+    code = code.replace(" 8B AB AB", " A1 AB");//reg32_A is EAX
+    offsets = exe.findAll(code, PTYPE_HEX, true, "\xAB", offset, assignOffset);
+  }
+ 
+  if (offsets.length === 0)
+    return "Failed in Step 4 - Table fetchers missing";
+  
+  //Step 4b - Remove the reg32_B * 4 from all the matches
+  for (var i = 0; i < offsets.length; i++) {
+    offset2 = offsets[i] + code.hexlength();
+    exe.replaceWord(offset2 - 1, 0x9010 + (exe.fetchByte(offset2) & 0x7));
+    debugValue(exe.Raw2Rva(offsets[i]).toBE());
+  }
+  
+  //Step 5a - Find the Hairstyle limiting comparison within the function
   code = 
     " 7C 05"    //JL SHORT addr1; skips the next two instructions
   + " 83 AB AB" //CMP reg32_A, const; const = max hairstyle ID
   + " 7E AB"    //JLE SHORT addr2; skip the next assignment - AB should be 06 or 07
   + " C7"       //MOV DWORD PTR DS:[reg32_B], 0D
   ;
-  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 4, offset + 0x50);
+  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 4, offset + 0x50);//VC9 - VC10
   
   if (offset2 === -1) {
     code = code.replace(" 7C", " 78");//changing JL to JS
-    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 4, offset + 0x50);
+    offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 4, offset + 0x50);//VC11
   }
-    
+  
   if (offset2 === -1 && doramOn) {//For Doram Client, its farther away since there are extra checks for Job ID within Doram Range or Human Range
     offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 0x100, offset + 0x200);
   }
@@ -180,48 +207,45 @@ function Enable64kHairstyle() {
   if (offset2 === -1)
     return "Failed in Step 5 - Limit checker missing";
   
-  //Step 5b - Extract the register being compared.
-  tgtReg = exe.fetchUByte(offset2 + 3) ^ 0xF8;
+  offset2 += code.hexlength();
   
-  //Step 5d - Change JL/JS to JLE and make it set value to 2 & Change original JLE to JMP
-  code = 
-    " 7E 05"    //JLE SHORT addr1
-  + " 90 90 90" //NOPs
-  + " EB"       //JMP SHORT addr2
-  ;
-  exe.replace(offset2, code, PTYPE_HEX);
+  //Step 5b - Change the JLE to JMP
+  exe.replace(offset2 - 3, "EB", PTYPE_HEX);
   
-  offset2 = exe.find(" 0D 00 00 00", PTYPE_HEX, false, "\xAB", offset2 + code.hexlength() + 2);//If EBP is used it appears 1 byte later so making sure.
-  exe.replace(offset2, "02", PTYPE_HEX);
+  //Step 5c - Change 0D to 02 in MOV instruction
+  code = exe.fetchUByte(offset2);
+  if (code === 0x04 || code > 0x07)
+    exe.replace(offset2 + 2, "02");
+  else
+    exe.replace(offset2 + 1, "02");
   
-  if (doramOn) {//There is an extra comparison for Doram race before this one - we need to do similar steps for it
-  
-    //Step 5e - Find Hairstyle limiter for Doram race before Human race
+  //Remove the && 0 to enable for Doram
+  if (doramOn && 0) {//Repeat 5a & 5b for Doram race which appears before offset2. 
+    //Step 6a - Find the Hairstyle limiting comparison within the function for Doram race
     code = 
       " 7C 05"    //JL SHORT addr1; skips the next two instructions
     + " 83 AB AB" //CMP reg32_A, const; const = max hairstyle ID
     + " 7C AB"    //JLE SHORT addr2; skip the next assignment - AB should be 06 or 07
     + " C7"       //MOV DWORD PTR DS:[reg32_B], 06
     ;
-  
+    
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x75, offset2 - 0x10);
     if (offset === -1)
-      return "Failed in Step 5 - Doram Limit Checker missing";
-    
-    //Step 5f - Extract the register being compared.
-    tgtReg = exe.fetchUByte(offset + 3) ^ 0xF8;
-    
-    //Step 5g - Change JL to JLE and make it set value to 1 & Change JLE to JMP
-    code = 
-      " 7E 05"    //JLE SHORT addr1
-    + " 90 90 90" //NOPs
-    + " EB"       //JMP SHORT addr2
-    ;
-    exe.replace(offset, code, PTYPE_HEX);
+      return "Failed in Step 6 - Doram Limit Checker missing";
   
-    offset = exe.find(" 06 00 00 00", PTYPE_HEX, false, "\xAB", offset + code.hexlength() + 2);//If EBP is used it appears 1 byte later so making sure.
-    exe.replace(offset, "01", PTYPE_HEX);
+    offset += code.hexlength();
+    
+    //Step 6b - Change the JLE to JMP
+    exe.replace(offset - 3, "EB", PTYPE_HEX);
+    
+    //Step 6c - Change 0D to 02 in MOV instruction
+    code = exe.fetchUByte(offset);
+    if (code === 0x04 || code > 0x07)
+      exe.replace(offset + 2, "02");
+    else
+      exe.replace(offset + 1, "02");
   }
+  
   return true;
 }
 
@@ -231,49 +255,3 @@ function Enable64kHairstyle() {
 function Enable64kHairstyle_() {
   return (exe.getClientDate() > 20111102);
 }
-
-/*  Not Done - not sure if its needed
-  // Step 3a - Void Table lookup.
-  if (type === 0) {
-    code =
-        " 8B 45 00"  // MOV  EAX,DWORD PTR SS:[EBP]
-      + " 8B 14 81"  // MOV  EDX,DWORD PTR DS:[ECX+EAX*4]
-      ;
-  }
-  else {
-    code =
-        " 75 19"             // JNE SHORT addr1
-      + " 8B 0E"             // MOV ECX, DWORD PTR DS:[ESI]
-      + " 8B 15 AB AB AB 00" // MOV EDX, DWORD PTR DS:[addr2]
-      + " 8B 14 8A"          // MOV EDX, DWORD PTR DS:[EDX+ECX*4]
-      ;
-  }
-  
-  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  if (offset === -1)
-    return "Failed in Step 3";
-  
-  // Step 3b - Replace the lookup with ad-hoc
-  if (type === 0) {
-    exe.replace(offset+4 , " 11 90", PTYPE_HEX); //MOV EDX,DWORD PTR DS:[ECX]
-  }
-  else {
-    exe.replace(offset+11, " 12 90", PTYPE_HEX); //MOV EDX,DWORD PTR DS:[EDX]
-  }
-    
-  //Step 3c - New client special
-  if (type === 1) {
-    code =
-        " 75 23"             // JNE SHORT addr1
-      + " 8B 06"             // MOV EAX, DWORD PTR DS:[ESI]
-      + " 8B 0D AB AB AB 00" // MOV ECX, DWORD PTR DS:[addr2]
-      + " 8B 14 81"          // MOV EDX, DWORD PTR DS:[EDX+ECX*4]
-      ;
-    offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-
-    if (offset == -1)
-      return "Failed in Step 3 - New Client Special";
-
-    exe.replace(offset+11, " 11 90", PTYPE_HEX); //MOV EDX,DWORD PTR DS:[ECX]
-  }
-  */
