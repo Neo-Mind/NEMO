@@ -183,7 +183,6 @@ function Enable64kHairstyle() {
   for (var i = 0; i < offsets.length; i++) {
     offset2 = offsets[i] + code.hexlength();
     exe.replaceWord(offset2 - 1, 0x9010 + (exe.fetchByte(offset2) & 0x7));
-    debugValue(exe.Raw2Rva(offsets[i]).toBE());
   }
   
   //Step 5a - Find the Hairstyle limiting comparison within the function
