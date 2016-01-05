@@ -36,7 +36,7 @@ function MoveItemCountUpwards() {
     + " 6A 0B"          //PUSH 0B
     + " 98"             //CWDE
     ;
-    type = 3; //VC11
+    type = 4; //VC11
     
     offset = exe.findCodes(code, PTYPE_HEX, false)[1];    
     if (typeof(offset) === "undefined")
