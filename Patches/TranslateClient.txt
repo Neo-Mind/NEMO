@@ -28,7 +28,7 @@ F: C4 C9 B8 AF C5 CD 20 B8 B8 B5 E9 B1 E2 00
 R: 'Make Character'
 
 -----------------------
-H: Skill Timer Hour
+M: Skill Timer Hour
 -----------------------
 F: 25 64 20 BD C3 B0 A3 20
 R: '%d hour '
