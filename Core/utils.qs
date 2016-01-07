@@ -288,7 +288,7 @@ function FetchPacketKeyInfo() {
     var str = f.readline().trim();
     if (str.length < 16) continue;
     if (str.search(cdate) === 0) {
-      var keys = str.substr( str.indexOf("=") + 1).trim().split(",");
+      var keys = str.split('=')[1].trim().split(",");
       if (keys.length === 3)
         break;
       

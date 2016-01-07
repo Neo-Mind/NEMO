@@ -39,6 +39,8 @@ function PacketEncryptionKeys(varname, index) {
   
   //Step 1c - Get new Key from user.
   var newKey = parseInt( exe.getUserInput(varname, XTYPE_HEXSTRING, "Hex input", "Enter the new key", info.keys[index].toBE()),  16);
+  if (newKey === info.keys[index])
+    return "Patch Cancelled - Key not changed";
   
   if (info.type === 0)//Packet Key PUSHed as arguments
   {
