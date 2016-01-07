@@ -17,8 +17,8 @@ function DisableMapInterface() {
   ;
   
   var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
-  if (offsets.length !== 2)
-    return "Failed in Step 1 - Not enough matches";
+  if (offsets.length === 0)
+    return "Failed in Step 1 - No matches found";
   
   //Step 1b - Change the First PUSH to a JMP to the JNE location and  change the JNE to JMP
   for (var i = 0; i < offsets.length; i++) {
