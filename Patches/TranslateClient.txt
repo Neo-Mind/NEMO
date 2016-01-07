@@ -1339,7 +1339,7 @@ F: C6 C4 2D BD BA C5 B8 20 B4 EB B7 FA C0 C7 20 B4 EB C7 A5 C0 FB C0 CE 20 C1 BE
 R: 'One of the leading tribes of the continent star, naturally curious and has a sporty personality.'
 
 F: B5 B5 B6 F7
-R: 'Dorma'
+R: 'Doram'
 
 F: BC D2 C8 AF BC FA BB E7
 R: 'Summoner'
