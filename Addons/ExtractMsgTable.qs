@@ -47,53 +47,47 @@ function ExtractMsgTable() {
   //Step 1d - Extract the tblAddr
 	offset = exe.Rva2Raw(exe.fetchDWord(offset2 + code.hexlength() - 4)) - 4;
   
+  //Step 2a - Read the reference strings from file (Korean original in hex format)
 	var fp = new TextFile();
-  var refArr = {};
-  var engArr = [];
-  var str = "";
+  var refList = [];
+  var msgStr = "";
   
-  //Step 2a - Read the reference file to an array - Korean ASCII
-	var index = 0;
-  var debug, i;
 	fp.open(APP_PATH + "/Input/msgStringRef.txt", "r");
 	while (!fp.eof()) {
-		var line = fp.readline();
-    str += line.toHex();
-    
-    if (line.indexOf('#', line.length - 1) !== -1) {
-      refArr[str] = index;
-      str = "";
-      index++;
-    }
-    else {
-      str += " 0d 0a";
-      debug = str;
-      i = index;
-    }
-  }
-	fp.close();
-  
-  str = "";
-	fp.open(APP_PATH + "/Input/msgStringEng.txt", "r");
-	while (!fp.eof()) {
-		var line = fp.readline();
-    str += line;
-    
-    if (line.indexOf('#', line.length - 1) !== -1) {
-      engArr.push(str);
-      str = "";
-    }
-    else {
-      str += "\n";
+    var parts = fp.readline().split('#');
+    for (var i = 1; i <= parts.length; i++) {
+      msgStr += parts[i - 1].replace(/\\r/g, " 0D").replace(/\\n/g, " 0A");
+      if (i < parts.length) {
+        refList.push(msgStr.toAscii());
+        msgStr = "";
+      }
     }
   }
   fp.close();
   
-  //return i + ":" + debug + " " + engArr[i];
+  //Step 2b - Read the translated strings from file (English regular text)
+  msgStr = "";
+  var index = 0;
+  var engMap = {};
+  
+	fp.open(APP_PATH + "/Input/msgStringEng.txt", "r");
+	while (!fp.eof()) {
+    var parts = fp.readline().split('#');
+    for (var i = 1; i <= parts.length; i++) {
+      msgStr += parts[i-1];
+      if (i < parts.length) {
+        engMap[refList[index]] = msgStr;
+        msgStr = "";
+        index++;
+      }
+    }
+  }
+  fp.close();
   
   //Step 3 - Loop through the table inside the client - Each Entry
 	var done = false;
 	var id = 0;
+  
 	fp.open(APP_PATH + "/Output/msgstringtable_" + exe.getClientDate() + ".txt", "w");
 	while (!done) {
 		if (exe.fetchDWord(offset) === id) {
@@ -102,13 +96,13 @@ function ExtractMsgTable() {
 			var start_offset = exe.Rva2Raw(exe.fetchDWord(offset+4));
 			var end_offset   = exe.find("00", PTYPE_HEX, false, "", start_offset);
       
-      var msgstr = exe.fetchHex(start_offset, end_offset - start_offset) + " 23";
+      msgStr = exe.fetch(start_offset, end_offset - start_offset);
       
       //Step 3b - Map the Korean string to English
-			if (typeof(refArr[msgstr]) !== "undefined" && typeof(engArr[refArr[msgstr]]) !== "undefined")
-				fp.writeline(engArr[refArr[msgstr]]);
-			else  
-      	fp.writeline(msgstr.toAscii() + "#");
+      if (engMap[msgStr])
+        fp.writeline(engMap[msgStr] + '#');
+      else
+      	fp.writeline(msgStr + "#");
       
 			offset += 8;
 			id++;
