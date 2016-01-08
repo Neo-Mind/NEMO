@@ -19,15 +19,15 @@ function CustomWindowTitle() {
   exe.replace(strOff, "$customWindowTitle", PTYPE_STRING);
   
   //Step 2a - Find offset of 'Ragnarok'
-  var code = exe.findString("Ragnarok", RVA).packToHex(4);  
+  var code = " C7 05 AB AB AB 00" + exe.findString("Ragnarok", RVA).packToHex(4);//MOV DWORD PTR DS:[g_title], OFFSET addr; ASCII "Ragnarok"
   
   //Step 2b - Find its reference
-  var offset = exe.findCode(code, PTYPE_HEX, false);
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   if( offset === -1)
     return "Failed in Step 2";
 
   //Step 3 - Replace the original reference with the URL offset.
-  exe.replaceDWord(offset, exe.Raw2Rva(strOff));
+  exe.replaceDWord(offset + code.hexlength() - 4, exe.Raw2Rva(strOff));
 
   return true;
 }
