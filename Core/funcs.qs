@@ -51,8 +51,7 @@ String.prototype.toAscii = function() {
 }
 
 String.prototype.unpackToInt = function() {
-	var orig = this;
-	return parseInt("0x" + orig.split(" ").reverse().join(""),16);
+	return (-1 & parseInt("0x" + this.toBE(),16));
 }
 
 String.prototype.toBE = function() {

@@ -10,10 +10,10 @@ function MoveItemCountUpwards() {
     " 68 FF FF FF 00" //PUSH 0FFFFFF
   + " 0F BF CE"       //MOVSX ECX, SI
   ;
-  var type = 1;//VC6
-  var offset = exe.findCode(code, PTYPE_HEX, false);
+  var type = 1;//VC6 & Early VC9
+  var offsets = exe.findCodes(code, PTYPE_HEX, false);
   
-  if (offset === -1) {
+  if (offsets.length === 0) {
     code =
       " 68 FF FF FF 00" //PUSH 0FFFFFF
     + " 6A 0B"          //PUSH 0B
@@ -24,11 +24,10 @@ function MoveItemCountUpwards() {
       type = 3; //VC10
     else
       type = 2; //VC9
-  
-    offset = exe.findCode(code, PTYPE_HEX, false);
+    offsets = exe.findCodes(code, PTYPE_HEX, false);
   }
   
-  if (offset === -1) {
+  if (offsets.length === 0) {
     code =
       " 68 FF FF FF 00" //PUSH 0FFFFFF
     + " B8 0E 00 00 00" //MOV EAX, 0E    
@@ -37,17 +36,14 @@ function MoveItemCountUpwards() {
     + " 98"             //CWDE
     ;
     type = 4; //VC11
-    
-    offset = exe.findCodes(code, PTYPE_HEX, false)[1];    
-    if (typeof(offset) === "undefined")
-      offset = -1;
+    offsets = exe.findCodes(code, PTYPE_HEX, false);
   }
   
-  if (offset === -1)
+  if (offsets.length === 0)
     return "Failed in Step 1 - No Patterns matched";
   
-  //Step 2a - Find the comparison within 0x50 bytes before the pattern
-  if (type === 1) {//VC6
+  //Step 2a - Get the comparison pattern 
+  if (type === 1) {//VC6 & Early VC9
     code = 
       " 8A 45 18" //MOV AL, BYTE PTR SS:[EBP+18]
     + " 83 C4 0C" //ADD ESP, 0C
@@ -66,12 +62,17 @@ function MoveItemCountUpwards() {
   
   code += " 74"; //JE SHORT addr
   
-  offset = exe.find(code, PTYPE_HEX, false, "", offset - 0x50, offset);
+  //Step 2b - Find the comparison within 0x50 bytes before one of the patterns
+  var offset = -1;
+  for (var i = 0; i < offsets.length; i++) {
+    offset = exe.find(code, PTYPE_HEX, false, "", offsets[i] - 0x50, offsets[i]);
+    if (offset !== -1)
+      break;
+  }
   if (offset === -1)
     return "Failed in Step 2 - Comparison missing";
 
-  //Step 2b - Change the JE to JMP  
-  exe.replace(offset + code.hexlength() - 1, "EB", PTYPE_HEX);
-  
+  //Step 2c - Change the JE to JMP  
+  exe.replace(offset + code.hexlength() - 1, "EB", PTYPE_HEX);  
   return true;
 }
