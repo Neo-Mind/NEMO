@@ -92,14 +92,16 @@ function RestoreLoginWindow() {
   }
   
   if (offset === -1)
-    return "Failed in Step 5 - LangType comparison missing";
+    return "Failed in Step 4 - LangType comparison missing";
   
-  if (exe.fetchUByte(offset + code.hexlength()) === 0x83 && exe.fetchByte(offset + code.hexlength() + 2) === 0x0C)
-    var repl = "EB 0F";//JMP after the JZs
-  else
+  offset += code.hexlength();
+  
+  if (exe.fetchUByte(offset) === 0x83 && exe.fetchByte(offset + 2) === 0x0C)//create a JMP to location after the JZs
     var repl = "EB 18";
+  else
+    var repl = "EB 0F";
   
-  exe.replace(offset + code.hexlength() - 0x11, repl, PTYPE_HEX);
+  exe.replace(offset - 0x11, repl, PTYPE_HEX);
   
   /*===========================================================================================================================
   Shinryo: We need to make the client return to Login Interface when Error occurs (such as wrong password, failed to connect).
