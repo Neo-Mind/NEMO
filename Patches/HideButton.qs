@@ -120,9 +120,9 @@ function HideButton2(prefix) {
 //========================================================//
 
 function HideRodex_() {
-  return (exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\basic_interface\\RO_menu_icon\\mail", RAW) !== -1);
+  return (exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\RO_menu_icon\\mail", RAW) !== -1);
 }
 
 function HideAchieve_() {
-  return (exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\basic_interface\\RO_menu_icon\\achievement", RAW) !== -1);
+  return (exe.findString("\xC0\xAF\xC0\xFA\xC0\xCE\xC5\xCD\xC6\xE4\xC0\xCC\xBD\xBA\\RO_menu_icon\\achievement", RAW) !== -1);
 }
