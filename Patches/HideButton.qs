@@ -95,19 +95,32 @@ function HideButton(src, tgt) {
 
 function HideButton2(prefix) {
   
-  //Step 1a - Find the address of the string
+  //Step 1a - Find the address of the reference prefix "info" (needed since some prefixes are matching multiple areas)
+  var refAddr = exe.findString("info", RVA);
+  if (refAddr === -1)
+    return "Failed in Step 1 - info missing";
+  
+  //Step 1b - Find the address of the string
   var strAddr = exe.findString(prefix, RVA);
   if (strAddr === -1)
     return "Failed in Step 1 - Prefix missing";
   
-  //Step 1b - Find its assignment to a stack location inside UIBasicWnd::OnCreate
-  var offset = exe.findCode(strAddr.packToHex(4) + " C7", PTYPE_HEX, false);
+  //Step 2a - Find assignment of "info" inside UIBasicWnd::OnCreate
+  var suffix = " C7";
+  var offset = exe.findCode(refAddr.packToHex(4) + suffix, PTYPE_HEX, false);
   
-  if (offset === -1)
-   offset = exe.findCode(strAddr.packToHex(4) + " 8D", PTYPE_HEX, false);
+  if (offset === -1) {
+    suffix = " 8D"; 
+    offset = exe.findCode(refAddr.packToHex(4) + suffix, PTYPE_HEX, false);
+  }
  
   if (offset === -1)
-    return "Failed in Step 1 - Prefix assignment missing";
+    return "Failed in Step 2 - info assignment missing";
+  
+  //Step 2b - Find the assignment of prefix after "info" assignment
+  offset = exe.find(strAddr.packToHex(4) + suffix, PTYPE_HEX, false, "", offset + 5, offset + 0x500);
+  if (offset === -1)
+    return "Failed in Step 2 - Prefix assignment missing";
   
   //Step 2 - Update the address to point to NULL
   exe.replaceDWord(offset, strAddr + prefix.length);
