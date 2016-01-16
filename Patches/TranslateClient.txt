@@ -1356,3 +1356,6 @@ M: Translate Message Box 2015
 
 F: B8 DE BC BC C1 F6
 R: 'Message'
+
+F: 20 28 00 00 28 20 54 6F 20
+R: 20 00 00 00 28 20 54 6F 20
