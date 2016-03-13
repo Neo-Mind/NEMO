@@ -11,45 +11,58 @@ function EnableCustom3DBones() {
     return "Failed in Step 1 - String not found";
   
   //Step 1b - Find its reference which is inside C3dGrannyBoneRes::GetAnimation
-  var finish = exe.findCode("68" + offset.packToHex(4), PTYPE_HEX, false);
-  if (finish === -1)
+  var offset2 = exe.findCode("68" + offset.packToHex(4), PTYPE_HEX, false);
+  if (offset2 === -1)
     return "Failed in Step 1 - String reference missing";
 
-  finish -= 9;
-  // MOV <R32>, [ARRAY] <= Find offset of this instruction
-  // PUSH <R32>
-  // PUSH <R32>
-  // PUSH <offset>
+  //Step 2a - Find Limiting CMP instruction within this function before the reference (should be within 0x80 bytes)
+  var code = 
+    " C6 05 AB AB AB 00 00" //MOV BYTE PTR DS:[addr], 0
+  + " 83 FE 09"             //CMP ESI, 9
+  ;
+  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x80, offset2);
   
-  //Step 2 - Find Limiting CMP instruction within this function before the reference.
-  //         we will assume it comes within 0x70h before finish
-  
-  // For VC9 images the value is 09h
-  var offset = exe.find(" 83 FE 09", PTYPE_HEX, false, " ", finish - 0x70, finish);
-  
-  if (offset === -1) //For VC6 images the value is 0A
-    offset = exe.find(" 83 FE 0A", PTYPE_HEX, false, " ", finish - 0x70, finish);
+  if (offset === -1) {
+    code = code.replace("09", "0A"); //Change the 09h to 0Ah for VC6 clients
+    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x80, offset2);
+  }
   
   if (offset === -1)
-    return "Failed in Step 2";
+    return "Failed in Step 2 - Comparison missing";
+
+  offset += code.hexlength();
   
-  offset += 3;
+  //Step 2b - Find the Index test after ID Comparison (should be within 0x20 bytes)
+  code = 
+    " 85 FF" //TEST EDI, EDI
+  + " 75 27" //JNE SHORT addr
+  ;
+  offset2 = exe.find(code, PTYPE_HEX, false, "", offset, offset + 0x20);
   
-  //Step 3 - Modify JA/JGE address to the code for using 3dmob_bone. Do not care about which CMP we hit,
-  //         the important thing is the conditional JGE/JA after it, be it SHORT or LONG.
-  //         Also let"s trust the client here, that it never calls the function with nAniIdx outside of [0;4]
+  if (offset2 === -1) {
+    code = code.replace("27", "28"); //VC10 and older has 28 instead of 27
+    offset2 = exe.find(code, PTYPE_HEX, false, "", offset, offset + 0x20);
+  }
+  
+  if (offset2 === -1)
+    return "Failed in Step 2 - Index Test missing";
+    
+  //Step 3a - NOP out the TEST & Modify the short JNE to JMP at offset2 
+  exe.replace(offset2, " 90 90 EB", PTYPE_HEX);
+  
+  //Step 3b - Modify the JA/JGE instruction at offset to just skip the Jump.
   switch(exe.fetchUByte(offset)) {
     case 0x77:
-    case 0x7D: {// Short Jump
-      exe.replace(offset + 1, (finish - offset - 2).packToHex(1), PTYPE_HEX);
-      break;      
+    case 0x7D: {// Short JA/JGE
+      exe.replace(offset, " 90 90", PTYPE_HEX);
+      break;
     }
-    case 0x0F: {// Long Jump
-      exe.replace(offset + 2, (finish - offset - 6).packToHex(4), PTYPE_HEX);
+    case 0x0F: {// Long JA/JGE
+      exe.replace(offset, " EB 04", PTYPE_HEX);
       break;
     }
     default: {
-      return "Failed in Step 3";  
+      return "Failed in Step 3";
     }
   }
   
