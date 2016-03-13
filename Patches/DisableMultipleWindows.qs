@@ -25,7 +25,7 @@ function DisableMultipleWindows() {
   
   if (offset === -1)
     return "Failed in Step 1 - CoInitialize call missing";
-  
+
   //Step 1c - If the MOV EAX statement follows the CoInitialize call then it is the old client where Multiple client check is there,
   //          Replace the statement with MOV EAX, 00FFFFFF
   if (exe.fetchUByte(offset + code.hexlength()) === 0xA1) {
@@ -47,22 +47,36 @@ function DisableMultipleWindows() {
     " E8" + GenVarHex(0)    // CALL ResetTimer
   + " 56"                   // PUSH ESI
   + " 33 F6"                // XOR ESI,ESI
+  + " 68" + GenVarHex(1)    // PUSH addr ; "KERNEL32"
+  + " FF 15" + GenVarHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
+  + " E8 0D 00 00 00"       // PUSH &JMP
+  + "CreateMutexA\x00".toHex()    // DB "CreateMutexA", 0
+  + " 50"                   // PUSH EAX
+  + " FF 15" + GenVarHex(3) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
   + " E8 0F 00 00 00"       // PUSH &JMP
-  + " 47 6C 6F 62 61 6C 5C 53 75 72 66 61 63 65 00" // DB "Global\Surface",0
+  + "Global\\Surface\x00".toHex() // DB "Global\Surface",0
   + " 56"                   // PUSH ESI
   + " 56"                   // PUSH ESI
-  + " FF 15" + GenVarHex(1) // CALL DWORD PTR DS:[<&KERNEL32.CreateMutexA>]
+  + " FF D0"                // CALL EAX
   + " 85 C0"                // TEST EAX,EAX
   + " 74 0F"                // JE addr1 -> ExitProcess call below
   + " 56"                   // PUSH ESI
   + " 50"                   // PUSH EAX
-  + " FF 15" + GenVarHex(2) // CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
+  + " FF 15" + GenVarHex(4) // CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
   + " 3D 02 01 00 00"       // CMP EAX, 258  ; WAIT_TIMEOUT
-  + " 75 07"                // JNZ addr2 -> POP ESI below
+  + " 75 26"                // JNZ addr2 -> POP ESI below
+  + " 68" + GenVarHex(5)    // PUSH addr ; "KERNEL32"
+  + " FF 15" + GenVarHex(6) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
+  + " E8 0C 00 00 00"       // PUSH &JMP
+  + "ExitProcess\x00".toHex()     // DB "ExitProcess", 0
+  + " 50"                   // PUSH EAX
+  + " FF 15" + GenVarHex(7) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
   + " 56"                   // PUSH ESI
-  + " FF 15" + GenVarHex(3) // CALL DWORD PTR DS:[<&KERNEL32.ExitProcess>]
+  + " FF D0"                // CALL EAX
   + " 5E"                   // POP ESI ; addr2
-  + " E9" + GenVarHex(4)    // JMP AfterStolenCall
+  + " 68" + GenVarHex(8)    // PUSH AfterStolenCall ; little trick to make calculation easier
+  + " C3"                   // RETN
+  + "KERNEL32\x00".toHex()  // "KERNEL32" ; string to use in GetModuleHandleA
   ;
     
   var csize = code.hexlength();
@@ -76,11 +90,22 @@ function DisableMultipleWindows() {
   exe.replace(offset - 5, "E9" + (exe.Raw2Rva(free) - exe.Raw2Rva(offset)).packToHex(4), PTYPE_HEX);
   
   //Step 2e - Fill in the blanks
-  code = ReplaceVarHex(code, 0, (resetTimer - exe.Raw2Rva(free + 5)));
-  code = ReplaceVarHex(code, 1, GetFunction("CreateMutexA", "KERNEL32.dll"));
-  code = ReplaceVarHex(code, 2, GetFunction("WaitForSingleObject", "KERNEL32.dll"));
-  code = ReplaceVarHex(code, 3, GetFunction("ExitProcess", "KERNEL32.dll"));
-  code = ReplaceVarHex(code, 4, (exe.Raw2Rva(offset) - exe.Raw2Rva(free + csize)));
+  code = ReplaceVarHex(code, 0, resetTimer - exe.Raw2Rva(free + 5));
+  code = ReplaceVarHex(code, 8, exe.Raw2Rva(offset));
+  
+  code = ReplaceVarHex(code, 4, GetFunction("WaitForSingleObject", "KERNEL32.dll"));
+
+  offset = exe.Raw2Rva(free + csize - 9);
+  code = ReplaceVarHex(code, 1, offset);
+  code = ReplaceVarHex(code, 5, offset);
+    
+  offset = GetFunction("GetModuleHandleA", "KERNEL32.dll");
+  code = ReplaceVarHex(code, 2, offset);
+  code = ReplaceVarHex(code, 6, offset);
+  
+  offset = GetFunction("GetProcAddress", "KERNEL32.dll");
+  code = ReplaceVarHex(code, 3, offset);
+  code = ReplaceVarHex(code, 7, offset);
   
   //Step 2f - Insert the code to allocated space
   exe.insert(free, csize, code, PTYPE_HEX);
