@@ -186,7 +186,7 @@ registerPatch( 63, "UseOfficialClothPalette", "Use Official Cloth Palettes", "UI
 
 registerPatch( 64, "FixChatAt", "@ Bug Fix", "UI", 0, "Shinryo", "Correct the bug to write @ in chat", true);
 
-registerPatch( 65, "ChangeItemInfo", "Load Custom lua file instead of iteminfo.lub", "UI", 0, "Neo", "Makes the client load your own lua file instead of iteminfo.lub . If you directly use ItemInfo.lub for your translated items, it may become lost during the next kRO update", false);
+registerPatch( 65, "ChangeItemInfo", "Load Custom lua file instead of iteminfo*.lub", "UI", 0, "Neo", "Makes the client load your own lua file instead of iteminfo*.lub . If you directly use itemInfo*.lub for your translated items, it may become lost during the next kRO update", false);
 
 registerPatch( 66, "LoadItemInfoPerServer", "Load iteminfo with char server", "Data", 0, "Neo", "Load ItemInfo file and call main function with selected char server name as argument", false);
 

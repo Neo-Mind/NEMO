@@ -34,6 +34,14 @@ function ReplaceVarHex(code, nums, values) {
 }
 
 //###########################################################
+//# Purpose: Check whether client is Renewal or Main client # 
+//###########################################################
+
+function IsRenewal() {
+    return(exe.findString("rdata.grf", RAW) !== -1);
+}
+
+//###########################################################
 //# Purpose: Extract the g_serviceType address from Client. # 
 //#          Returned value will be in PTYPE_HEX format     #
 //###########################################################

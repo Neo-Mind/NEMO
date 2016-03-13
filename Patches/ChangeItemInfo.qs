@@ -5,10 +5,16 @@
 
 function ChangeItemInfo() {
   
-  //Step 1a - Find offset of "System/iteminfo.lub"
-  var offset = exe.findString("System/iteminfo.lub", RVA);
+  //Step 1a - Check if the client is Renewal (iteminfo file name is "System/iteminfo_Sak.lub" for Renewal clients)
+  if (IsRenewal())
+      var iiName = "System/iteminfo_Sak.lub";
+  else
+      var iiName = "System/iteminfo.lub";
+  
+  //Step 1b - Find offset of the original string
+  var offset = exe.findString(iiName, RVA);
   if (offset === -1)
-    return "Failed in Step 1 - iteminfo.lub not found";
+    return "Failed in Step 1 - iteminfo file name not found";
   
   //Step 1b - Find its reference
   offset = exe.findCode("68" + offset.packToHex(4),  PTYPE_HEX, false);
@@ -16,8 +22,8 @@ function ChangeItemInfo() {
     return "Failed in Step 1 - iteminfo reference not found";
   
   //Step 2a - Get the new filename from user
-  var myfile = exe.getUserInput("$newItemInfo", XTYPE_STRING, "String input - maximum 28 characters including folder name/", "Enter the new ItemInfo path (should be relative to RO folder)", "System/iteminfo.lub", 1, 28);
-  if (myfile === "System/iteminfo.lub")
+  var myfile = exe.getUserInput("$newItemInfo", XTYPE_STRING, "String input - maximum 28 characters including folder name/", "Enter the new ItemInfo path (should be relative to RO folder)", iiName, 1, 28);
+  if (myfile === iiName)
     return "Patch Cancelled - New value is same as old";
   
   //Step 2b - Allocate space for the new name
@@ -36,5 +42,9 @@ function ChangeItemInfo() {
 // Disable for Unsupported clients //
 //=================================//
 function ChangeItemInfo_() {
-  return (exe.findString("System/iteminfo.lub", RAW) !== -1);
+  if (IsRenewal())
+      var iiName = "System/iteminfo_Sak.lub";
+  else
+      var iiName = "System/iteminfo.lub";
+  return (exe.findString(iiName, RAW) !== -1);
 }
