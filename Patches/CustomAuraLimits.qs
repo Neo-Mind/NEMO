@@ -140,17 +140,18 @@ function CustomAuraLimits() {
     
     //Step 4d - Find g_session assignment
     code =
-      " B9 AB AB AB 00" //MOV ECX, g_session
-    + " E8"             //CALL jobIdFunc
+      " E8 AB AB AB AB" //CALL jobIdFunc
+    + " 50"             //PUSH EAX
+    + " B9 AB AB AB 00" //MOV ECX, g_session
+    + " E8"             //CALL addr
     ;
 
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x20);
     if (offset === -1)
       return "Failed in Step 4 - g_session reference missing";
     
-    //Step 4e - Extract g_session and job Id getter addresses
-    var gSession = exe.fetchDWord(offset + 1);
-    var jobIdFunc = exe.Raw2Rva(offset + 10) + exe.fetchDWord(offset + 6);
+    //Step 4e - Extract job Id getter address (we dont need the gSession for this one)
+    var jobIdFunc = exe.Raw2Rva(offset + 5) + exe.fetchDWord(offset + 1);
     
     //Step 4f - Find the Zero assignment at the end of the function
     code = " C7 86 AB AB 00 00 00 00 00 00"; //MOV DWORD PTR DS:[ESI + const], 0
@@ -287,6 +288,9 @@ function CustomAuraLimits() {
   + " C3"                     //RETN
   ;
   
+  if (!directComparison)
+    code = code.replace(" B9" + GenVarHex(1), " 90 90 90 90 90");
+
   //Step 6b - Allocate space for it
   var size = code.hexlength() + 8 * idLvlTable.length + 4 + tblSize;
   var free = exe.findZeros(size);
