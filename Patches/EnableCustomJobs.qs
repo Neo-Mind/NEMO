@@ -220,14 +220,23 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   if (offset2 === -1)
     return "Failed in Step 5 - 2nd LangType comparison missing";
   
+  //Step 5g - Extract any Register Pushes before the Comparison - This is needed since they are restored at the end of the function
+  var push1 = exe.fetchUByte(offset2 - 1);
+  if (push1 < 0x50 || push1 > 0x57)
+    push1 = 0x90;
+  
+  var push2 = exe.fetchUByte(offset2 - 2);
+  if (push2 < 0x50 || push2 > 0x57)
+    push2 = 0x90;
+  
   offset2 += code.hexlength();
   offset2 += 4 + exe.fetchDWord(offset2);
   
-  //Step 5g - Change the CMP to NOP and JNE to JMP as shown below at The JNE address
-  //A1 <LANGTYPE>
-  //83 F8 0A    => 90 90 90
+  //Step 5h - Change the CMP to NOP and JNE to JMP as shown below at The JNE address
+  //A1 <LANGTYPE> ; MOV EAX, DWORD PTR DS:[g_serviceType]
+  //83 F8 0A    => push2 push1 90
   //0F 85 addr  => 90 E9 addr
-  exe.replace(offset2, " 90 90 90 90 E9", PTYPE_HEX);
+  exe.replace(offset2, push2.packToHex(1) + push1.packToHex(1) + " 90 90 E9", PTYPE_HEX);
 
   //Step 5h - Point offset2 to the MOV EAX before the CMP
   offset2 -= 5;

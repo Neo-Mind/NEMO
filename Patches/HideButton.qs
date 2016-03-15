@@ -122,7 +122,7 @@ function HideButton2(prefix) {
   if (offset === -1)
     return "Failed in Step 2 - Prefix assignment missing";
   
-  //Step 2 - Update the address to point to NULL
+  //Step 2c - Update the address to point to NULL
   exe.replaceDWord(offset, strAddr + prefix.length);
   
   return true;
