@@ -229,6 +229,9 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   if (push2 < 0x50 || push2 > 0x57)
     push2 = 0x90;
   
+  if (push2 === 0x90 && push1 === 0x90) //Recent client does PUSH ESI somewhat earlier hence we dont detect any
+    push1 = 0x56;
+    
   offset2 += code.hexlength();
   offset2 += 4 + exe.fetchDWord(offset2);
   
@@ -321,7 +324,16 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   //================================================//
   
   //Step 8a - Find Function where Baby Jobs are checked (missing in old client)
-  code =
+  if (fpEnb) {
+    code = " 8B AB 08";    //MOV reg32_A, DWORD PTR SS:[EBP+8]
+    csize = 3;
+  }
+  else {
+    code = " 8B AB 24 04"; //MOV reg32_A, DWORD PTR SS:[ESP+4]
+    csize = 4;
+  }
+  
+  code +=
     " 3D B7 0F 00 00" //CMP EAX, 0FB7
   + " 7C AB"          //JL SHORT addr -> next CMP chain
   + " 3D BD 0F 00 00" //CMP EAX, 0FBD
@@ -336,6 +348,7 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   }
   
   if (offset !== -1) {
+    offset += csize;
     //Step 8b - Get the PUSH register in case it is not EAX
     if (offset2 === "")
       offset2 = (0x50 + (exe.fetchByte(offset + 1) & 0x7)).packToHex(1);
