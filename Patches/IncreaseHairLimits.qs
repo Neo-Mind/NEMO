@@ -6,9 +6,11 @@
 function IncreaseHairLimits() {//To Do - Doram client is different need to explore
 
   //Step 1a - Find the reference PUSH before the switch cases for the arrows
-  var refOffset = exe.findCode(" 68 14 27 00 00", PTYPE_HEX, false);
-  if (refOffset === -1)
+  var refOffset = exe.findCodes(" 68 14 27 00 00", PTYPE_HEX, false);
+  if (refOffset.length === 0)
     return "Failed in Step 1 - PUSH missing";
+  
+  refOffset = refOffset[refOffset.length-1];//Assumption : The last one is the one we need. Previously there was only one match but recent clients have 2
     
   //Step 1b -  Find the Comparison for Hair Color after it
   var code = 
