@@ -282,6 +282,8 @@ registerPatch(112, "HideMapButton", "Hide Map Button", "UI", 12, "Neo", "Hide Ma
 
 registerPatch(113, "HideQuest", "Hide Quest Button", "UI", 12, "Neo", "Hide Quest Button", false);
 
+registerPatch(114, "ChangeVendingLimit", "Change Vending Limit [Experimental]", "Data", 0, "Neo", "Change the Vending Limit of 1 Billion zeny to user specified value", false);
+
 //registerPatch(151, "UseArialOnAllLangTypes", "Use Arial on All LangTypes", "UI", 0, "Ai4rei/AN, Shakto", "Makes Arial the default font on all LangTypes (it's enable ascii by default)", true);
 
 //FixTetraVortex patch is removed since the black screen animation issue is fixed Server Side
