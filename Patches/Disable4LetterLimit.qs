@@ -39,8 +39,8 @@ function Disable4LetterLimit(index) {//Some old clients dont have the ID Check
   
   //Step 1b - Find which of the offsets belong to Password & ID Check
   code = 
-    " E8 AB AB AB FF"  // CALL UIEditCtrl::GetTextSize
-  + " 83 F8 04"        // CMP EAX, 4
+    " E8 AB AB AB FF"  //CALL UIEditCtrl::GetTextSize
+  + " 83 F8 04"        //CMP EAX, 4
   ;
   
   var csize = code.hexlength();

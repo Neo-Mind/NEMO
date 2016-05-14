@@ -5,12 +5,12 @@
 
 function Enable64kHairstyle() {
   //Step 1a - Find address of Format String 
-  var code = "\xC0\xCE\xB0\xA3\xC1\xB7\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s";// "인간족\머리통\%s\%s_%s.%s"
+  var code = "\xC0\xCE\xB0\xA3\xC1\xB7\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s"; // "인간족\머리통\%s\%s_%s.%s"
   var doramOn = false;
   var offset = exe.findString(code, RAW);
   
   if (offset === -1) {//Doram Client 
-    code = "\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s";// "\머리통\%s\%s_%s.%s"
+    code = "\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s"; // "\머리통\%s\%s_%s.%s"
     doramOn = true;
     offset = exe.findString(code, RAW);
   }
@@ -33,7 +33,7 @@ function Enable64kHairstyle() {
   else 
     offset = offset - 3;
   
-  if (exe.fetchUByte(offset) !== 0x8D)// x > 0x7F => accomodating for the extra 3 bytes of x
+  if (exe.fetchUByte(offset) !== 0x8D) // x > 0x7F => accomodating for the extra 3 bytes of x
     offset = offset - 3;
   
   if (exe.fetchUByte(offset) !== 0x8D)

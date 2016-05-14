@@ -10,7 +10,7 @@ function EnableTitleBarMenu() {
     return "Failed in Step 1 - CreateWindowExA not found";
   
   //Step 1b - Find the Style pushes
-  var code = " 68 00 00 C2 02"; // PUSH 2C200000 - Style
+  var code = " 68 00 00 C2 02"; //PUSH 2C200000 - Style
   var offsets = exe.findCodes(code, PTYPE_HEX, false);
   if (offsets.length === 0)
     return "Failed in Step 1 - Style not found";

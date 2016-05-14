@@ -64,7 +64,7 @@ function EnableDNSSupport() {
   + " 68" + GenVarHex(5)    //PUSH OFFSET addr2 ; location is at the end of the code with Initial value "127.0.0.1"
   + " FF 15" + GenVarHex(6) //CALL DWORD PTR DS:[<&USER32.wsprintfA>]
   + " 83 C4 18"             //ADD ESP,18
-  + " C7 05" + GenVarHex(7) + GenVarHex(8) // MOV DWORD PTR DS:[g_accountAddr], addr2 ; Replace g_accountAddr current value with its ip address
+  + " C7 05" + GenVarHex(7) + GenVarHex(8) //MOV DWORD PTR DS:[g_accountAddr], addr2 ; Replace g_accountAddr current value with its ip address
   + " 61"                   //POPAD
   + " C3"                   //RETN
   + " 00"                   //Just a gap in between

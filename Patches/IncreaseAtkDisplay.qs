@@ -7,9 +7,9 @@ function IncreaseAtkDisplay() {
   
   //Step 1a - Find the location where 999999 is checked
   var code = 
-    " 81 AB 3F 42 0F 00" // CMP reg32_A, 0F423F ; 999999 = 0x0F423F
-  + " 7E 07"             // JLE SHORT addr1
-  + " AB 3F 42 0F 00"    // MOV reg32_A, 0F423F
+    " 81 AB 3F 42 0F 00" //CMP reg32_A, 0F423F ; 999999 = 0x0F423F
+  + " 7E 07"             //JLE SHORT addr1
+  + " AB 3F 42 0F 00"    //MOV reg32_A, 0F423F
   ;
   var refOffset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
@@ -23,16 +23,16 @@ function IncreaseAtkDisplay() {
 
   //Step 1b - Find the start of the Function
   code =
-    " 6A FF"             // PUSH -1
-  + " 68 AB AB AB 00"    // PUSH addr1
-  + " 64 A1 00 00 00 00" // MOV EAX, DWORD PTR FS:[0]
-  + " 50"                // PUSH EAX
-  + " 83 EC"             // SUB ESP, const1
+    " 6A FF"             //PUSH -1
+  + " 68 AB AB AB 00"    //PUSH addr1
+  + " 64 A1 00 00 00 00" //MOV EAX, DWORD PTR FS:[0]
+  + " 50"                //PUSH EAX
+  + " 83 EC"             //SUB ESP, const1
   ;
   var offset = exe.find(code, PTYPE_HEX, true, "\xAB", refOffset - 0x40, refOffset);
   
   if (offset === -1) {
-    code = code.replace(" 50", " 50 64 89 25 00 00 00 00");//Insert MOV DWORD PTR FS:[0], ESP after PUSH EAX
+    code = code.replace(" 50", " 50 64 89 25 00 00 00 00"); //Insert MOV DWORD PTR FS:[0], ESP after PUSH EAX
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", refOffset - 0x40, refOffset);
   }
   

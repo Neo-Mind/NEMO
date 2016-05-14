@@ -14,11 +14,11 @@ function EnableCustomJobs() {//Pre-VC9 Client support not completed
   //===============================//
   
   //Step 1a - Get address of reference strings . (Pattern for Archer seems to be stable across clients hence we will use it)
-  var refPath = exe.findString("\xB1\xC3\xBC\xF6", RVA);// 掙熱 for Archer. Same value is used for palette as well as imf
+  var refPath = exe.findString("\xB1\xC3\xBC\xF6", RVA); // 掙熱 for Archer. Same value is used for palette as well as imf
   if (refPath === -1)
     return "Failed in Step 1 - Path prefix missing";
   
-  var refHand = exe.findString("\xB1\xC3\xBC\xF6\\\xB1\xC3\xBC\xF6", RVA);// 掙熱\掙熱 for Archer
+  var refHand = exe.findString("\xB1\xC3\xBC\xF6\\\xB1\xC3\xBC\xF6", RVA); // 掙熱\掙熱 for Archer
   if (refHand === -1)
     return "Failed in Step 1 - Hand prefix missing";
   

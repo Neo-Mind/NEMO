@@ -9,14 +9,14 @@ function IncreaseScreenshotQuality() {
   var fpEnb = HasFramePointer();
   if (fpEnb) {
     var code = 
-      " C7 85 AB AB FF FF 03 00 00 00" // MOV DWORD PTR SS:[EBP-x], 3 ; DIBChannels = 3
-    + " C7 85 AB AB FF FF 02 00 00 00" // MOV DWORD PTR SS:[EBP-y], 2 ; DIBColor = 2
+      " C7 85 AB AB FF FF 03 00 00 00" //MOV DWORD PTR SS:[EBP-x], 3 ; DIBChannels = 3
+    + " C7 85 AB AB FF FF 02 00 00 00" //MOV DWORD PTR SS:[EBP-y], 2 ; DIBColor = 2
     ;
   }
   else {
     var code =
-      " C7 44 24 AB 03 00 00 00" // MOV DWORD PTR SS:[ESP+x], 3 ; DIBChannels = 3
-    + " C7 44 24 AB 02 00 00 00" // MOV DWORD PTR SS:[ESP+y], 2 ; DIBColor = 2
+      " C7 44 24 AB 03 00 00 00" //MOV DWORD PTR SS:[ESP+x], 3 ; DIBChannels = 3
+    + " C7 44 24 AB 02 00 00 00" //MOV DWORD PTR SS:[ESP+y], 2 ; DIBColor = 2
     ;
   }
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");

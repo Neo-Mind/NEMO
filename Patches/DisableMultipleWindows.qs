@@ -44,39 +44,39 @@ function DisableMultipleWindows() {
     
   //Step 2b - Prepare code for mutex windows
   code =
-    " E8" + GenVarHex(0)    // CALL ResetTimer
-  + " 56"                   // PUSH ESI
-  + " 33 F6"                // XOR ESI,ESI
-  + " 68" + GenVarHex(1)    // PUSH addr ; "KERNEL32"
-  + " FF 15" + GenVarHex(2) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
-  + " E8 0D 00 00 00"       // PUSH &JMP
-  + "CreateMutexA\x00".toHex()    // DB "CreateMutexA", 0
-  + " 50"                   // PUSH EAX
-  + " FF 15" + GenVarHex(3) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
-  + " E8 0F 00 00 00"       // PUSH &JMP
-  + "Global\\Surface\x00".toHex() // DB "Global\Surface",0
-  + " 56"                   // PUSH ESI
-  + " 56"                   // PUSH ESI
-  + " FF D0"                // CALL EAX
-  + " 85 C0"                // TEST EAX,EAX
-  + " 74 0F"                // JE addr1 -> ExitProcess call below
-  + " 56"                   // PUSH ESI
-  + " 50"                   // PUSH EAX
-  + " FF 15" + GenVarHex(4) // CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
-  + " 3D 02 01 00 00"       // CMP EAX, 258  ; WAIT_TIMEOUT
-  + " 75 26"                // JNZ addr2 -> POP ESI below
-  + " 68" + GenVarHex(5)    // PUSH addr ; "KERNEL32"
-  + " FF 15" + GenVarHex(6) // CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
-  + " E8 0C 00 00 00"       // PUSH &JMP
-  + "ExitProcess\x00".toHex()     // DB "ExitProcess", 0
-  + " 50"                   // PUSH EAX
-  + " FF 15" + GenVarHex(7) // CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
-  + " 56"                   // PUSH ESI
-  + " FF D0"                // CALL EAX
-  + " 5E"                   // POP ESI ; addr2
-  + " 68" + GenVarHex(8)    // PUSH AfterStolenCall ; little trick to make calculation easier
-  + " C3"                   // RETN
-  + "KERNEL32\x00".toHex()  // "KERNEL32" ; string to use in GetModuleHandleA
+    " E8" + GenVarHex(0)          //CALL ResetTimer
+  + " 56"                         //PUSH ESI
+  + " 33 F6"                      //XOR ESI,ESI
+  + " 68" + GenVarHex(1)          //PUSH addr ; "KERNEL32"
+  + " FF 15" + GenVarHex(2)       //CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
+  + " E8 0D 00 00 00"             //PUSH &JMP
+  + "CreateMutexA\x00".toHex()    //DB "CreateMutexA", 0
+  + " 50"                         //PUSH EAX
+  + " FF 15" + GenVarHex(3)       //CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
+  + " E8 0F 00 00 00"             //PUSH &JMP
+  + "Global\\Surface\x00".toHex() //DB "Global\Surface",0
+  + " 56"                         //PUSH ESI
+  + " 56"                         //PUSH ESI
+  + " FF D0"                      //CALL EAX
+  + " 85 C0"                      //TEST EAX,EAX
+  + " 74 0F"                      //JE addr1 -> ExitProcess call below
+  + " 56"                         //PUSH ESI
+  + " 50"                         //PUSH EAX
+  + " FF 15" + GenVarHex(4)       //CALL DWORD PTR DS:[<&KERNEL32.WaitForSingleObject>]
+  + " 3D 02 01 00 00"             //CMP EAX, 258  ; WAIT_TIMEOUT
+  + " 75 26"                      //JNZ addr2 -> POP ESI below
+  + " 68" + GenVarHex(5)          //PUSH addr ; "KERNEL32"
+  + " FF 15" + GenVarHex(6)       //CALL DWORD PTR DS:[<&KERNEL32.GetModuleHandleA>]
+  + " E8 0C 00 00 00"             //PUSH &JMP
+  + "ExitProcess\x00".toHex()     //DB "ExitProcess", 0
+  + " 50"                         //PUSH EAX
+  + " FF 15" + GenVarHex(7)       //CALL DWORD PTR DS:[<&KERNEL32.GetProcAddress>]
+  + " 56"                         //PUSH ESI
+  + " FF D0"                      //CALL EAX
+  + " 5E"                         //POP ESI ; addr2
+  + " 68" + GenVarHex(8)          //PUSH AfterStolenCall ; little trick to make calculation easier
+  + " C3"                         //RETN
+  + "KERNEL32\x00".toHex()        //DB "KERNEL32", 0 ; string to use in GetModuleHandleA
   ;
     
   var csize = code.hexlength();

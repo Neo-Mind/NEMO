@@ -5,11 +5,12 @@
 
 function UsePlainTextDescriptions() {
   
-  // Step 1 - Find the comparison in the DataTxtDecode function
+  //Step 1a - Get the Langtype
   var LANGTYPE = GetLangType();//Langtype value overrides Service settings hence they use the same variable - g_serviceType
   if (LANGTYPE.length === 1)
     return "Failed in Step 1 - " + LANGTYPE[0];
  
+ //Step 1b - Find the LangType comparison in the DataTxtDecode function
   var code =
     " 83 3D" + LANGTYPE + " 00" //CMP DWORD PTR DS:[g_serviceType], 0
   + " 75 AB" //JNZ SHORT addr
@@ -17,7 +18,6 @@ function UsePlainTextDescriptions() {
   + " 57"    //PUSH EDI
   ;
   var repLoc = 7;//Position of JNZ relative to offset
-  
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//VC9+ Clients
   
   if (offset === -1) {
@@ -34,12 +34,11 @@ function UsePlainTextDescriptions() {
     + " 75"            //JNZ SHORT addr
     ;
     repLoc = code.hexlength() - 1;
-    
     offset = exe.findCode(code, PTYPE_HEX, false);//Older Clients
   }
   
   if (offset === -1)
-    return "Failed in Step 1";
+    return "Failed in Step 1 - LangType Comparison missing";
   
   //Step 2 - Change JNE/JNZ to JMP
   exe.replace(offset + repLoc, "EB", PTYPE_HEX);

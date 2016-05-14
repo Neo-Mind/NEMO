@@ -34,10 +34,10 @@ function DisableHallucinationWavyScreen() {//Missing Comparison in pre-2010 clie
 
   //Step 2a - Find the Comparison we need
   code =
-    " 8B AB"                      // MOV ECX, reg32
-  + " E8 AB AB AB AB"             // CALL addr1
-  + " 83 3D" + gUseEffect + " 00" // CMP DWORD PTR DS:[g_useEffect], 0
-  + " 0F 84"                      // JE LONG addr2
+    " 8B AB"                      //MOV ECX, reg32
+  + " E8 AB AB AB AB"             //CALL addr1
+  + " 83 3D" + gUseEffect + " 00" //CMP DWORD PTR DS:[g_useEffect], 0
+  + " 0F 84"                      //JE LONG addr2
   ;
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   

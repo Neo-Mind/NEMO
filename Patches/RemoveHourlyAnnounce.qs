@@ -34,8 +34,8 @@ function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 
 
   //Step 2a - Find Time divider before the PlayTime Reminder comparison
   code =  
-    " B8 B1 7C 21 95" // MOV EAX, 95217CB1
-  + " F7 E1"          // MUL ECX
+    " B8 B1 7C 21 95" //MOV EAX, 95217CB1
+  + " F7 E1"          //MUL ECX
   ;
     
   var offsets = exe.findCodes(code, PTYPE_HEX, false);

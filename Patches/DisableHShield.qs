@@ -42,11 +42,11 @@ function DisableHShield() {
     //Step 2c - Find Pattern before the referenced location within 0x40 bytes
     if (offset !== -1) {
       code = 
-        " E8 AB AB AB AB"  // CALL func1
-      + " 84 C0"           // TEST AL, AL
-      + " 74 16"           // JZ SHORT addr1
-      + " 8B AB"           // MOV ECX, ESI
-      + " E8"              // CALL func2
+        " E8 AB AB AB AB"  //CALL func1
+      + " 84 C0"           //TEST AL, AL
+      + " 74 16"           //JZ SHORT addr1
+      + " 8B AB"           //MOV ECX, ESI
+      + " E8"              //CALL func2
       ;
       offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x40, offset);
     }
@@ -54,10 +54,10 @@ function DisableHShield() {
     //Step 2d - Replace the First call with code to return 1 and cleanup stack
     if (offset !== -1) {
       code = 
-        " 90"    // NOP
-      + " B0 01" // MOV AL, 1
-      + " 5E"    // POP ESI
-      + " C3"    // RETN
+        " 90"    //NOP
+      + " B0 01" //MOV AL, 1
+      + " 5E"    //POP ESI
+      + " C3"    //RETN
       ;    
       exe.replace(offset, code, PTYPE_HEX);
     }
@@ -94,8 +94,8 @@ function DisableHShield() {
   if (offset !== -1) {
     //Step 3c - Find the JNE after it that skips the HShield calls
     code = 
-      " 80 3D AB AB AB 00 00" // CMP BYTE PTR DS:[addr1], 0
-    + " 75"                   // JNE SHORT addr2
+      " 80 3D AB AB AB 00 00" //CMP BYTE PTR DS:[addr1], 0
+    + " 75"                   //JNE SHORT addr2
     ;
     offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x80);
     

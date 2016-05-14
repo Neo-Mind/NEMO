@@ -44,7 +44,7 @@ function RestoreModelCulling() {
 		return "Failed in Step 1 - No match for C3dActor::CullByOBB!";
 
 	//Step 2a - Locate the jump on m_isHideCheck
-	var jmpCodes = [" 74 1D", " 74 1E", " 74 1F"]; // JZ LOC_END
+	var jmpCodes = [" 74 1D", " 74 1E", " 74 1F"]; //JZ LOC_END
 	var pJmpHideCheck = -1;
 
 	for (var i = 0; i < jmpCodes.length; i++) {

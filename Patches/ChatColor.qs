@@ -167,13 +167,13 @@ function ChatColorPartyOther() {
 
   //Step 1a - Find the area where color is pushed
   var code =
-    " 6A 03"          // PUSH 3 ; old clients have an extra instruction after this one
-  + " 68 FF C8 C8 00" // PUSH FF,C8,C8 (Light Pink)
+    " 6A 03"          //PUSH 3 ; old clients have an extra instruction after this one
+  + " 68 FF C8 C8 00" //PUSH FF,C8,C8 (Light Pink)
   ;
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
   if (offset === -1) {
-    code = code.replace(" 6A 03", " 6A 03 8D AB AB AB FF FF");//insert LEA reg32_A, [EBP-x] after PUSH 3
+    code = code.replace(" 6A 03", " 6A 03 8D AB AB AB FF FF"); //insert LEA reg32_A, [EBP-x] after PUSH 3
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   

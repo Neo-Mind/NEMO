@@ -5,7 +5,7 @@
 
 function TranslateClient() {
 
-  // Step 1 - Open the text file for reading
+  //Step 1 - Open the text file for reading
   var f = new TextFile();
   if (!f.open(APP_PATH + "/patches/TranslateClient.txt") )
     return "Failed in Step 1 - Unable to open file";
@@ -14,7 +14,7 @@ function TranslateClient() {
   var msg = ""; 
   var failmsgs = [];//Array to store all Failure messages
   
-  // Step 2 - Loop through the text file, get the respective strings & do findString + replace
+  //Step 2 - Loop through the text file, get the respective strings & do findString + replace
   
   while (!f.eof()) {
     var str = f.readline().trim();
@@ -70,18 +70,18 @@ function TranslateClient() {
     return "Failed in Step 4 - " + LANGTYPE[0];
    
   var code = 
-    " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_serviceType], 0
-  + " B9 AB AB AB 00"           // MOV ECX, addr1
-  + " 75"                       // JNZ addr2
+    " 83 3D" + LANGTYPE + " 00"   //CMP DWORD PTR DS:[g_serviceType], 0
+  + " B9 AB AB AB 00"             //MOV ECX, addr1
+  + " 75"                         //JNZ SHORT addr2
   ;
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//VC9+ Clients
   
   if (offset === -1) {
     code = 
-      LANGTYPE          //MOV reg32_A, DWORD PTR DS:[g_serviceType] ; Usually reg32_A is EAX
-    + " B9 AB AB AB 00" //MOV ECX, addr1
-    + " 85 AB"          //TEST reg32_A, reg32_A
-    + " 75"
+      LANGTYPE            //MOV reg32_A, DWORD PTR DS:[g_serviceType] ; Usually reg32_A is EAX
+    + " B9 AB AB AB 00"   //MOV ECX, addr1
+    + " 85 AB"            //TEST reg32_A, reg32_A
+    + " 75"               //JNZ SHORT addr2
     ;
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//Older Clients
   }

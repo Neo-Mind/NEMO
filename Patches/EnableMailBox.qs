@@ -6,11 +6,11 @@ function EnableMailBox() {
   
   //Step 1a - Prep codes for finding short jumps
   var code  =
-    " 74 AB"    // JE SHORT addr1 (prev statement is either TEST EAX, EAX or CMP EAX, r32 => both instructions use 2 bytes)
-  + " 83 F8 08" // CMP EAX,08
-  + " 74 AB"    // JE SHORT addr1
-  + " 83 F8 09" // CMP EAX,09
-  + " 74 AB"    // JE SHORT addr1
+    " 74 AB"    //JE SHORT addr1 (prev statement is either TEST EAX, EAX or CMP EAX, r32 => both instructions use 2 bytes)
+  + " 83 F8 08" //CMP EAX,08
+  + " 74 AB"    //JE SHORT addr1
+  + " 83 F8 09" //CMP EAX,09
+  + " 74 AB"    //JE SHORT addr1
   ;
 
   var pat1 = " 8B 8E AB 00 00 00"; //MOV ECX, DWORD PTR DS:[ESI+const]

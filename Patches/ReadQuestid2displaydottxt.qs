@@ -12,8 +12,8 @@ function ReadQuestid2displaydottxt() {
   
   //Step 1b - Find its reference 
   var code = 
-    " 6A 00"                    // PUSH 0
-  + " 68" + offset.packToHex(4) // PUSH addr2 ; "questID2display.txt"
+    " 6A 00"                    //PUSH 0
+  + " 68" + offset.packToHex(4) //PUSH addr2 ; "questID2display.txt"
   ;
   offset = exe.findCode(code, PTYPE_HEX, false);//VC9+ Clients
   

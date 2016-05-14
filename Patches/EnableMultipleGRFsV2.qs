@@ -10,8 +10,8 @@ function EnableMultipleGRFsV2() {//The initial steps are same as EnableMultipleG
   
   //Step 1b - Find its reference
   var code =
-    " 68" + grf       // PUSH OFFSET addr1; "data.grf"
-  + " B9 AB AB AB 00" // MOV ECX, OFFSET g_fileMgr
+    " 68" + grf       //PUSH OFFSET addr1; "data.grf"
+  + " B9 AB AB AB 00" //MOV ECX, OFFSET g_fileMgr
   ;
   
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
@@ -23,24 +23,24 @@ function EnableMultipleGRFsV2() {//The initial steps are same as EnableMultipleG
     
   //Step 2b - Find the AddPak call after the push 
   code =
-    " E8 AB AB AB AB"    // CALL CFileMgr::AddPak()
-  + " 8B AB AB AB AB 00" // MOV reg32, DWORD PTR DS:[addr1]
-  + " A1 AB AB AB 00"    // MOV EAX, DWORD PTR DS:[addr2]
+    " E8 AB AB AB AB"    //CALL CFileMgr::AddPak()
+  + " 8B AB AB AB AB 00" //MOV reg32, DWORD PTR DS:[addr1]
+  + " A1 AB AB AB 00"    //MOV EAX, DWORD PTR DS:[addr2]
   ;
   var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 10);
   
   if (fnoffset === -1) {//VC9 Client
     code =
-      " E8 AB AB AB AB" // CALL CFileMgr::AddPak()
-    + " A1 AB AB AB 00" // MOV EAX, DWORD PTR DS:[addr2]
+      " E8 AB AB AB AB" //CALL CFileMgr::AddPak()
+    + " A1 AB AB AB 00" //MOV EAX, DWORD PTR DS:[addr2]
     ;
     fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 10, offset + 40);
   }
   
   if (fnoffset === -1) {//Older Clients
     code =
-      " E8 AB AB AB AB" // CALL CFileMgr::AddPak()
-    + " BF AB AB AB 00" // MOV EDI, OFFSET addr2
+      " E8 AB AB AB AB" //CALL CFileMgr::AddPak()
+    + " BF AB AB AB 00" //MOV EDI, OFFSET addr2
     ;
     fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 10, offset + 40);
   }
@@ -80,9 +80,9 @@ function EnableMultipleGRFsV2() {//The initial steps are same as EnableMultipleG
   
   //Step 4a - Prep code for GRF loading
   var template = 
-    " 68" + GenVarHex(1) // PUSH OFFSET addr; GRF name
-  + setECX               // MOV ECX, OFFSET g_fileMgr
-  + " E8" + GenVarHex(2) // CALL CFileMgr::AddPak()
+    " 68" + GenVarHex(1) //PUSH OFFSET addr; GRF name
+  + setECX               //MOV ECX, OFFSET g_fileMgr
+  + " E8" + GenVarHex(2) //CALL CFileMgr::AddPak()
   ;
     
   //Step 4b - Get Size of code & strings to allocate

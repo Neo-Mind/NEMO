@@ -12,8 +12,8 @@ function ShowLicenseScreen() {
   
   //Step 1b - Find its reference (which will come right before the conditional jump)
   var code =
-    " 6A 05"  //PUSH 5
-  + " 68" + offset.packToHex(4) // PUSH addr; ASCII "model\3dmob\guildflag90_1.gr2"
+    " 6A 05"                      //PUSH 5
+  + " 68" + offset.packToHex(4)   //PUSH addr; ASCII "model\3dmob\guildflag90_1.gr2"
   ;
   
   offset = exe.findCode(code, PTYPE_HEX, false);

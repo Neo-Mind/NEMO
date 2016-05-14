@@ -10,11 +10,11 @@ function ReadDataFolderFirst() {
   if (offset === -1)
     return "Failed in Step 1 - loading not found";
   
-  // Step 1b - Find its reference
+  //Step 1b - Find its reference
   var code = 
-    " 74 07"                    // JZ SHORT addr - skip the below code
-  + " C6 05 AB AB AB AB 01"     // MOV BYTE PTR DS:[g_readFolderFirst], 1
-  + " 68" + offset.packToHex(4) // PUSH offset ; "loading"
+    " 74 07"                    //JZ SHORT addr - skip the below code
+  + " C6 05 AB AB AB AB 01"     //MOV BYTE PTR DS:[g_readFolderFirst], 1
+  + " 68" + offset.packToHex(4) //PUSH offset ; "loading"
   ;
   
   var repl = " 90 90";//Change JZ SHORT to NOPs
@@ -24,9 +24,9 @@ function ReadDataFolderFirst() {
   
   if (offset2 === -1) {
     code = 
-      " 0F 45 AB"                 // CMOVNZ reg32_A, reg32_B
-    + " 88 AB AB AB AB AB"        // MOV BYTE PTR DS:[g_readFolderFirst], reg8_A
-    + " 68" + offset.packToHex(4) // PUSH offset ; "loading"
+      " 0F 45 AB"                 //CMOVNZ reg32_A, reg32_B
+    + " 88 AB AB AB AB AB"        //MOV BYTE PTR DS:[g_readFolderFirst], reg8_A
+    + " 68" + offset.packToHex(4) //PUSH offset ; "loading"
     ;
     
     repl = " 90 8B";//change CMOVNZ to NOP + MOV

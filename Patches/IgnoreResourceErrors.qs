@@ -15,9 +15,9 @@ function IgnoreResourceErrors() {
   
   var fpEnb = HasFramePointer();
   if (fpEnb)      
-    code = code.replace(" MovEax", " 8B 45 08");    // MOV EAX, DWORD PTR SS:[EBP-8]
+    code = code.replace(" MovEax", " 8B 45 08");    //MOV EAX, DWORD PTR SS:[EBP-8]
   else
-    code = code.replace(" MovEax", " 8B 44 24 04"); // MOV EAX, DWORD PTR SS:[ESP+4]
+    code = code.replace(" MovEax", " 8B 44 24 04"); //MOV EAX, DWORD PTR SS:[ESP+4]
       
   //Step 1b - Find the function
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");

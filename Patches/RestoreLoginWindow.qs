@@ -8,18 +8,18 @@ function RestoreLoginWindow() {
   
   //Step 1a - Find the code where we need to make client call the login window
   var code =
-    " 50"                   // PUSH EAX
-  + " E8 AB AB AB FF"       // CALL g_ResMgr
-  + " 8B C8"                // MOV ECX, EAX
-  + " E8 AB AB AB FF"       // CALL CResMgr::Get
-  + " 50"                   // PUSH EAX
-  + " B9 AB AB AB 00"       // MOV ECX, OFFSET g_windowMgr
-  + " E8 AB AB AB FF"       // CALL UIWindowMgr::SetWallpaper
-  + " 80 3D AB AB AB 00 00" // CMP BYTE PTR DS:[g_Tparam], 0 <- The parameter push + call to UIWindowManager::MakeWindow originally here 
-  + " 74 13"                // JZ SHORT addr1 - after the JMP
-  + " C6 AB AB AB AB 00 00" // MOV BYTE PTR DS:[g_Tparam], 0
-  + " C7 AB AB 04 00 00 00" // MOV DWORD PTR DS:[EBX+0C], 4 <- till here we need to overwrite
-  + " E9"                   // JMP addr2
+    " 50"                     //PUSH EAX
+  + " E8 AB AB AB FF"         //CALL g_ResMgr
+  + " 8B C8"                  //MOV ECX, EAX
+  + " E8 AB AB AB FF"         //CALL CResMgr::Get
+  + " 50"                     //PUSH EAX
+  + " B9 AB AB AB 00"         //MOV ECX, OFFSET g_windowMgr
+  + " E8 AB AB AB FF"         //CALL UIWindowMgr::SetWallpaper
+  + " 80 3D AB AB AB 00 00"   //CMP BYTE PTR DS:[g_Tparam], 0 <- The parameter push + call to UIWindowManager::MakeWindow originally here 
+  + " 74 13"                  //JZ SHORT addr1 - after the JMP
+  + " C6 AB AB AB AB 00 00"   //MOV BYTE PTR DS:[g_Tparam], 0
+  + " C7 AB AB 04 00 00 00"   //MOV DWORD PTR DS:[EBX+0C], 4 <- till here we need to overwrite
+  + " E9"                     //JMP addr2
   ;
       
   var codeOffset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
@@ -40,11 +40,11 @@ function RestoreLoginWindow() {
   
   //Step 2b - Find the UIWindowMgr::MakeWindow call
   code =
-    movEcx            // MOV ECX, OFFSET g_windowMgr
-  + " E8 AB AB AB FF" // CALL UIWindowMgr::MakeWindow
-  + " 6A 00"          // PUSH 0
-  + " 6A 00"          // PUSH 0
-  + " 68" + offset.packToHex(4) // PUSH addr ; ASCII "NUMACCOUNT"
+    movEcx              //MOV ECX, OFFSET g_windowMgr
+  + " E8 AB AB AB FF"   //CALL UIWindowMgr::MakeWindow
+  + " 6A 00"            //PUSH 0
+  + " 6A 00"            //PUSH 0
+  + " 68" + offset.packToHex(4) //PUSH addr ; ASCII "NUMACCOUNT"
   ;
     
   var o2 = exe.findCode(code, PTYPE_HEX, true, "\xAB");
@@ -56,10 +56,11 @@ function RestoreLoginWindow() {
   
   //Step 3a - Prepare the code to overwrite with - originally present in old clients
   code =    
-    " 6A 03"          // PUSH 3
-  + movEcx            // MOV ECX, OFFSET g_windowMgr
-  + " E8" + windowMgr // CALL UIWindowMgr::MakeWindow
-  + " 90".repeat(11)  // Bunch of NOPs
+    " 6A 03"            //PUSH 3
+  + movEcx              //MOV ECX, OFFSET g_windowMgr
+  + " E8" + windowMgr   //CALL UIWindowMgr::MakeWindow
+  + " EB 09"            //JMP SHORT addr ; skip over to the MOV [EBX+0C], 4
+  //90".repeat(11)    //Bunch of NOPs
   ;
   
   //Step 3b - Overwrite with the code.
@@ -76,18 +77,18 @@ function RestoreLoginWindow() {
     return "Failed in Step 4 - " + LANGTYPE[0];
     
   code =
-    " 80 3D AB AB AB 00 00" // CMP BYTE PTR DS:[g_passwordencrypt], 0
-  + " 0F 85 AB AB 00 00"    // JNE addr1
-  + " A1" + LANGTYPE        // MOV EAX, DWORD PTR DS:[g_serviceType]
-  + " AB AB"                // TEST EAX, EAX - (some clients use CMP EAX, EBP instead)
-  + " 0F 84 AB AB 00 00"    // JZ addr2 -> Send SSO Packet (ID = 0x825. was 0x2B0 in Old clients)
-  + " 83 AB 12"             // CMP EAX, 12
-  + " 0F 84 AB AB 00 00"    // JZ addr2 -> Send SSO Packet (ID = 0x825. was 0x2B0 in Old clients)
+    " 80 3D AB AB AB 00 00"   //CMP BYTE PTR DS:[g_passwordencrypt], 0
+  + " 0F 85 AB AB 00 00"      //JNE addr1
+  + " A1" + LANGTYPE          //MOV EAX, DWORD PTR DS:[g_serviceType]
+  + " AB AB"                  //TEST EAX, EAX - (some clients use CMP EAX, EBP instead)
+  + " 0F 84 AB AB 00 00"      //JZ addr2 -> Send SSO Packet (ID = 0x825. was 0x2B0 in Old clients)
+  + " 83 AB 12"               //CMP EAX, 12
+  + " 0F 84 AB AB 00 00"      //JZ addr2 -> Send SSO Packet (ID = 0x825. was 0x2B0 in Old clients)
   ;
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
  
   if (offset === -1) {
-    code = code.replace(" A1", " 8B AB");//MOV reg32_A, DWORD PTR DS:[g_serviceType]
+    code = code.replace(" A1", " 8B AB"); //MOV reg32_A, DWORD PTR DS:[g_serviceType]
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   }
   
@@ -117,11 +118,11 @@ function RestoreLoginWindow() {
   
   //Step 5a - First we look for one location that appears always after g_modeMgr is retrieved
   code = 
-    " 6A 00"          //PUSH 0
-  + " 6A 00"          //PUSH 0
-  + " 6A 00"          //PUSH 0
-  + " 68 F6 00 00 00" //PUSH F6
-  + " FF"             //CALL reg32_A or CALL DWORD PTR DS:[reg32_A+const]
+    " 6A 00"            //PUSH 0
+  + " 6A 00"            //PUSH 0
+  + " 6A 00"            //PUSH 0
+  + " 68 F6 00 00 00"   //PUSH F6
+  + " FF"               //CALL reg32_A or CALL DWORD PTR DS:[reg32_A+const]
   ;
   
   offset = exe.findCode(code, PTYPE_HEX, false);
@@ -130,9 +131,9 @@ function RestoreLoginWindow() {
   
   //Step 5b - Find the start of the function
   code =
-    " 83 3D AB AB AB AB 01" //CMP DWORD PTR DS:[addr1], 1
-  + " 75 AB"                //JNE addr2
-  + " 8B 0D"                //MOV ECX, DWORD PTR DS:[Reference]
+    " 83 3D AB AB AB AB 01"   //CMP DWORD PTR DS:[addr1], 1
+  + " 75 AB"                  //JNE addr2
+  + " 8B 0D"                  //MOV ECX, DWORD PTR DS:[Reference]
   ;
   
   var offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 30, offset);
@@ -142,29 +143,29 @@ function RestoreLoginWindow() {
   //Step 5c - Extract the reference and construct the code for getting g_modeMgr to ECX + C & mode setter to EDX (same as shown initially)
   var infix = 
     exe.fetchHex(offset + code.hexlength() - 2, 6) //MOV ECX, DWORD PTR DS:[Reference]
-  + " 8B 01"    // MOV EAX, DWORD PTR DS:[ECX]
-  + " 8B 50 18" // MOV EDX, DWORD PTR DS:[EAX+18]
+  + " 8B 01"      //MOV EAX, DWORD PTR DS:[ECX]
+  + " 8B 50 18"   //MOV EDX, DWORD PTR DS:[EAX+18]
   ;
   
   //Step 5d - Find how many PUSH 0s are there. Older clients had 3 arguments but newer ones only have 3
   var pushes = exe.findAll("6A 00", PTYPE_HEX, false, "", offset + code.hexlength() + 4, offset + code.hexlength() + 16);
   
-  //Step 5e - Find error handler = CModeMgr::SendMsg
+  //Step 5e - Find error handler = CModeMgr::Quit
   code =
-    " 8B F1"                    // MOV ESI,ECX
-  + " 8B 46 04"                 // MOV EAX,DWORD PTR DS:[ESI+4]
-  + " C7 40 14 00 00 00 00"     // MOV DWORD PTR DS:[EAX+14], 0
-  + " 83 3D" + LANGTYPE + " 0B" // CMP DWORD PTR DS:[g_serviceType], 0B
-  + " 75 1D"                    // JNE SHORT addr1 -> after CALL instruction below
-  + " 8B 0D AB AB AB 00"        // MOV ECX,DWORD PTR DS:[g_hMainWnd]
-  + " 6A 01"                    // PUSH 1
-  + " 6A 00"                    // PUSH 0
-  + " 6A 00"                    // PUSH 0
-  + " 68 AB AB AB 00"           // PUSH addr2 ; ASCII "http://www.ragnarok.co.in/index.php"
-  + " 68 AB AB AB 00"           // PUSH addr3 ; ASCII "open"
-  + " 51"                       // PUSH ECX
-  + " FF 15 AB AB AB 00"        // CALL DWORD PTR DS:[<&SHELL32.ShellExecuteA>]
-  + " C7 06 00 00 00 00"        // MOV DWORD PTR DS:[ESI],0 (ESI is supposed to have g_modeMgr but it doesn't always point to it, so we assign it another way)
+    " 8B F1"                      //MOV ESI,ECX
+  + " 8B 46 04"                   //MOV EAX,DWORD PTR DS:[ESI+4]
+  + " C7 40 14 00 00 00 00"       //MOV DWORD PTR DS:[EAX+14], 0
+  + " 83 3D" + LANGTYPE + " 0B"   //CMP DWORD PTR DS:[g_serviceType], 0B
+  + " 75 1D"                      //JNE SHORT addr1 -> after CALL instruction below
+  + " 8B 0D AB AB AB 00"          //MOV ECX,DWORD PTR DS:[g_hMainWnd]
+  + " 6A 01"                      //PUSH 1
+  + " 6A 00"                      //PUSH 0
+  + " 6A 00"                      //PUSH 0
+  + " 68 AB AB AB 00"             //PUSH addr2 ; ASCII "http://www.ragnarok.co.in/index.php"
+  + " 68 AB AB AB 00"             //PUSH addr3 ; ASCII "open"
+  + " 51"                         //PUSH ECX
+  + " FF 15 AB AB AB 00"          //CALL DWORD PTR DS:[<&SHELL32.ShellExecuteA>]
+  + " C7 06 00 00 00 00"          //MOV DWORD PTR DS:[ESI],0 (ESI is supposed to have g_modeMgr but it doesn't always point to it, so we assign it another way)
   ;
   /*==============================================================================
    Shinryo:
@@ -187,20 +188,21 @@ function RestoreLoginWindow() {
   
   //Step 5f - Construct the replacement code
   var replace =    
-    " 52"                   // PUSH EDX
-  + " 50"                   // PUSH EAX
-  + infix                   // MOV ECX,DWORD PTR DS:[Reference]
-                            // MOV EAX,DWORD PTR DS:[ECX]
-                            // MOV EDX,DWORD PTR DS:[EAX+18]
-  + " 6A 00".repeat(pushes.length) // PUSH 0 sequence
-  + " 68 1D 27 00 00"       // PUSH 271D
-  + " C7 41 0C 03 00 00 00" // MOV DWORD PTR DS:[ECX+0C],3
-  + " FF D2"                // CALL EDX
-  + " 58"                   // POP EAX
-  + " 5A"                   // POP EDX
+    " 52"                   //PUSH EDX
+  + " 50"                   //PUSH EAX
+  + infix                   //MOV ECX,DWORD PTR DS:[Reference]
+                            //MOV EAX,DWORD PTR DS:[ECX]
+                            //MOV EDX,DWORD PTR DS:[EAX+18]
+  + " 6A 00".repeat(pushes.length) //PUSH 0 sequence
+  + " 68 1D 27 00 00"       //PUSH 271D
+  + " C7 41 0C 03 00 00 00" //MOV DWORD PTR DS:[ECX+0C],3
+  + " FF D2"                //CALL EDX
+  + " 58"                   //POP EAX
+  + " 5A"                   //POP EDX
   ;
   
-  replace += " 90".repeat(code.hexlength() - replace.hexlength()); // Bunch of NOPs
+  //replace += " 90".repeat(code.hexlength() - replace.hexlength()); // Bunch of NOPs
+  replace += " EB" + (code.hexlength() - replace.hexlength() - 2).packToHex(1); //Skip to the POP ESI
 
   //Step 5g - Overwrite the SendMsg function.
   exe.replace(offset, replace, PTYPE_HEX);

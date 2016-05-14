@@ -11,9 +11,9 @@ function ReadMsgstringtabledottxt() {
     return "Failed in Step 1 - " + LANGTYPE[0];
 
   var code = 
-    " 83 3D" + LANGTYPE + " 00" // CMP DWORD PTR DS:[g_serviceType], 0
-  + " 56"                       // PUSH ESI
-  + " 75"                       // JNZ SHORT addr -> continue with msgStringTable.txt loading
+    " 83 3D" + LANGTYPE + " 00" //CMP DWORD PTR DS:[g_serviceType], 0
+  + " 56"                       //PUSH ESI
+  + " 75"                       //JNZ SHORT addr -> continue with msgStringTable.txt loading
   ;
   var offset = exe.findCode(code, PTYPE_HEX, false);//VC9+ Clients
   

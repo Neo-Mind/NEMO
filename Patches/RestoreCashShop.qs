@@ -47,8 +47,8 @@ function RestoreCashShop() {
 
   //Step 3c - Fill in the blanks.
   code = ReplaceVarHex(code, 1, makeWin - (refAddr));
-  code = ReplaceVarHex(code, 2, makeWin - (refAddr + 15));// (PUSH + MOV + CALL)
-  code = ReplaceVarHex(code, 3, exe.Raw2Rva(offset2) - (refAddr + 20));// (PUSH + MOV + CALL + JMP)
+  code = ReplaceVarHex(code, 2, makeWin - (refAddr + 15)); // (PUSH + MOV + CALL)
+  code = ReplaceVarHex(code, 3, exe.Raw2Rva(offset2) - (refAddr + 20)); // (PUSH + MOV + CALL + JMP)
   
   //Step 4 - Insert the code and create the JMP to it.
   exe.insert(free, code.hexlength(), code, PTYPE_HEX);
