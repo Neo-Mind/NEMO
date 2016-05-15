@@ -46,7 +46,7 @@ function ChangeVendingLimit() {
   offset = exe.findCode(code, PTYPE_HEX, false);
   if (offset === -1)
     return "Failed in Step 2 - MsgBox call missing";
-  
+
   //Step 2b - Find the comparison before it
   if (newstyle)
   {
@@ -62,8 +62,13 @@ function ChangeVendingLimit() {
     + " 7D"          //JGE SHORT addr
     ;
   }
-  
   var offset1 = exe.find(code, PTYPE_HEX, false, "", offset - 0x80, offset);
+  
+  if (offset1 === -1 && newstyle) {
+    code = code.replace("7E", "76");//Recent clients use JBE instead of JLE
+    offset1 = exe.find(code, PTYPE_HEX, false, "", offset - 0x80, offset);
+  }
+  
   if (offset1 === -1)
     return "Failed in Step 2 - Comparison missing";
   
