@@ -345,3 +345,13 @@ registerPatch(223, "MoveItemCountUpwards", "Move Item Count Upwards [Experimenta
 //registerPatch(224, "IncreaseNpcIDs", "Increase NPC Ids [Experimental]", "Custom", 0, "Neo", "Increase the Loaded NPC IDs to include 10K+ range IDs. Limits are configurable", false);
 
 registerPatch(225, "ShowRegisterButton", "Show Register Button", "Custom", 0, "Neo", "Makes the client always show register button on Login Window for all Langtypes. Clicking the button will open <registrationweb> from clientinfo and closes the client.", false);
+
+//======================================//
+// Delay Patches                                                         //
+//======================================//
+
+registerGroup(30, "WalkToDelay", true);
+
+registerPatch( 300, "DisableWalkToDelay", "Disable Walk To Delay.", "Fix", 30, "MegaByte", "Will have a quicker response to walking clicks. But client may likely send more/duplicated packets.", false);
+
+registerPatch( 301, "SetWalkToDelay", "Change Walk To Delay.", "Fix", 30, "MegaByte", "Can have a quicker response to walking clicks. But client may likely send more/duplicated packets.", false);
