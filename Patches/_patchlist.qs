@@ -40,6 +40,8 @@ registerGroup(14, "LicenseScreen", true);
 
 registerGroup(15, "Resurrection", true);
 
+registerGroup(16, "WalkToDelay", true);
+
 //#########################################################################################################################################################
 //#                                                                                                                                                       #
 //# FORMAT for registering patch : registerPatch(patch id, functionName, patch Name, category, group id, author, description, recommended [true/false] ); #
@@ -346,12 +348,6 @@ registerPatch(223, "MoveItemCountUpwards", "Move Item Count Upwards [Experimenta
 
 registerPatch(225, "ShowRegisterButton", "Show Register Button", "Custom", 0, "Neo", "Makes the client always show register button on Login Window for all Langtypes. Clicking the button will open <registrationweb> from clientinfo and closes the client.", false);
 
-//======================================//
-// Delay Patches                                                         //
-//======================================//
+registerPatch(226, "DisableWalkToDelay", "Disable Walk To Delay.", "Fix", 30, "MegaByte", "Will have a quicker response to walking clicks. But client may likely send more/duplicated packets.", false);
 
-registerGroup(30, "WalkToDelay", true);
-
-registerPatch( 300, "DisableWalkToDelay", "Disable Walk To Delay.", "Fix", 30, "MegaByte", "Will have a quicker response to walking clicks. But client may likely send more/duplicated packets.", false);
-
-registerPatch( 301, "SetWalkToDelay", "Change Walk To Delay.", "Fix", 30, "MegaByte", "Can have a quicker response to walking clicks. But client may likely send more/duplicated packets.", false);
+registerPatch(227, "SetWalkToDelay", "Change Walk To Delay.", "Fix", 30, "MegaByte", "Can have a quicker response to walking clicks. But client may likely send more/duplicated packets.", false);
