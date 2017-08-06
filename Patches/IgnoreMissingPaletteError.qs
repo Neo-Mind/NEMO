@@ -27,12 +27,13 @@ function IgnoreMissingPaletteError() {
   
   //Step 1c - Now Find the call to CFile::Open and its result comparison
   code = 
-    " E8 AB AB AB 00"    //CALL CFile::Open
+    " E8 AB AB AB AB"    //CALL CFile::Open
   + " 84 C0"             //TEST AL, AL
   + " 0F 85 AB AB 00 00" //JNZ addr
   ;
   
   offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x100, offset2);
+
   if (offset === -1)
     return "Failed in Step 1 - Function call missing";
 
