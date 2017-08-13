@@ -86,8 +86,9 @@ function TranslateClient() {
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//Older Clients
   }
 
-  if (offset === -1)
-    return "Failed in Step 4 - Translate Taekwon Job";
+  if (offset === -1) // This change isn't necessary. [Secret]
+    //return "Failed in Step 4 - Translate Taekwon Job";
+	return true;
   
   //Step 4b - Change the JNZ to JMP so that Korean names never get assigned.
   exe.replace(offset + code.hexlength() - 1, "EB", PTYPE_HEX);
