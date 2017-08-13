@@ -26,8 +26,8 @@ function ShowExpNumbers() {//To Do - Make color and coords configurable
   //Step 2a - Look for a double PUSH pattern (addresses of Total and Current Exp values are being sent as args to be filled)
   code = 
     " 8B AB AB 00 00 00" //MOV ECX, DWORD PTR DS:[reg32_B + const]
-  + " 68 AB AB AB 00"    //PUSH totExp
-  + " 68 AB AB AB 00"    //PUSH curExp
+  + " 68 AB AB AB AB"    //PUSH totExp
+  + " 68 AB AB AB AB"    //PUSH curExp
   + " E8"                //CALL loaderFunc
   ;
   
