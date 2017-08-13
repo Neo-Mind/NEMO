@@ -26,7 +26,7 @@ function SkipCheaterCheck(msgNum) {
   + " 68 FF FF 00 00" //PUSH 0FFFF
   + " 68" + msgNum.packToHex(4) //PUSH msgNum
   ;
-  var offset = exe.findCode(code, PTYPE_HEX, false);
+  var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
   
   if (offset === -1) {
     code = code.replace(/6A 00/g, "AB");//Change PUSH 0 with PUSH reg32
