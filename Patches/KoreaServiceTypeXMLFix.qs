@@ -25,7 +25,8 @@ function KoreaServiceTypeXMLFix() {
     + " E8"                   //CALL SelectClientInfo
     ;
     var repl = " 90 90 90 90 90";
-    
+    var offset2 = 12; //12 = 7 from JMP DWORD PTR and 5 from CALL SelectKoreaClientInfo
+	
     offset = exe.find(code, PTYPE_HEX, true, "\xAB", offsets[i] - 0x30, offsets[i]);
     
     if (offset === -1) {
@@ -35,11 +36,25 @@ function KoreaServiceTypeXMLFix() {
       offset = exe.find(code, PTYPE_HEX, true, "\xAB", offsets[i] - 0x30, offsets[i]);
     }
    
+    if (offset === -1) { // 2017 clients [Secret]
+	  code = 
+  	    " 75 AB"                //JNZ SHORT addr
+  	  + " E8 AB AB AB AB"       //CALL SelectKoreaClientInfo
+  	  + " E9 AB AB AB AB"       //JMP addr2 -> Skip calling SelectClientInfo
+  	  + " 6A 00"                //PUSH 0
+  	  + " E8"                   //CALL SelectClientInfo
+	  ;
+	  repl = " 90 90 90 90 90";
+	  offset2 = 7; //7 = 2 from JNZ SHORT and 5 from CALL SelectKoreaClientInfo
+	  
+	  offset = exe.find(code, PTYPE_HEX, true, "\xAB", offsets[i] - 0x30, offsets[i]);
+	}
+	
     if (offset === -1)
       return "Failed in Step 2 - Calls missing for iteration no." + i;
     
     //Step 2b - Replace the JMP skipping SelectClientInfo
-    exe.replace(offset + 12, repl, PTYPE_HEX);//12 = 7 from JMP DWORD PTR and 5 from CALL SelectKoreaClientInfo
+    exe.replace(offset + offset2, repl, PTYPE_HEX);
     
     //Step 2c - Extract the refAddr
     offset = exe.Rva2Raw(exe.fetchDWord(offset + 3));
