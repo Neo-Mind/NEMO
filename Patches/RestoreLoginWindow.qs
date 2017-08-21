@@ -23,8 +23,16 @@ function RestoreLoginWindow() {
   ;
       
   var codeOffset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  // newer exes have g_tParam located past 00nnnn, so we need to expand the search!
   if (codeOffset === -1)
-    return "Failed in Step 1";
+  {
+    code = code.replace(" 80 3D AB AB AB 00", " 80 3D AB AB AB 01");
+	code = code.replace(" C6 AB AB AB AB 00", " C6 AB AB AB AB 01");
+	codeOffset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
+  if (codeOffset === -1)
+	  return "Failed in Step 1";
    
   //Step 1b - Extract the MOV ECX, g_windowMgr statement
   var movEcx = exe.fetchHex(codeOffset + 14, 5);
@@ -174,13 +182,20 @@ function RestoreLoginWindow() {
   ===============================================================================*/ 
   
   offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
-  
+ 
   if (offset === -1) {//For recent client g_hMainWnd is directly pushed instead of assigning to ECX first
  
     code = code.replace(" 75 1D 8B 0D AB AB AB 00", " 75 1C"); //remove the ECX assignment and fix the JNE address accordingly
     code = code.replace(" 51 FF 15 AB", " FF 35 AB AB AB 00 FF 15 AB"); //replace PUSH ECX with PUSH DWORD PTR DS:[g_hMainWnd]
     
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+	
+	if (offset === -1)
+	{
+	  // and newer clients push hwndParent further, so !
+	  code = code.replace(" FF 35 AB AB AB 00 FF 15 AB", " FF 35 AB AB AB 01 FF 15 AB");
+	  offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+	}
   }
   
   if (offset === -1)

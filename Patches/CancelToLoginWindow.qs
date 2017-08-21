@@ -18,6 +18,13 @@ function CancelToLoginWindow() {
   + " E8"                    //CALL addr
   ;
   var offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
+  
+  if (offsets.length === 0)
+  {
+    code = code.replace(" 8D AB AB AB AB AB 00", " 8D AB AB AB AB AB 01");
+	offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offsets.length === 0)
     return "Failed in Step 1 - Reference case missing";
   

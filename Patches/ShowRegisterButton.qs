@@ -34,13 +34,25 @@ function ShowRegisterButton() {
   
   var offset2 = exe.find(code + codeSuffix, PTYPE_HEX, true, "\xAB", offset - 0x30, offset);
   if (offset2 === -1) {
-    code =
-      " A1" + LANGTYPE      //MOV EAX, DWORD PTR DS:[g_serviceType]
-    + " 85 C0"              //TEST EAX, EAX
-    + " 0F 85 AB 00 00 00"  //JNE addr
-    ;
-    type = 2;
-    offset2 = exe.find(code + codeSuffix, PTYPE_HEX, true, "\xAB", offset - 0x30, offset);
+  
+    if (offset2 === -1)
+	{
+	  codeSuffix = codeSuffix.replace(" 83 3D AB AB AB 00 01", " 83 3D AB AB AB 01 01");
+	  offset2 = exe.find(code + codeSuffix, PTYPE_HEX, true, "\xAB", offset - 0x30, offset);
+	}
+	
+	if (offset2 === -1)
+	{
+      code =
+        " A1" + LANGTYPE      //MOV EAX, DWORD PTR DS:[g_serviceType]
+      + " 85 C0"              //TEST EAX, EAX
+      + " 0F 85 AB 00 00 00"  //JNE addr
+      ;
+      type = 2;
+      offset2 = exe.find(code + codeSuffix, PTYPE_HEX, true, "\xAB", offset - 0x30, offset);
+	  codeSuffix = codeSuffix.replace(" 83 3D AB AB AB 01 01", " 83 3D AB AB AB 00 01");
+      offset2 = exe.find(code + codeSuffix, PTYPE_HEX, true, "\xAB", offset - 0x30, offset);
+	}
   }
   
   if (offset2 === -1)

@@ -23,6 +23,12 @@ function ExtendBox(index) {
   //Step 1 - Find the Box Limiter Code - Atleast 4 matches should be there
   //         MOV DWORD PTR DS:[EAX+byte], 0x46
   var offsets = exe.findCodes(" C7 40 AB 46 00 00 00", PTYPE_HEX, true, "\xAB");
+  
+  // new client detected, so!
+  if (offsets.length < 4)
+	offsets = exe.findCodes(" C7 80 AB AB AB AB 46 00 00 00", PTYPE_HEX, true, "\xAB");
+  
+  
   if (offsets.length < 4)
     return "Failed in Step 1";
   

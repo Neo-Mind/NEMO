@@ -60,6 +60,12 @@ function EnableWhoCommand() {
   if (offset2 === -1) {
     code = code.replace(" A1 AB AB AB 00 50", " FF 35 AB AB AB 00"); //Change MOV EAX to PUSH DWORD PTR DS:[refAddr]
     offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x60, offset);
+	
+	// refAddr pushed further on new exe, so !
+	if (offset2 === -1) {
+	  code = code.replace(" FF 35 AB AB AB 00"," FF 35 AB AB AB 01");
+	  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset-0x60, offset);
+	}
   }
   
   if (offset2 === -1)
