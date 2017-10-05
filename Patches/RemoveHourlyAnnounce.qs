@@ -26,6 +26,11 @@ function RemoveHourlyAnnounce() {//PlayTime comparison is not there in Pre-2010 
     offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");//Older clients and some new clients
   }
 
+  if (offset === -1 && !fpEnb) {
+    code = code.replace(" 8B 44 24 AB", " 66 8B 45 AB"); // HasFramePointer() broke? [Secret]
+	offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offset === -1)
     return "Failed in Step 1";
 
