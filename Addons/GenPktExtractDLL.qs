@@ -53,7 +53,7 @@ function GenPktExtractDLL() {//Planning to shift this into PEEK instead of here
   
   //Step 1d - Look for g_PacketLenMap reference and the pktLen function call following it
   code =
-      " B9 AB AB AB 00" //MOV ECX, g_PacketLenMap
+      " B9 AB AB AB AB" //MOV ECX, g_PacketLenMap
     + " E8 AB AB AB AB" //CALL addr; gets the address pointing to the packet followed by len
     + " 8B AB 04"       //MOV reg32_A, [EAX+4]
     ;
