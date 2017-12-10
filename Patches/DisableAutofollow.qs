@@ -21,6 +21,11 @@ function DisableAutofollow() {
     offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
   }
   
+  if (offsets.length === 0) { // 2017 clients [Secret]
+    code = code.replace(" A3 AB AB AB 00", " A3 AB AB AB AB");
+	offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
+  }
+  
   if (offsets.length === 0) {
     code = code.replace(" A3", " 89 AB"); //MOV DWORD PTR DS:[CGameMode::m_lastLockOnPcGid], reg32_B
     offsets = exe.findCodes(code, PTYPE_HEX, true, "\xAB");
