@@ -3,13 +3,20 @@
 //#          to custom file specified by user  #
 //##############################################
 
+function GetItemInfoName() {
+  if (IsRenewal())
+      var iiName = "System/iteminfo_Sak.lub";
+  else {
+      var iiName = "System/iteminfo.lub";
+      if(exe.findString(iiName, RAW) === -1)
+		return "System/iteminfo_true.lub"; // late 2017 clients use 'iteminfo_true.lub' instead.
+  }
+  return iiName;
+}
 function ChangeItemInfo() {
   
   //Step 1a - Check if the client is Renewal (iteminfo file name is "System/iteminfo_Sak.lub" for Renewal clients)
-  if (IsRenewal())
-      var iiName = "System/iteminfo_Sak.lub";
-  else
-      var iiName = "System/iteminfo.lub";
+  var iiName = GetItemInfoName();
   
   //Step 1b - Find offset of the original string
   var offset = exe.findString(iiName, RVA);
@@ -42,9 +49,5 @@ function ChangeItemInfo() {
 // Disable for Unsupported clients //
 //=================================//
 function ChangeItemInfo_() {
-  if (IsRenewal())
-      var iiName = "System/iteminfo_Sak.lub";
-  else
-      var iiName = "System/iteminfo.lub";
-  return (exe.findString(iiName, RAW) !== -1);
+  return (exe.findString(GetItemInfoName(), RAW) !== -1);
 }

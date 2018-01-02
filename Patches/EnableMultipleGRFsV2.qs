@@ -11,7 +11,7 @@ function EnableMultipleGRFsV2() {//The initial steps are same as EnableMultipleG
   //Step 1b - Find its reference
   var code =
     " 68" + grf       //PUSH OFFSET addr1; "data.grf"
-  + " B9 AB AB AB 00" //MOV ECX, OFFSET g_fileMgr
+  + " B9 AB AB AB AB" //MOV ECX, OFFSET g_fileMgr
   ;
   
   var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
