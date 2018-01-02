@@ -53,6 +53,11 @@ function ShowResurrectionButton() {//To do - When on PVP/GVG map the second time
     offset2 = exe.find(code + code + code, PTYPE_HEX, true, "\xAB", offset, offset + 0x40);
   }
   
+  if (offset2 === -1) { // late 2017 clients [Secret]
+    code = code.replace(" 0F 85 AB 00", " 0F 85 AB 01");
+    offset2 = exe.find(code + code + code, PTYPE_HEX, true, "\xAB", offset, offset + 0x40);
+  }
+  
   if (offset2 === -1)
     return "Failed in Step 2 - No comparisons matched";
   
