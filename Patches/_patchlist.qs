@@ -360,3 +360,5 @@ registerPatch(230, "AlwaysReadKrExtSettings", "Always load Korea ExternalSetting
 
 registerPatch(231, "HideSNSButton", "Hide SNS Button", "UI", 12, "Secret", "Hide SNS (Twitter) button", false);
 
+registerPatch(232, "EnableGuildWhenInClan", "Enable guild while in clan", "Custom", 0, "Functor, Secret", "Remove restriction of guild functionality while being a member of a clan", false);
+
