@@ -24,7 +24,7 @@ function EnableGuildWhenInClan() {
 	+   " B8 68 01 00 00"    // MOV EAX, 168
 	;
 	
-	offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 0x200);
+	offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset, offset + 0x200);
 	
 	if (offset === -1)
 		return "Failed in Step 2 - magic jump not found";
