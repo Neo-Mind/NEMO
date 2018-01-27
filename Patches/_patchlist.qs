@@ -42,6 +42,8 @@ registerGroup(15, "Resurrection", true);
 
 registerGroup(16, "WalkToDelay", true);
 
+registerGroup(17, "EnableSkills", false);
+
 //#########################################################################################################################################################
 //#                                                                                                                                                       #
 //# FORMAT for registering patch : registerPatch(patch id, functionName, patch Name, category, group id, author, description, recommended [true/false] ); #
@@ -361,4 +363,11 @@ registerPatch(230, "AlwaysReadKrExtSettings", "Always load Korea ExternalSetting
 registerPatch(231, "HideSNSButton", "Hide SNS Button", "UI", 12, "Secret", "Hide SNS (Twitter) button", false);
 
 registerPatch(232, "EnableGuildWhenInClan", "Enable guild while in clan", "Custom", 0, "Functor, Secret", "Remove restriction of guild functionality while being a member of a clan", false);
+
+registerPatch(233, "EnablePlayerSkills", "Enable Custom Player Skills [Experimental]", "Custom", 17, "Neo", "Enables the use of custom skills castable on players (using Lua Files)", false);
+/*
+registerPatch(234, "EnableHomunSkills", "Enable Custom Homunculus Skills [Experimental]", "Custom", 17, "Neo", "Enables the use of custom skills for Homunculus (using Lua Files)", false);
+
+registerPatch(235, "EnableMerceSkills", "Enable Custom Mercenary Skills [Experimental]", "Custom", 17, "Neo", "Enables the use of custom skills for Mercenaries (using Lua Files)", false);
+*/
 
