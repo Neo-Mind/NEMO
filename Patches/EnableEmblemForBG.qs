@@ -17,6 +17,20 @@ function EnableEmblemForBG()
     ;
     
     var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    if (offset === -1) {
+        var code =
+            " B9 AB AB AB 01" //MOV ECX, OFFSET g_session
+        +   " E8 AB AB AB 00" //CALL CSession::IsSiegeMode
+        +   " 85 C0"          //TEST EAX, EAX
+        +   " 74 AB"          //JZ SHORT addr
+        +   " B9 AB AB AB 01" //MOV ECX, OFFSET g_session
+        +   " E8 AB AB AB 00" //CALL CSession::IsBgMode
+        +   " 85 C0"          //TEST EAX, EAX
+        +   " 75 AB"          //JNZ SHORT addr ;AB at the end is needed
+        ;
+
+        var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+    }
     if (offset === -1)
         return "Failed in Step 1";
  
