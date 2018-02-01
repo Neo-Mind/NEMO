@@ -6,21 +6,32 @@ function AlwaysReadKrExtSettings() {
 	}
 	
 	// Step 1b - Find its reference
-	offset = exe.findCode("68" + offset.packToHex(4), PTYPE_HEX, false);
-	if(offset === -1) {
+	var korea_ref_offset = exe.findCode("68" + offset.packToHex(4), PTYPE_HEX, false);
+	if(korea_ref_offset === -1) {
 		return "Failed in step 1b - String reference is missing.";
 	}
 	
-	// Step 1c - Find switch jump above
-	var code = " FF 24 AB AB AB AB 00"; // JMP T[EAX * 4]
-	offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset - 0x30, offset);
-	if(offset === -1) {
-		return "Failed in step 1c - Switch jump is missing.";
-	}
+	// Step 2a - Find server_korea reading code
+	var LANGTYPE = GetLangType();
+	var SERVERTYPE = GetServerType();
 	
-	// Step 2 - Replace JMP with NOPs
-	var repl = " 90".repeat(code.hexlength()); // replace with NOPs
-	exe.replace(offset, repl, PTYPE_HEX);
+	var code =
+		" 8B F9"         // MOV EDI, ECX
+	+	" A1" + LANGTYPE // MOV EAX, g_serviceType
+	+	" 83 F8 12"      // CMP EAX, 12
+	;
+		
+	offset = exe.find(code, PTYPE_HEX, true, "\xAB", korea_ref_offset - 0x50, korea_ref_offset);
+	
+	if (offset === -1)
+		return "Failed in Step 2a - g_serviceType comparison not found";
+	
+	// offset now points to the JA instruction after CMP EAX, 12
+	offset += code.hexlength();
+	
+	// Step 3a - Force the client to read Lua Files\service_korea\ExternalSettings_kr.lub
+	var diff = korea_ref_offset - offset - 2; // -2 for EB xx
+	exe.replace(offset, " EB" + diff.packToHex(1), PTYPE_HEX);
 	
 	return true;
 }
