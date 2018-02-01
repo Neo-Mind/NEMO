@@ -68,6 +68,33 @@ function GetLangType() {
   
 }
 
+//###########################################################
+//# Purpose: Extract the g_serverType address from Client. # 
+//#          Returned value will be in PTYPE_HEX format     #
+//###########################################################
+
+function GetServerType() {
+  
+  //Step 1a - Get address of the string 'sakray'
+  var offset = exe.findString("sakray", RVA);
+  if (offset === -1)
+    return ["'sakray' not found"];
+  
+  //Step 1b - Find its reference
+  offset = exe.findCode("68" + offset.packToHex(4), PTYPE_HEX, false);
+  if (offset === -1)
+    return ["'sakray' reference missing"];
+
+  //Step 2a - Look for the g_serverType assignment to 1 after it.   
+  offset = exe.find(" C7 05 AB AB AB AB 01 00 00 00", PTYPE_HEX, true, "\xAB", offset + 5);
+  if (offset === -1)
+    return ["g_serverType assignment missing"];
+
+  //Step 2b - Extract and return
+  return exe.fetchHex(offset + 2, 4);
+  
+}
+
 //#####################################################################
 //# Purpose: Extract g_windowMgr assignment & UIWindowMgr::MakeWindow #
 //#          address. Returned value is a hash array or error string  #
