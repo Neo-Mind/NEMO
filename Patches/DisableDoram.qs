@@ -66,3 +66,7 @@ function DisableDoram() {
   exe.replace(offset + code.hexlength(), "90 90 90 90 90 90", PTYPE_HEX);
   return true;
 }
+
+function DisableDoram_() {
+	return exe.getClientDate() <= 20170614;
+}
