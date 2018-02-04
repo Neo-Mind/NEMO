@@ -6,11 +6,14 @@
 function LoadCustomClientInfo() {
   
   //Step 1a - Check if the client is Sakray (clientinfo file name is "sclientinfo.xml" for some Sakray clients)
-  if (IsRenewal())
-      var ciName = "sclientinfo.xml";
-  else
-      var ciName = "clientinfo.xml";
+  var offset = exe.findString("sclientinfo.xml", RVA);
+
+  if (offset === -1) // if sclientinfo.xml does not exist then it is a main server exe
+      offset = exe.findString("clientinfo.xml", RVA);
   
+  if (offset === -1)
+      return "s?clientinfo.xml not found.";
+
   //Step 1b - Find offset of the original string
   var offset = exe.findString(ciName, RVA);
   if (offset === -1)
@@ -42,9 +45,5 @@ function LoadCustomClientInfo() {
 // Disable for Unsupported clients //
 //=================================//
 function LoadCustomClientInfo_() {
-  if (IsRenewal())
-    var ciName = "sclientinfo.xml";
-  else
-    var ciName = "clientinfo.xml";
-  return (exe.findString(ciName, RAW) !== -1);
+  return (exe.findString("sclientinfo.xml", RAW) !== -1 || exe.findString("clientinfo.xml", RAW) !== -1);
 }
