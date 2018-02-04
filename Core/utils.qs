@@ -238,7 +238,7 @@ function FetchPacketKeyInfo() {
   //Step 3a - Find Pattern 2 - Encryption + Key assignment fused into one function with mode argument. 
   //          0 = Encrypt & Assign Keys, 1 = Assign Base Keys, 2 = Assign 0s = No Encryption
   code =
-    " 8B 0D AB AB AB 00" //MOV ECX, DWORD PTR DS:[refAddr]
+    " 8B 0D AB AB AB AB" //MOV ECX, DWORD PTR DS:[refAddr]
   + " 6A 01"             //PUSH 1
   + " E8"                //CALL CRagConnection::Obfuscate2
   ;
