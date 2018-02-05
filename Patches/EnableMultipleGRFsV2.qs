@@ -27,7 +27,7 @@ function EnableMultipleGRFsV2() {//The initial steps are same as EnableMultipleG
   + " 8B AB AB AB AB 00" //MOV reg32, DWORD PTR DS:[addr1]
   + " A1 AB AB AB 00"    //MOV EAX, DWORD PTR DS:[addr2]
   ;
-  var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 10);
+  var fnoffset = exe.find(code, PTYPE_HEX, true, "\xAB", offset + 10, offset + 30);
   
   if (fnoffset === -1) {//VC9 Client
     code =
