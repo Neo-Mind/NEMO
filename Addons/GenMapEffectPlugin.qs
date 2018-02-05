@@ -182,7 +182,7 @@ function GenMapEffectPlugin() {
     + " 56"       //PUSH ESI
     + " 8B F1"    //MOV ESI, ECX
     ;
-  offset2 = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, "", offset-0x60, offset);
+  offset2 = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, "", offset-0x70, offset);
   
   if (offset2 === -1)
     offset2 = exe.find(code, PTYPE_HEX, false, "", offset-0x60, offset);
@@ -199,7 +199,7 @@ function GenMapEffectPlugin() {
     throw "Error: LaunchSakura missing";
   
   //Step 11b - Find the start of the function
-  offset2 = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, "", offset-0x60, offset);
+  offset2 = exe.find(" 55 8B EC" + code, PTYPE_HEX, false, "", offset-0x70, offset);
   
   if (offset2 === -1)
     offset2 = exe.find(code, PTYPE_HEX, false, "", offset-0x60, offset);
