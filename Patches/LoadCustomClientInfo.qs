@@ -6,16 +6,17 @@
 function LoadCustomClientInfo() {
   
   //Step 1a - Check if the client is Sakray (clientinfo file name is "sclientinfo.xml" for some Sakray clients)
-  var offset = exe.findString("sclientinfo.xml", RVA);
+  var ciName = "sclientinfo.xml";
+  var offset = exe.findString(ciName, RVA);
 
-  if (offset === -1) // if sclientinfo.xml does not exist then it is a main server exe
-      offset = exe.findString("clientinfo.xml", RVA);
+  if (offset === -1) { // if sclientinfo.xml does not exist then it is a main server exe
+    ciName = "clientinfo.xml";
+    offset = exe.findString(ciName, RVA);
+  }
   
   if (offset === -1)
       return "s?clientinfo.xml not found.";
 
-  //Step 1b - Find offset of the original string
-  var offset = exe.findString(ciName, RVA);
   if (offset === -1)
     return "Failed in Step 1 - clientinfo file name not found";
   
