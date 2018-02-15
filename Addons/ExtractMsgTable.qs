@@ -28,6 +28,17 @@ function ExtractMsgTable() {
     code = code.replace(" AB 8B AB", " AB FF AB");//Change MOV reg32_D with PUSH 
 	  offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset+10, offset+80);
   }
+	if (offset2 === -1) { // 2016+ clients
+		code =
+			" 56"					// PUSH ESI
+		+	" 33 AB"				// XOR reg32_A, reg32_A
+		+	" 33 AB"				// XOR reg32_B, reg32_B
+		+	" 8B AB"				// MOV reg32_C, reg32_C
+		+	" 8B AB AB AB AB 00"	// MOV reg32_A, tblAddr[reg32_B]
+		;
+		
+		offset2 = exe.find(code, PTYPE_HEX, true, "\xAB", offset-40, offset+10);
+	}
 
 	if (offset2 === -1) {//Old clients
     code =
