@@ -110,8 +110,11 @@ function ExtractMsgTable() {
 			msgStr = exe.fetch(start_offset, end_offset - start_offset);
 			
 			//Step 3b - Map the Korean string to English
-			if (engMap[msgStr])
+			if (engMap[msgStr]) {
 				fp.writeline(engMap[msgStr] + '#');
+				msgStr = msgStr.replace(/\r/g, "\\r");
+				msgStr = msgStr.replace(/\n/g, "\\n");
+			}
 			else
 				fp.writeline(msgStr + "#");
 
