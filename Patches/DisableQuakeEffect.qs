@@ -67,3 +67,7 @@ function DisableQuakeEffect() {
   
   return true;
 }
+
+function DisableQuakeEffect_() {
+	return exe.findString("/quake", RVA) !== -1;
+}
