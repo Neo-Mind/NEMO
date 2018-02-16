@@ -30,7 +30,7 @@ function IgnoreAccountArgument() {
 	// Step 3 - Replace JZ with JMP
 	offset += 5; // 3 from ADD and 2 from TEST
 	
-	exe.replace(offset, PTYPE_HEX, " EB");
+	exe.replace(offset, " EB", PTYPE_HEX);
 	
 	return true;
 }
