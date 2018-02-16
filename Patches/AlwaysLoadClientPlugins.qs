@@ -15,7 +15,7 @@ function AlwaysLoadClientPlugins() {
 	
 	// Step 2a - Fetch soundMode variable location
 	var code =
-		" 68 AB AB AB 00"	// PUSH soundMode
+		" 68 AB AB AB AB"	// PUSH soundMode
 	+	" 8D 45 AB"			// LEA EAX, [EBP+Type]
 	+	" 50"				// PUSH EAX
 	+	" 6A 00"			// PUSH 0
