@@ -11,7 +11,7 @@ function IncreaseViewID() {
     return "Failed in Step 1 - Can't find ReqAccName";
       
   //Step 1b - Find where it is PUSHed - only 1 match would occur
-  offset = exe.findCode(" 68" + offset.packToHex(4), PTYPE_HEX, true, "\xAB");
+  offset = exe.findCode(" 68" + offset.packToHex(4), PTYPE_HEX, false);
   if (offset === -1)
     return "Failed in Step 1 - Can't find Function reference";
   
