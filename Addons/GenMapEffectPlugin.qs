@@ -25,7 +25,7 @@ function GenMapEffectPlugin() {
 	
   //Step 3a - Look for g_Weather assignment before EntryPtr
   var code = 
-      " B9 AB AB AB 00" //MOV ECX, g_Weather
+      " B9 AB AB AB AB" //MOV ECX, g_Weather
     + " E8"             //CALL CWeather::ScriptProcess
     ;
     
