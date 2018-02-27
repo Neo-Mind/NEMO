@@ -7,7 +7,7 @@ function DisableWalkToDelay() {
 }
 
 function SetWalkToDelay() {
-  return ChangeWalkToDelay(exe.getUserInput("$walkDelay", XTYPE_WORD, "Number Input", "Enter the new walk delay(0-1000) - snaps to closest valid value", 40, 0, 1000));
+  return ChangeWalkToDelay(exe.getUserInput("$walkDelay", XTYPE_WORD, "Number Input", "Enter the new walk delay(0-1000) - snaps to closest valid value", 150, 0, 1000));
 }
 
 //########################################################################
