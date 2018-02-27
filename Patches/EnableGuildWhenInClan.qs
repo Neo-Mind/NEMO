@@ -7,11 +7,20 @@ function EnableGuildWhenInClan() {
     // Step 1 - Find Message ID #2605 reference
 	var code =
 		" 68 2D 0A 00 00" // PUSH 0x0A2D
-		+ " E8 AB AB AB FF" // CALL MsgStr     
-		+ " 50"             // PUSH EAX
+	+	" E8 AB AB AB FF" // CALL MsgStr
+	+	" 50"             // PUSH EAX
 	;
 
 	var offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+	if (offset === -1) {
+		code =
+			" 68 2D 0A 00 00"   // PUSH 0x0A2D
+		+	" E9 AB AB AB FF"   // JMP addr1
+		+	" B8"				// MOV ??
+		;
+		offset = exe.findCode(code, PTYPE_HEX, true, "\xAB");
+	}
+	
 	if (offset === -1)
 		return "Failed in Step 1 - reference to MsgStr with ID 2605 missing.";
 	
