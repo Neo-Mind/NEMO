@@ -106,7 +106,7 @@ function Enable64kHairstyle() {
 
   if (offset === -1) {//const is > 0x7F
     code = code.replace(" 83", " 81");
-    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x280, offset2);
+    offset = exe.find(code, PTYPE_HEX, true, "\xAB", offset2 - 0x2A0, offset2);
   }
   
   offset += code.hexlength();
@@ -175,6 +175,16 @@ function Enable64kHairstyle() {
     code = code.replace(" 8B AB AB", " A1 AB");//reg32_A is EAX
     offsets = exe.findAll(code, PTYPE_HEX, true, "\xAB", offset, assignOffset);
   }
+  
+  if (offsets.length === 0) {  // 2017 +
+    code =
+      " 8B AB"             //MOV reg32_B, DWORD PTR DS:[reg32_C]
+    + " A1 AB AB AB 01"    //MOV reg32_A, DWORD PTR DS:[addr]
+    + " 8B 14"             //MOV EDX, DWORD PTR DS:[reg32_B * 4 + reg32_A]
+    ;
+    offsets = exe.findAll(code, PTYPE_HEX, true, "\xAB", offset, assignOffset);
+  }
+
  
   if (offsets.length === 0)
     return "Failed in Step 4 - Table fetchers missing";
