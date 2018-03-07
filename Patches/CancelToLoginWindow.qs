@@ -56,14 +56,14 @@ function CancelToLoginWindow() {
   var crag = (offset +  8) + exe.fetchDWord(offset + 4);
   var ccon = (offset + 15) + exe.fetchDWord(offset + 11);
   
-  //Step 2c - Find address of ¸Þ½ÃÁö => Korean version of "Message"
+  //Step 2c - Find address of ë©”ì‹œì§€ => Korean version of "Message"
   offset = exe.findString("\xB8\xDE\xBD\xC3\xC1\xF6", RVA);
   if (offset === -1)
     return "Failed in Step 2 - Message not found";
   
   //Step 2d - Prep Cancel case pattern to look for
   var canceller = 
-    " 68" + offset.packToHex(4) //PUSH addr ; "¸Þ½ÃÁö"
+    " 68" + offset.packToHex(4) //PUSH addr ; "ë©”ì‹œì§€"
   + " AB"    //PUSH reg32_A ; contains 0
   + " AB"    //PUSH reg32_A
   + " 6A 01" //PUSH 1

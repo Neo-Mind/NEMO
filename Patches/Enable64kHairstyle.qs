@@ -5,12 +5,12 @@
 
 function Enable64kHairstyle() {
   //Step 1a - Find address of Format String 
-  var code = "\xC0\xCE\xB0\xA3\xC1\xB7\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s"; // "¿Œ∞£¡∑\∏”∏Æ≈Î\%s\%s_%s.%s"
+  var code = "\xC0\xCE\xB0\xA3\xC1\xB7\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s"; // "Ïù∏Í∞ÑÏ°±\Î®∏Î¶¨ÌÜµ\%s\%s_%s.%s"
   var doramOn = false;
   var offset = exe.findString(code, RAW);
   
   if (offset === -1) {//Doram Client 
-    code = "\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s"; // "\∏”∏Æ≈Î\%s\%s_%s.%s"
+    code = "\\\xB8\xD3\xB8\xAE\xC5\xEB\\%s\\%s_%s.%s"; // "\Î®∏Î¶¨ÌÜµ\%s\%s_%s.%s"
     doramOn = true;
     offset = exe.findString(code, RAW);
   }
