@@ -11,7 +11,7 @@ function UseSSOLoginPacket() {
     return "Failed in Step 1 - " + LANGTYPE[0];
   
   var code =
-    " 80 3D AB AB AB 00 00" //CMP BYTE PTR DS:[g_passwordencrypt], 0
+    " 80 3D AB AB AB AB 00" //CMP BYTE PTR DS:[g_passwordencrypt], 0
   + " 0F 85 AB AB 00 00"    //JNE addr1
   + " A1" + LANGTYPE        //MOV EAX, DWORD PTR DS:[g_serviceType]
   + " AB AB"                //TEST EAX, EAX - (some clients use CMP EAX, EBP instead)

@@ -17,6 +17,12 @@ function DisableQuakeEffect() {
   ;
   
   offset = exe.findCode(code, PTYPE_HEX, false);
+  
+  if (offset === -1) {
+    code = code.replace(" 8B", " 8D");
+    offset = exe.findCode(code, PTYPE_HEX, false);
+  }
+  
   if (offset === -1)
     return "Failed in Step 1 - BMP reference missing";
   
