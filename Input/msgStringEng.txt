@@ -2519,7 +2519,7 @@ Item has already been registered. Please try again later.#
 Failed to delete the item. Please try again later.#
 %s item has been deleted.#
 Special#
-Sales limited sale item update# 
+Sales limited sale item update#
 Discontinued#
 Quantity update is required #
 The %d is out of stock or to buy as much as#
