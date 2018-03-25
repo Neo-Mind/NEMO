@@ -380,3 +380,5 @@ registerPatch(238, "AlwaysLoadClientPlugins", "Always Load Client Plugins [Exper
 registerPatch(239, "DisableKROSiteLaunch", "Disable kRO Site Launch", "Fix", 0, "mrjnumber1", "Disable ro.gnjoy.com launching after in-game settings change", false);
 
 registerPatch(240, "ChangeQuickSwitchDelay", "Change Quick Switch Delay", "Fix", 0, "mrjnumber1", "Change quick item switch delay", false);
+
+registerPatch(241, "DisableCDGuard", "Disable Cheat Defender Anti Cheat", "Fix", 0, "4144", "Disables Cheat Defender Game Guard", true);
